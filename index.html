@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>W Maintenance</title>
+  <title>W Maintenance Enterprise</title>
   
   <!-- Supabase JS Client v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -11,69 +11,83 @@
   <style>
     /* CSS Variables: Dark Mode (Default) */
     :root {
-      --bg-main: #0f172a;
+      --bg-main: #0b1120;
       --bg-card: #1e293b;
+      --bg-card-hover: #243248;
       --bg-input: #334155;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
       --border-color: #334155;
       --accent-green: #22c55e;
       --accent-blue: #38bdf8;
+      --accent-navy: #1e3a8a;
       --status-open: #ef4444;
       --status-progress: #f59e0b;
       --status-done: #10b981;
+      --warning-sop: #dc2626;
+      --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
     }
 
-    /* Light Mode: White background & Navy / Dark Blue elements */
+    /* CSS Variables: Light Mode (Daylight / White & Navy) */
     body.light-theme {
-      --bg-main: #f1f5f9;
+      --bg-main: #f8fafc;
       --bg-card: #ffffff;
-      --bg-input: #e2e8f0;
+      --bg-card-hover: #f1f5f9;
+      --bg-input: #f1f5f9;
       --text-main: #0f172a;
       --text-muted: #475569;
       --border-color: #cbd5e1;
       --accent-green: #16a34a;
       --accent-blue: #0284c7;
+      --accent-navy: #0f172a;
       --status-open: #dc2626;
       --status-progress: #d97706;
       --status-done: #059669;
+      --warning-sop: #b91c1c;
+      --card-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; padding-bottom: 40px; transition: background-color 0.25s, color 0.25s; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; padding-bottom: 50px; transition: background-color 0.25s, color 0.25s; }
 
-    /* Top Navigation Header */
+    /* Top Sticky Header */
     header {
       background-color: var(--bg-card);
       border-bottom: 1px solid var(--border-color);
-      padding: 12px 20px;
+      padding: 12px 18px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       position: sticky;
       top: 0;
-      z-index: 50;
+      z-index: 100;
+      box-shadow: var(--card-shadow);
     }
     .brand { font-size: 1.25rem; font-weight: 800; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
-    .brand span.w { color: var(--accent-green); font-size: 1.5rem; font-weight: 900; }
-    .header-actions { display: flex; gap: 10px; align-items: center; }
+    .brand span.w { color: var(--accent-green); font-size: 1.6rem; font-weight: 900; }
+    
+    .header-actions { display: flex; gap: 8px; align-items: center; }
     .icon-btn {
       background: var(--bg-input);
       color: var(--text-main);
       border: 1px solid var(--border-color);
       border-radius: 8px;
-      padding: 6px 12px;
-      font-size: 0.9rem;
+      padding: 7px 12px;
+      font-size: 0.85rem;
       cursor: pointer;
-      font-weight: 600;
+      font-weight: 700;
       display: flex;
       align-items: center;
       gap: 5px;
+      transition: all 0.2s;
     }
+    .icon-btn:active { transform: scale(0.97); }
 
-    /* Container & Navigation Tabs */
-    .container { max-width: 1000px; margin: 15px auto; padding: 0 15px; }
-    .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+    /* Container */
+    .container { max-width: 1050px; margin: 15px auto; padding: 0 15px; }
+
+    /* Navigation Tabs */
+    .nav-tabs { display: flex; gap: 10px; margin-bottom: 18px; }
     .tab-btn {
       flex: 1;
       padding: 12px;
@@ -82,7 +96,7 @@
       border: 1px solid var(--border-color);
       border-radius: 10px;
       font-weight: 700;
-      font-size: 1rem;
+      font-size: 0.95rem;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -94,25 +108,131 @@
       background: var(--accent-green);
       color: #ffffff;
       border-color: var(--accent-green);
+      box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
     }
 
-    /* Panels & Cards */
+    /* Shift Banner Bar */
+    .shift-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 8px 16px;
+      margin-bottom: 16px;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+    .shift-tag {
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: var(--accent-blue);
+      color: #fff;
+    }
+
+    /* Cards */
     .card {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 18px;
       margin-bottom: 18px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      box-shadow: var(--card-shadow);
     }
 
-    /* PIN Box - Clean & Professional */
+    /* Section Labels */
+    .section-label {
+      font-size: 0.85rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Grid Button Groups */
+    .grid-btn-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-bottom: 15px; }
+    .rooms-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+      gap: 6px;
+      margin-bottom: 15px;
+      max-height: 230px;
+      overflow-y: auto;
+      padding: 6px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: var(--bg-main);
+    }
+
+    .select-pill {
+      background: var(--bg-input);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s;
+    }
+    .select-pill:active { transform: scale(0.96); }
+    .select-pill.active {
+      background: var(--accent-blue);
+      color: #ffffff;
+      border-color: var(--accent-blue);
+    }
+    .select-pill.sub-active {
+      background: var(--accent-green);
+      color: #ffffff;
+      border-color: var(--accent-green);
+    }
+
+    /* Issues Grid */
+    .issues-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-bottom: 16px; }
+    .issue-card {
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px 10px;
+      text-align: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .issue-card:active { transform: scale(0.96); }
+    .issue-card.active {
+      background: var(--accent-green);
+      color: #ffffff;
+      border-color: var(--accent-green);
+    }
+
+    /* Security SOP Banner */
+    .sop-alert {
+      background: rgba(220, 38, 38, 0.12);
+      border: 2px solid var(--warning-sop);
+      color: var(--warning-sop);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 0.88rem;
+      font-weight: 800;
+      margin-bottom: 16px;
+      display: none;
+      line-height: 1.4;
+    }
+
+    /* PIN Box */
     .pin-box {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 16px 20px;
+      border-radius: 14px;
+      padding: 18px 20px;
       margin-bottom: 20px;
+      box-shadow: var(--card-shadow);
     }
     .pin-title {
       font-size: 0.85rem;
@@ -125,13 +245,13 @@
     .pin-form { display: flex; gap: 10px; }
     .pin-input {
       flex: 1;
-      padding: 10px 14px;
+      padding: 12px 14px;
       border-radius: 8px;
       border: 1px solid var(--border-color);
       background: var(--bg-input);
       color: var(--text-main);
-      font-size: 1rem;
-      font-weight: 600;
+      font-size: 1.05rem;
+      font-weight: 700;
       outline: none;
     }
     .btn-green {
@@ -139,64 +259,29 @@
       color: #ffffff;
       border: none;
       border-radius: 8px;
-      padding: 10px 22px;
-      font-weight: 700;
+      padding: 12px 24px;
+      font-weight: 800;
+      font-size: 0.95rem;
       cursor: pointer;
+      transition: all 0.2s;
     }
+    .btn-green:active { transform: scale(0.97); }
 
-    /* Quick Grid Selectors (No Typing Needed) */
-    .section-label { font-size: 0.9rem; font-weight: 700; margin-bottom: 10px; color: var(--text-muted); }
-    .grid-btn-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin-bottom: 16px; }
-    .select-pill {
-      background: var(--bg-input);
-      color: var(--text-main);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 10px 8px;
-      font-size: 0.88rem;
-      font-weight: 600;
-      text-align: center;
-      cursor: pointer;
-      user-select: none;
-    }
-    .select-pill.active {
-      background: var(--accent-blue);
-      color: #ffffff;
-      border-color: var(--accent-blue);
-    }
-
-    /* Preset Issues Grid */
-    .issues-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-bottom: 16px; }
-    .issue-card {
-      background: var(--bg-input);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 12px 10px;
-      text-align: center;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .issue-card.active {
-      background: var(--accent-green);
-      color: #ffffff;
-      border-color: var(--accent-green);
-    }
-
-    /* Photo Upload */
+    /* Photo Upload & Preview */
     .photo-preview {
       width: 100%;
-      max-height: 180px;
+      max-height: 200px;
       object-fit: cover;
       border-radius: 8px;
-      margin-top: 8px;
+      margin-top: 10px;
       display: none;
       border: 1px solid var(--border-color);
+      cursor: pointer;
     }
 
     /* Dashboard Columns */
     .board { display: grid; grid-template-columns: 1fr; gap: 15px; }
-    @media(min-width: 768px) { .board { grid-template-columns: 1fr 1fr 1fr; } }
+    @media(min-width: 820px) { .board { grid-template-columns: 1fr 1fr 1fr; } }
     .column-header {
       display: flex;
       justify-content: space-between;
@@ -207,50 +292,89 @@
       font-weight: 800;
       font-size: 0.95rem;
     }
-    .badge { border-radius: 20px; padding: 2px 10px; font-size: 0.8rem; color: #ffffff; font-weight: 700; }
+    .badge { border-radius: 20px; padding: 3px 10px; font-size: 0.8rem; color: #ffffff; font-weight: 800; }
     .badge-open { background: var(--status-open); }
     .badge-progress { background: var(--status-progress); }
     .badge-done { background: var(--status-done); }
 
-    /* Ticket Item */
+    /* Ticket Item Cards */
     .ticket {
-      background: var(--bg-input);
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 10px;
-      border-left: 4px solid var(--accent-blue);
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 12px;
+      border-left: 5px solid var(--accent-blue);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+      transition: all 0.2s;
     }
     .ticket.open { border-left-color: var(--status-open); }
     .ticket.in_progress { border-left-color: var(--status-progress); }
     .ticket.completed { border-left-color: var(--status-done); opacity: 0.85; }
-    .ticket-head { display: flex; justify-content: space-between; font-weight: 700; font-size: 0.95rem; }
-    .ticket-cat { color: var(--accent-blue); font-size: 0.8rem; font-weight: 700; }
-    .ticket-issue { margin: 6px 0; font-size: 0.9rem; }
-    .ticket-actions { display: flex; gap: 6px; margin-top: 8px; }
+
+    .ticket-head { display: flex; justify-content: space-between; font-weight: 800; font-size: 1rem; align-items: center; }
+    .ticket-cat {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent-blue);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+    .ticket-meta { font-size: 0.76rem; color: var(--text-muted); margin-top: 4px; display: flex; justify-content: space-between; }
+    .ticket-sop-tag {
+      display: inline-block;
+      background: var(--status-open);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-top: 4px;
+    }
+    .ticket-issue { margin: 8px 0; font-size: 0.92rem; font-weight: 600; line-height: 1.35; }
+    .ticket-actions { display: flex; gap: 8px; margin-top: 10px; }
     .action-btn {
       flex: 1;
-      padding: 6px;
-      font-size: 0.75rem;
+      padding: 8px;
+      font-size: 0.8rem;
       border-radius: 6px;
-      font-weight: 700;
+      font-weight: 800;
       border: none;
       cursor: pointer;
       color: #fff;
+      transition: all 0.15s;
     }
+    .action-btn:active { transform: scale(0.97); }
+
+    /* Modal for Photo Zoom */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+    .modal-img { max-width: 100%; max-height: 90vh; border-radius: 8px; }
 
     .hidden { display: none !important; }
-    .empty-text { text-align: center; color: var(--text-muted); padding: 30px 10px; font-size: 0.9rem; }
+    .empty-text { text-align: center; color: var(--text-muted); padding: 35px 10px; font-size: 0.9rem; font-weight: 600; }
   </style>
 </head>
 <body>
 
-  <!-- Top Header -->
+  <!-- Top Sticky Header -->
   <header>
     <div class="brand">
       <span class="w">W</span> MAINTENANCE
     </div>
     <div class="header-actions">
-      <!-- Light / Dark Theme Switch -->
+      <!-- Sound Alert Toggle -->
+      <button class="icon-btn" id="soundBtn" onclick="toggleSound()">🔊 Ήχος</button>
+      <!-- Daylight / Night Theme Switch -->
       <button class="icon-btn" id="themeBtn" onclick="toggleTheme()">☀️ Ημέρα</button>
       <!-- Language Switch -->
       <button class="icon-btn" id="langBtn" onclick="toggleLanguage()">🇬🇧 EN</button>
@@ -259,6 +383,12 @@
 
   <div class="container">
     
+    <!-- Shift & Time Status Bar -->
+    <div class="shift-bar">
+      <div>🕒 <span id="clockDisplay">--:--</span></div>
+      <div>ΒΑΡΔΙΑ: <span class="shift-tag" id="currentShiftText">Πρωινή</span></div>
+    </div>
+
     <!-- Navigation Tabs -->
     <div class="nav-tabs">
       <button class="tab-btn active" id="tabNewBtn" onclick="switchView('new')">📝 <span data-t="tabNew">Δήλωση Βλάβης</span></button>
@@ -269,46 +399,88 @@
     <div id="viewNew">
       <div class="card">
         
-        <!-- Τύπος Χώρου -->
-        <div class="section-label" data-t="secLocation">1. Επιλογή Χώρου:</div>
-        <div class="grid-btn-group" id="locTypeGroup">
-          <div class="select-pill active" onclick="setLocType('room', this)">🛏️ <span data-t="room">Δωμάτιο</span></div>
-          <div class="select-pill" onclick="setLocType('villa', this)">🏡 <span data-t="villa">Βίλα</span></div>
-          <div class="select-pill" onclick="setLocType('public', this)">🏛️ <span data-t="public">Κοινόχρηστο</span></div>
+        <!-- 1. ΠΟΙΟΣ ΔΗΛΩΝΕΙ -->
+        <div class="section-label" data-t="secReporter">1. Ποιος δηλώνει τη βλάβη:</div>
+        <div class="grid-btn-group" id="reporterGroup">
+          <div class="select-pill active" onclick="setReporter('Style (Housekeeping)', this)">Style</div>
+          <div class="select-pill" onclick="setReporter('Whatever/Whenever', this)">W / W</div>
+          <div class="select-pill" onclick="setReporter('Reception', this)">Reception</div>
+          <div class="select-pill" onclick="setReporter('Curators', this)">Curators</div>
+          <div class="select-pill" onclick="setReporter('Security', this)">Security</div>
+          <div class="select-pill" onclick="setReporter('Engineering', this)">Engineering</div>
+          <div class="select-pill" onclick="setReporter('F&B', this)">F&B</div>
         </div>
 
-        <!-- Επιλογή Συγκεκριμένου Χώρου / Δωματίου -->
-        <div class="section-label" id="locSelectLabel" data-t="secRoomNum">Αριθμός Δωματίου / Χώρου:</div>
-        <div class="grid-btn-group" id="locationButtons">
-          <!-- Γεμίζει αυτόματα με JS -->
+        <!-- 2. ΠΕΡΙΟΧΗ / ΕΝΟΤΗΤΑ (ΚΑΘΑΡΑ, ΧΩΡΙΣ EMOJI) -->
+        <div class="section-label" data-t="secWing">2. Περιοχή / Ενότητα:</div>
+        <div class="grid-btn-group" id="areaGroup">
+          <div class="select-pill active" onclick="setArea('north', this)">Βόρεια Πτέρυγα</div>
+          <div class="select-pill" onclick="setArea('south', this)">Νότια Πτέρυγα</div>
+          <div class="select-pill" onclick="setArea('agora_suites', this)">Σουίτες Αγοράς</div>
+          <div class="select-pill" onclick="setArea('agora_rooms', this)">Agora / Diving</div>
+          <div class="select-pill" onclick="setArea('villas_north', this)">Βόρειες Βίλες</div>
+          <div class="select-pill" onclick="setArea('villas_south', this)">Νότιες Βίλες</div>
+          <div class="select-pill" onclick="setArea('public', this)">Κοινόχρηστοι Χώροι</div>
         </div>
 
-        <!-- Κατηγορία Βλάβης -->
-        <div class="section-label" data-t="secCategory">2. Ειδικότητα / Κατηγορία:</div>
+        <!-- ΥΠΟΚΑΤΗΓΟΡΙΑ / ΟΡΟΦΟΣ -->
+        <div class="section-label" id="subAreaLabel">Επιλογή Ορόφου / Τομέα:</div>
+        <div class="grid-btn-group" id="subAreaGroup">
+          <!-- Φορτώνει αυτόματα με JS -->
+        </div>
+
+        <!-- ΑΡΙΘΜΟΣ ΔΩΜΑΤΙΟΥ / ΣΟΥΙΤΑΣ -->
+        <div class="section-label" id="roomSelectLabel">Αριθμός Δωματίου / Χώρου:</div>
+        <div class="rooms-grid" id="roomsList">
+          <!-- Φορτώνει όλα τα πραγματικά δωμάτια με JS -->
+        </div>
+
+        <!-- ΥΠΟΧΩΡΟΣ (ΓΙΑ ΒΙΛΕΣ / ΣΟΥΙΤΕΣ) -->
+        <div id="subLocationBlock" class="hidden">
+          <div class="section-label">Επιμέρους Χώρος / Σημείο:</div>
+          <div class="grid-btn-group" id="subLocationGroup">
+            <div class="select-pill active" onclick="setSubLocation('Γενικά', this)">Γενικά</div>
+            <div class="select-pill" onclick="setSubLocation('Master Bedroom', this)">Master Bedroom</div>
+            <div class="select-pill" onclick="setSubLocation('Twin Bedroom', this)">Twin Bedroom</div>
+            <div class="select-pill" onclick="setSubLocation('Living Room', this)">Living Room</div>
+            <div class="select-pill" onclick="setSubLocation('Μπάνιο', this)">Μπάνιο</div>
+            <div class="select-pill" onclick="setSubLocation('Πισίνα / Εξωτερικός', this)">Πισίνα / Έξω</div>
+          </div>
+        </div>
+
+        <!-- 3. ΕΙΔΙΚΟΤΗΤΑ / ΚΑΤΗΓΟΡΙΑ -->
+        <div class="section-label" data-t="secCategory">3. Ειδικότητα / Κατηγορία:</div>
         <div class="grid-btn-group">
-          <div class="select-pill active" onclick="setCategory('Υδραυλικά', this)">🔧 Υδραυλικά</div>
-          <div class="select-pill" onclick="setCategory('Ηλεκτρολογικά', this)">⚡ Ηλεκτρολογικά</div>
-          <div class="select-pill" onclick="setCategory('A/C', this)">❄️ A/C</div>
-          <div class="select-pill" onclick="setCategory('A/V', this)">📺 A/V</div>
-          <div class="select-pill" onclick="setCategory('Ξυλουργικά', this)">🚪 Πόρτες/Έπιπλα</div>
+          <div class="select-pill active" onclick="setCategory('Υδραυλικά', this)">Υδραυλικά</div>
+          <div class="select-pill" onclick="setCategory('Ηλεκτρολογικά', this)">Ηλεκτρολογικά</div>
+          <div class="select-pill" onclick="setCategory('A/C', this)">A/C</div>
+          <div class="select-pill" onclick="setCategory('A/V', this)">A/V</div>
+          <div class="select-pill" onclick="setCategory('Ξυλουργικά', this)">Πόρτες / Έπιπλα</div>
+          <div class="select-pill" onclick="setCategory('Χρηματοκιβώτιο / Lock', this)">Safe / Κλειδαριά</div>
         </div>
 
-        <!-- Προκαθορισμένες Βλάβες (Zero Typing) -->
-        <div class="section-label" data-t="secIssue">3. Συχνή Βλάβη (Άμεσο κλικ):</div>
+        <!-- SECURITY SOP ALERT BANNER -->
+        <div id="sopBanner" class="sop-alert">
+          ⚠️ <strong>ΥΠΟΧΡΕΩΤΙΚΟ ΠΡΩΤΟΚΟΛΛΟ SECURITY SOP:</strong><br>
+          Η επέμβαση σε χρηματοκιβώτιο ή ξεκλείδωμα πόρτας απαγορεύεται χωρίς τη φυσική παρουσία μέλους της Ασφάλειας (Security).
+        </div>
+
+        <!-- 4. ΠΡΟΚΑΘΟΡΙΣΜΕΝΕΣ ΒΛΑΒΕΣ (ZERO TYPING) -->
+        <div class="section-label" data-t="secIssue">4. Συχνή Βλάβη (Άμεσο κλικ):</div>
         <div class="issues-grid" id="presetIssues">
           <!-- Γεμίζει ανάλογα με την κατηγορία -->
         </div>
 
-        <!-- Φωτογραφία (Προαιρετικό) -->
-        <div class="section-label" data-t="secPhoto">4. Φωτογραφία (Προαιρετικά):</div>
-        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="previewPhoto(this)" />
-        <button class="icon-btn" style="width:100%; justify-content:center; padding:12px; margin-bottom:12px;" onclick="document.getElementById('photoInput').click()">
+        <!-- 5. ΦΩΤΟΓΡΑΦΙΑ ΜΕ ΑΥΤΟΜΑΤΗ ΣΥΜΠΙΕΣΗ -->
+        <div class="section-label" data-t="secPhoto">5. Φωτογραφία (Προαιρετικά - Συμπιέζεται αυτόματα):</div>
+        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoUpload(this)" />
+        <button class="icon-btn" style="width:100%; justify-content:center; padding:12px; margin-bottom:8px;" onclick="document.getElementById('photoInput').click()">
           📷 <span data-t="takePhoto">Λήψη / Επιλογή Φωτογραφίας</span>
         </button>
-        <img id="photoPreviewImg" class="photo-preview" alt="Preview" />
+        <img id="photoPreviewImg" class="photo-preview" alt="Preview" onclick="openPhotoModal(this.src)" />
 
-        <!-- Κουμπί Αποστολής -->
-        <button class="btn-green" style="width:100%; font-size:1.1rem; padding:15px; margin-top:10px;" onclick="submitTicket()">
+        <!-- ΚΟΥΜΠΙ ΑΠΟΣΤΟΛΗΣ -->
+        <button class="btn-green" style="width:100%; font-size:1.15rem; padding:16px; margin-top:12px;" onclick="submitTicket()">
           🚀 <span data-t="sendIssue">ΚΑΤΑΧΩΡΗΣΗ ΒΛΑΒΗΣ</span>
         </button>
 
@@ -322,11 +494,11 @@
       <div class="pin-box">
         <div class="pin-title" id="pinBoxTitle">ΣΥΝΔΕΣΗ ENGINEERING</div>
         <div class="pin-form" id="pinFormArea">
-          <input type="password" id="pinInput" class="pin-input" placeholder="Εισάγετε PIN..." />
+          <input type="password" id="pinInput" class="pin-input" placeholder="Εισάγετε PIN..." inputmode="numeric" />
           <button class="btn-green" onclick="handlePinLogin()">Είσοδος</button>
         </div>
         <div id="userLoggedInBar" class="hidden" style="display:flex; justify-content:space-between; align-items:center;">
-          <span id="loggedUserText" style="font-weight:700; color:var(--accent-green);"></span>
+          <span id="loggedUserText" style="font-weight:800; color:var(--accent-green); font-size:1rem;"></span>
           <button class="icon-btn" onclick="logout()">Αποσύνδεση</button>
         </div>
       </div>
@@ -354,7 +526,7 @@
         <!-- Ολοκληρωμένες (Τελευταίες 24h) -->
         <div class="card">
           <div class="column-header">
-            <span style="color:var(--status-done)">🟢 <span data-t="colDone">ΟΛΟΚΛΗΡΩΜΕΝΕΣ</span></span>
+            <span style="color:var(--status-done)">🟢 <span data-t="colDone">ΟΛΟΚΛΗΡΩΜΕΝΕΣ (24H)</span></span>
             <span class="badge badge-done" id="countDone">0</span>
           </div>
           <div id="listDone"><p class="empty-text" data-t="noIssues">Καμία βλάβη</p></div>
@@ -365,119 +537,312 @@
 
   </div>
 
+  <!-- Modal για Zoom Φωτογραφίας -->
+  <div id="photoModal" class="modal-overlay hidden" onclick="closePhotoModal()">
+    <img id="modalImg" class="modal-img" src="" alt="Enlarged ticket view" />
+  </div>
+
   <script>
     /* ========================================================
-       1. ΡΥΘΜΙΣΕΙΣ SUPABASE (ΒΑΛΕ ΕΔΩ ΤΑ ΔΙΚΑ ΣΟΥ ΣΤΟΙΧΕΙΑ)
+       1. SUPABASE CLIENT & LIVE SETUP
        ======================================================== */
-    const SUPABASE_URL = "https://EDW_VAZEIS_TO_URL_SOU.supabase.co";
-    const SUPABASE_KEY = "EDW_VAZEIS_TO_ANON_PUBLIC_KEY_SOU";
-    
+    const SUPABASE_URL = "https://gmrphnwiuhubbvlhwkuw.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtcnBobndpdWh1YmJ2bGh3a3V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzMzczMDMsImV4cCI6MjEwNTkxMzMwM30.MGBT1-OJkCM7c5H2YxEUsCHjx8nXeUhfnKDfnazdvGI";
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     /* ========================================================
-       2. PIN ΧΡΗΣΤΩΝ & ΡΟΛΟΙ
+       2. PIN, ΡΟΛΟΙ & ΤΕΧΝΙΚΟΙ
        ======================================================== */
     const PIN_ROLES = {
-      "1001": { name: "Ηλεκτρολόγος", role: "electrician" },
-      "2001": { name: "Υδραυλικός", role: "plumber" },
-      "7000": { name: "A/V Specialist", role: "av" },
-      "8888": { name: "PC Γραφείου", role: "office" },
+      "1001": { name: "Ηλεκτρολόγος Βάρδιας", role: "electrician" },
+      "2001": { name: "Υδραυλικός Βάρδιας", role: "plumber" },
+      "7000": { name: "A/V Systems Specialist", role: "av" },
+      "8888": { name: "PC Γραφείου / Helpdesk", role: "office" },
       "9999": { name: "Admin Engineering", role: "admin" }
     };
     let currentUser = null;
+    let soundEnabled = true;
 
     /* ========================================================
-       3. ΓΛΩΣΣΕΣ & ΘΕΜΑ (LIGHT / DARK)
+       3. ΗΧΗΤΙΚΕΣ ΕΙΔΟΠΟΙΗΣΕΙΣ & ΔΟΝΗΣΗ (WEB AUDIO SYNTH)
+       ======================================================== */
+    function playAlarm() {
+      if (!soundEnabled) return;
+
+      // Δόνηση κινητού (αν υποστηρίζεται)
+      if (navigator.vibrate) {
+        navigator.vibrate([200, 100, 200, 100, 400]);
+      }
+
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Note A5
+        osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.35); // Drop to A4
+
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.4);
+      } catch (e) {
+        console.log("Audio alert not triggered:", e);
+      }
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const btn = document.getElementById("soundBtn");
+      btn.innerHTML = soundEnabled ? "🔊 Ήχος" : "🔇 Σίγαση";
+    }
+
+    /* ========================================================
+       4. ΒΑΡΔΙΕΣ ΒΑΣΕΙ ΩΡΑΣ
+       ======================================================== */
+    function updateClockAndShift() {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById("clockDisplay").textContent = `${String(hours).padStart(2, '0')}:${minutes}`;
+
+      const shiftEl = document.getElementById("currentShiftText");
+      if (hours >= 7 && hours < 15) {
+        shiftEl.textContent = "Πρωινή (07:00 - 15:00)";
+      } else if (hours >= 15 && hours < 23) {
+        shiftEl.textContent = "Απογευματινή (15:00 - 23:00)";
+      } else {
+        shiftEl.textContent = "Νυχτερινή / Ασφαλείας (23:00 - 07:00)";
+      }
+    }
+    setInterval(updateClockAndShift, 10000);
+    updateClockAndShift();
+
+    /* ========================================================
+       5. ΓΛΩΣΣΑ & ΘΕΜΑ (LIGHT / DARK)
        ======================================================== */
     let currentLang = "el";
     const i18n = {
       el: {
         tabNew: "Δήλωση Βλάβης", tabBoard: "Έλεγχος & Ταμπλό",
-        secLocation: "1. Επιλογή Χώρου:", room: "Δωμάτιο", villa: "Βίλα", public: "Κοινόχρηστο",
-        secRoomNum: "Αριθμός Δωματίου / Χώρου:", secCategory: "2. Ειδικότητα / Κατηγορία:",
-        secIssue: "3. Συχνή Βλάβη (Άμεσο κλικ):", secPhoto: "4. Φωτογραφία (Προαιρετικά):",
+        secReporter: "1. Ποιος δηλώνει τη βλάβη:", secWing: "2. Περιοχή / Ενότητα:",
+        secCategory: "3. Ειδικότητα / Κατηγορία:", secIssue: "4. Συχνή Βλάβη (Άμεσο κλικ):",
+        secPhoto: "5. Φωτογραφία (Προαιρετικά - Συμπιέζεται αυτόματα):",
         takePhoto: "Λήψη / Επιλογή Φωτογραφίας", sendIssue: "ΚΑΤΑΧΩΡΗΣΗ ΒΛΑΒΗΣ",
-        colOpen: "ΑΝΟΙΧΤΕΣ", colProgress: "ΣΕ ΕΞΕΛΙΞΗ", colDone: "ΟΛΟΚΛΗΡΩΜΕΝΕΣ",
+        colOpen: "ΑΝΟΙΧΤΕΣ", colProgress: "ΣΕ ΕΞΕΛΙΞΗ", colDone: "ΟΛΟΚΛΗΡΩΜΕΝΕΣ (24H)",
         noIssues: "Καμία βλάβη"
       },
       en: {
         tabNew: "Report Issue", tabBoard: "Dashboard",
-        secLocation: "1. Select Location:", room: "Room", villa: "Villa", public: "Public Area",
-        secRoomNum: "Room / Area Number:", secCategory: "2. Category / Skill:",
-        secIssue: "3. Common Issue (Quick Click):", secPhoto: "4. Photo (Optional):",
+        secReporter: "1. Reported by:", secWing: "2. Area / Wing:",
+        secCategory: "3. Category / Skill:", secIssue: "4. Common Issue (Quick Click):",
+        secPhoto: "5. Photo (Optional - Auto-compressed):",
         takePhoto: "Take / Upload Photo", sendIssue: "SUBMIT TICKET",
-        colOpen: "OPEN", colProgress: "IN PROGRESS", colDone: "COMPLETED",
+        colOpen: "OPEN", colProgress: "IN PROGRESS", colDone: "COMPLETED (24H)",
         noIssues: "No tickets"
       }
     };
 
     function toggleTheme() {
       const isLight = document.body.classList.toggle("light-theme");
-      const btn = document.getElementById("themeBtn");
-      btn.innerHTML = isLight ? "🌙 Νύχτα" : "☀️ Ημέρα";
+      document.getElementById("themeBtn").innerHTML = isLight ? "🌙 Νύχτα" : "☀️ Ημέρα";
     }
 
     function toggleLanguage() {
       currentLang = currentLang === "el" ? "en" : "el";
       document.getElementById("langBtn").innerHTML = currentLang === "el" ? "🇬🇧 EN" : "🇬🇷 GR";
       document.querySelectorAll("[data-t]").forEach(el => {
-        const key = el.getAttribute("data-t");
-        if (i18n[currentLang][key]) el.textContent = i18n[currentLang][key];
+        const k = el.getAttribute("data-t");
+        if (i18n[currentLang][k]) el.textContent = i18n[currentLang][k];
       });
     }
 
     /* ========================================================
-       4. ΔΕΔΟΜΕΝΑ ΧΩΡΩΝ & ΒΛΑΒΩΝ (ZERO-TYPING)
+       6. ΔΟΜΗ ΔΩΜΑΤΙΩΝ & ΣΟΥΙΤΩΝ (ΠΛΗΡΗΣ ΛΙΣΤΑ, ΧΩΡΙΣ EMOJI)
        ======================================================== */
-    const locations = {
-      room: ["101","102","103","104","105","106","201","202","203","204","205","206","301","302","303"],
-      villa: ["Villa 1", "Villa 2", "Villa 3", "Villa 4", "Villa 5"],
-      public: ["Lobby", "Pool Bar", "Main Restaurant", "Spa", "Gym", "Beach Bar"]
+    function makeRange(start, end) {
+      const arr = [];
+      for (let i = start; i <= end; i++) arr.push(String(i));
+      return arr;
+    }
+
+    const hotelStructure = {
+      north: {
+        label: "Βόρεια Πτέρυγα",
+        subs: {
+          "1ος Όροφος (101-132)": makeRange(101, 132),
+          "2ος Όροφος (201-232)": makeRange(201, 232),
+          "3ος Όροφος (301-326)": makeRange(301, 326)
+        }
+      },
+      south: {
+        label: "Νότια Πτέρυγα",
+        subs: {
+          "1ος Όροφος (151-174)": makeRange(151, 174),
+          "2ος Όροφος (251-274)": makeRange(251, 274),
+          "3ος Όροφος (351-370)": makeRange(351, 370)
+        }
+      },
+      agora_suites: {
+        label: "Σουίτες Αγοράς",
+        subs: {
+          "400 Suites (411-428)": makeRange(411, 428),
+          "600 Suites (610-629)": makeRange(610, 629)
+        }
+      },
+      agora_rooms: {
+        label: "Agora / Diving",
+        subs: {
+          "500 Rooms (501-540)": makeRange(501, 540),
+          "Diving Rooms (241-246)": makeRange(241, 246)
+        }
+      },
+      villas_north: {
+        label: "Βόρειες Βίλες",
+        subs: {
+          "Όλες οι Βόρειες": ["Villa 1", "Villa 3", "Villa 5", "Villa 6", "Villa 7", "Villa 8", "Villa 9", "Villa 10", "Villa 11", "Villa 12"]
+        }
+      },
+      villas_south: {
+        label: "Νότιες Βίλες",
+        subs: {
+          "Όλες οι Νότιες": ["Villa 21", "Villa 22", "Villa 23", "Villa 24", "Villa 25", "Villa 26", "Villa 27", "Villa 28", "Villa 29", "Villa 30", "Villa 31", "Villa 32", "Villa 33", "Villa 35", "Villa 37", "Villa 39"]
+        }
+      },
+      public: {
+        label: "Κοινόχρηστοι Χώροι",
+        subs: {
+          "Κεντρικά & Outlet": ["Welcome Desk", "W Lounge", "Platea", "Parelia", "Wet Deck", "Away Spa", "FIT Gym", "Engineering Workshop", "Staff Canteen"]
+        }
+      }
     };
 
     const issuePresets = {
-      "Υδραυλικά": ["Δεν έχει ζεστό νερό", "Τρέχει η βρύση", "Βουλωμένη αποχέτευση", "Διαρροή στο καζανάκι", "Χαμηλή πίεση"],
-      "Ηλεκτρολογικά": ["Δεν ανάβει το φως", "Χαλασμένη πρίζα", "Έπεσε η ασφάλεια", "Πρόβλημα master switch", "Κουδούνι"],
-      "A/C": ["Δεν ψύχει", "Τρέχει νερό μέσα", "Κάνει έντονο θόρυβο", "Δεν ανταποκρίνεται το χειριστήριο"],
-      "A/V": ["Χωρίς σήμα TV", "Πρόβλημα στο Soundbar/Ηχείο", "Χαλασμένο HDMI / AppleTV", "Δεν ανοίγει η TV"],
-      "Ξυλουργικά": ["Μαγκώνει η πόρτα", "Χαλασμένη κλειδαριά / Κάρτα", "Πρόβλημα στη ντουλάπα", "Σπασμένη καρέκλα"]
+      "Υδραυλικά": [
+        "Δεν έχει ζεστό νερό", "Τρέχει η βρύση", "Βουλωμένη αποχέτευση",
+        "Διαρροή στο καζανάκι", "Χαμηλή πίεση νερού", "Πρόβλημα ντουζιέρας / καμπίνας",
+        "Μυρωδιά αποχέτευσης", "Πρόβλημα Jacuzzi / Πισίνας"
+      ],
+      "Ηλεκτρολογικά": [
+        "Δεν ανάβει το φως", "Χαλασμένη πρίζα / USB", "Έπεσε η ασφάλεια",
+        "Πρόβλημα master switch", "Κουδούνι / Ένδειξη DND", "Φωτισμός καθρέφτη",
+        "Εξωτερικός φωτισμός βεράντας", "Μαγνητική επαφή μπαλκονόπορτας"
+      ],
+      "A/C": [
+        "Δεν ψύχει / Δεν ανάβει", "Τρέχει νερό μέσα", "Κάνει έντονο θόρυβο",
+        "Δεν ανταποκρίνεται ο θερμοστάτης", "Μυρωδιά από το κλιματιστικό", "Κλειδωμένη ένδειξη A/C"
+      ],
+      "A/V": [
+        "Χωρίς σήμα TV", "Soundbar / Bluetooth offline", "Χαλασμένο HDMI / AppleTV",
+        "Δεν ανάβει η τηλεόραση", "Τηλεχειριστήριο χωρίς μπαταρία", "Χαλασμένο Subwoofer"
+      ],
+      "Ξυλουργικά": [
+        "Μαγκώνει η πόρτα", "Χαλασμένη κλειδαριά / Κάρτα", "Πρόβλημα ντουλάπας / συρτάρι",
+        "Σπασμένη καρέκλα / Έπιπλο", "Πόρτα μπαλκονιού δεν κλειδώνει", "Μεντεσές χαλασμένος"
+      ],
+      "Χρηματοκιβώτιο / Lock": [
+        "Κλειδωμένο χρηματοκιβώτιο (SOP Required)", "Χαλασμένο πληκτρολόγιο safe",
+        "Κλειδαριά δωματίου δεν ανοίγει (SOP)", "Αλλαγή μπαταριών Safe Box"
+      ]
     };
 
-    let selectedLocType = "room";
-    let selectedLocation = "101";
+    let selectedReporter = "Style (Housekeeping)";
+    let selectedArea = "north";
+    let selectedSubKey = "";
+    let selectedRoom = "101";
+    let selectedSubLocation = "Γενικά";
     let selectedCategory = "Υδραυλικά";
     let selectedIssue = "";
-    let photoBase64 = null;
+    let compressedPhotoBase64 = null;
 
-    function setLocType(type, elem) {
-      selectedLocType = type;
-      document.querySelectorAll("#locTypeGroup .select-pill").forEach(p => p.classList.remove("active"));
+    function setReporter(rep, elem) {
+      selectedReporter = rep;
+      elem.parentElement.querySelectorAll(".select-pill").forEach(p => p.classList.remove("active"));
       elem.classList.add("active");
-      renderLocationButtons();
     }
 
-    function renderLocationButtons() {
-      const cont = document.getElementById("locationButtons");
-      cont.innerHTML = "";
-      const list = locations[selectedLocType] || [];
-      selectedLocation = list[0] || "";
-      list.forEach((loc, idx) => {
+    function setArea(areaKey, elem) {
+      selectedArea = areaKey;
+      elem.parentElement.querySelectorAll(".select-pill").forEach(p => p.classList.remove("active"));
+      elem.classList.add("active");
+      renderSubAreas();
+    }
+
+    function renderSubAreas() {
+      const subCont = document.getElementById("subAreaGroup");
+      subCont.innerHTML = "";
+      const areaObj = hotelStructure[selectedArea];
+      const subKeys = Object.keys(areaObj.subs);
+
+      selectedSubKey = subKeys[0];
+      subKeys.forEach((subKey, idx) => {
+        const d = document.createElement("div");
+        d.className = "select-pill" + (idx === 0 ? " sub-active" : "");
+        d.textContent = subKey;
+        d.onclick = () => {
+          subCont.querySelectorAll(".select-pill").forEach(p => p.classList.remove("sub-active"));
+          d.classList.add("sub-active");
+          selectedSubKey = subKey;
+          renderRooms();
+        };
+        subCont.appendChild(d);
+      });
+
+      // Αν είναι Βίλα ή Σουίτα, εμφανίζεται επιλογή επιμέρους χώρου
+      const subLocBlock = document.getElementById("subLocationBlock");
+      if (selectedArea.includes("villas") || selectedArea === "agora_suites") {
+        subLocBlock.classList.remove("hidden");
+      } else {
+        subLocBlock.classList.add("hidden");
+        selectedSubLocation = "Γενικά";
+      }
+
+      renderRooms();
+    }
+
+    function renderRooms() {
+      const roomCont = document.getElementById("roomsList");
+      roomCont.innerHTML = "";
+      const rooms = hotelStructure[selectedArea].subs[selectedSubKey] || [];
+      selectedRoom = rooms[0] || "";
+
+      rooms.forEach((r, idx) => {
         const d = document.createElement("div");
         d.className = "select-pill" + (idx === 0 ? " active" : "");
-        d.textContent = loc;
+        d.textContent = r;
         d.onclick = () => {
-          document.querySelectorAll("#locationButtons .select-pill").forEach(p => p.classList.remove("active"));
+          roomCont.querySelectorAll(".select-pill").forEach(p => p.classList.remove("active"));
           d.classList.add("active");
-          selectedLocation = loc;
+          selectedRoom = r;
         };
-        cont.appendChild(d);
+        roomCont.appendChild(d);
       });
+    }
+
+    function setSubLocation(subLoc, elem) {
+      selectedSubLocation = subLoc;
+      elem.parentElement.querySelectorAll(".select-pill").forEach(p => p.classList.remove("active"));
+      elem.classList.add("active");
     }
 
     function setCategory(cat, elem) {
       selectedCategory = cat;
       elem.parentElement.querySelectorAll(".select-pill").forEach(p => p.classList.remove("active"));
       elem.classList.add("active");
+
+      // Εμφάνιση Security SOP Alert αν είναι χρηματοκιβώτιο
+      const sopBanner = document.getElementById("sopBanner");
+      if (cat.includes("Χρηματοκιβώτιο") || cat.includes("Safe")) {
+        sopBanner.style.display = "block";
+      } else {
+        sopBanner.style.display = "none";
+      }
+
       renderPresets();
     }
 
@@ -491,7 +856,7 @@
         d.className = "issue-card" + (idx === 0 ? " active" : "");
         d.textContent = iss;
         d.onclick = () => {
-          document.querySelectorAll("#presetIssues .issue-card").forEach(c => c.classList.remove("active"));
+          cont.querySelectorAll(".issue-card").forEach(c => c.classList.remove("active"));
           d.classList.add("active");
           selectedIssue = iss;
         };
@@ -499,36 +864,82 @@
       });
     }
 
-    function previewPhoto(input) {
+    /* ========================================================
+       7. ΑΥΤΟΜΑΤΗ ΣΥΜΠΙΕΣΗ ΦΩΤΟΓΡΑΦΙΑΣ (CANVAS COMPRESSION)
+       ======================================================== */
+    function handlePhotoUpload(input) {
       if (input.files && input.files[0]) {
+        const file = input.files[0];
         const reader = new FileReader();
+
         reader.onload = function(e) {
-          photoBase64 = e.target.result;
-          const img = document.getElementById("photoPreviewImg");
-          img.src = photoBase64;
-          img.style.display = "block";
+          const img = new Image();
+          img.onload = function() {
+            // Αυτόματο resize σε max 1000px πλάτος για να είναι ελαφριά
+            const canvas = document.createElement("canvas");
+            let width = img.width;
+            let height = img.height;
+            const maxDim = 1000;
+
+            if (width > height && width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Συμπίεση σε JPEG 0.75 ποιότητα
+            compressedPhotoBase64 = canvas.toDataURL("image/jpeg", 0.75);
+            
+            const preview = document.getElementById("photoPreviewImg");
+            preview.src = compressedPhotoBase64;
+            preview.style.display = "block";
+          };
+          img.src = e.target.result;
         };
-        reader.readAsDataURL(input.files[0]);
+        reader.readAsDataURL(file);
       }
     }
 
+    function openPhotoModal(src) {
+      document.getElementById("modalImg").src = src;
+      document.getElementById("photoModal").classList.remove("hidden");
+    }
+    function closePhotoModal() {
+      document.getElementById("photoModal").classList.add("hidden");
+    }
+
     /* ========================================================
-       5. ΑΠΟΣΤΟΛΗ ΒΛΑΒΗΣ ΣΤΟ SUPABASE
+       8. ΚΑΤΑΧΩΡΗΣΗ ΒΛΑΒΗΣ ΣΤΟ SUPABASE
        ======================================================== */
     async function submitTicket() {
-      if (!selectedLocation || !selectedIssue) {
+      if (!selectedRoom || !selectedIssue) {
         alert("Παρακαλώ επιλέξτε χώρο και βλάβη!");
         return;
       }
 
+      let fullLocation = selectedRoom;
+      if (selectedSubLocation && selectedSubLocation !== "Γενικά") {
+        fullLocation += ` (${selectedSubLocation})`;
+      }
+
+      const isSop = selectedCategory.includes("Χρηματοκιβώτιο") || selectedCategory.includes("Safe");
+
       const newTicket = {
-        location_type: selectedLocType,
-        location_name: selectedLocation,
+        location_type: selectedArea,
+        location_name: fullLocation,
         category: selectedCategory,
         issue: selectedIssue,
-        photo_url: photoBase64,
+        photo_url: compressedPhotoBase64,
         status: "pending",
-        priority: "Normal"
+        priority: isSop ? "Urgent (SOP)" : "Normal",
+        reported_by: selectedReporter
       };
 
       const { data, error } = await db.from("tickets").insert([newTicket]);
@@ -536,8 +947,8 @@
         alert("Σφάλμα καταχώρησης: " + error.message);
       } else {
         alert("✅ Η βλάβη καταχωρήθηκε επιτυχώς!");
-        // Reset photo
-        photoBase64 = null;
+        // Reset φωτογραφίας
+        compressedPhotoBase64 = null;
         document.getElementById("photoPreviewImg").style.display = "none";
         document.getElementById("photoInput").value = "";
         switchView("board");
@@ -545,7 +956,7 @@
     }
 
     /* ========================================================
-       6. ΣΥΝΔΕΣΗ ΜΕ PIN & ΤΑΜΠΛΟ
+       9. ΣΥΝΔΕΣΗ ENGINEERING & PIN
        ======================================================== */
     function handlePinLogin() {
       const pin = document.getElementById("pinInput").value.trim();
@@ -569,8 +980,18 @@
     }
 
     /* ========================================================
-       7. ΦΟΡΤΩΣΗ & REALTIME ΣΥΓΧΡΟΝΙΣΜΟΣ
+       10. ΦΟΡΤΩΣΗ, REALTIME & ΧΡΟΝΟΜΕΤΡΗΣΗ
        ======================================================== */
+    function formatTimeAgo(dateString) {
+      if (!dateString) return "";
+      const diff = Math.floor((new Date() - new Date(dateString)) / 1000);
+      if (diff < 60) return "μόλις τώρα";
+      const min = Math.floor(diff / 60);
+      if (min < 60) return `πριν ${min}λ`;
+      const hr = Math.floor(min / 60);
+      return `πριν ${hr}ω`;
+    }
+
     async function loadTickets() {
       const { data: tickets, error } = await db
         .from("tickets")
@@ -589,26 +1010,45 @@
       let cOpen = 0, cProg = 0, cDone = 0;
       let htmlOpen = "", htmlProg = "", htmlDone = "";
 
+      const now = new Date().getTime();
+      const oneDayAgo = now - (24 * 60 * 60 * 1000);
+
       tickets.forEach(t => {
-        // Αν είναι συνδεδεμένος τεχνικός, φιλτράρουμε (εκτός αν είναι Admin/Office)
+        // Φίλτρο 24ώρου για τις ολοκληρωμένες
+        if (t.status === 'completed' && t.created_at) {
+          const ticketTime = new Date(t.created_at).getTime();
+          if (ticketTime < oneDayAgo) return; // παράλειψη παλιών
+        }
+
+        // Φιλτράρισμα ανά ειδικότητα συνδεδεμένου τεχνικού
         if (currentUser && currentUser.role !== "admin" && currentUser.role !== "office") {
           if (currentUser.role === "electrician" && t.category !== "Ηλεκτρολογικά") return;
           if (currentUser.role === "plumber" && t.category !== "Υδραυλικά") return;
           if (currentUser.role === "av" && t.category !== "A/V") return;
         }
 
+        const repText = t.reported_by ? `Από: ${t.reported_by}` : '';
+        const timeAgo = formatTimeAgo(t.created_at);
+        const isSop = (t.priority && t.priority.includes("SOP")) || (t.category && t.category.includes("Χρηματοκιβώτιο"));
+
         const cardHtml = `
           <div class="ticket ${t.status}">
             <div class="ticket-head">
-              <span>📍 ${t.location_name}</span>
+              <span>${t.location_name}</span>
               <span class="ticket-cat">${t.category}</span>
             </div>
+            ${isSop ? `<div class="ticket-sop-tag">⚠️ SECURITY SOP REQUIRED</div>` : ''}
+            <div class="ticket-meta">
+              <span>${repText}</span>
+              <span>${timeAgo}</span>
+            </div>
             <div class="ticket-issue">${t.issue}</div>
-            ${t.photo_url ? `<img src="${t.photo_url}" style="width:100%; border-radius:6px; margin:5px 0; max-height:120px; object-fit:cover;" />` : ''}
+            ${t.assigned_role ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">👤 Τεχνικός: <strong>${t.assigned_role}</strong></div>` : ''}
+            ${t.photo_url ? `<img src="${t.photo_url}" onclick="openPhotoModal('${t.photo_url}')" style="width:100%; border-radius:6px; margin:6px 0; max-height:120px; object-fit:cover; cursor:pointer;" />` : ''}
             <div class="ticket-actions">
-              ${t.status === 'pending' ? `<button class="action-btn" style="background:var(--status-progress);" onclick="updateStatus(${t.id}, 'in_progress')">Έναρξη</button>` : ''}
+              ${t.status === 'pending' ? `<button class="action-btn" style="background:var(--status-progress);" onclick="updateStatus(${t.id}, 'in_progress')">Ανάληψη</button>` : ''}
               ${t.status === 'in_progress' ? `<button class="action-btn" style="background:var(--status-done);" onclick="updateStatus(${t.id}, 'completed')">Ολοκλήρωση</button>` : ''}
-              ${t.status === 'completed' ? `<span style="font-size:0.75rem; color:var(--text-muted);">✅ Ολοκληρώθηκε</span>` : ''}
+              ${t.status === 'completed' ? `<span style="font-size:0.78rem; font-weight:700; color:var(--status-done);">✅ Ολοκληρώθηκε</span>` : ''}
             </div>
           </div>
         `;
@@ -628,20 +1068,28 @@
     }
 
     async function updateStatus(id, newStatus) {
-      const { error } = await db.from("tickets").update({ status: newStatus }).eq("id", id);
+      const updates = { status: newStatus };
+      if (currentUser && newStatus === 'in_progress') {
+        updates.assigned_role = currentUser.name;
+      }
+      const { error } = await db.from("tickets").update(updates).eq("id", id);
       if (error) alert("Σφάλμα ενημέρωσης: " + error.message);
       else loadTickets();
     }
 
-    // Ακροατής Realtime: Όταν μπαίνει νέα βλάβη, ανανεώνεται ακαριαία το PC
+    // Live Realtime listener με ενεργοποίηση Alarm
     db.channel('realtime:tickets')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, () => {
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tickets' }, () => {
+        playAlarm();
+        loadTickets();
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tickets' }, () => {
         loadTickets();
       })
       .subscribe();
 
     /* ========================================================
-       8. INITIALIZATION
+       11. INITIALIZATION & NAVIGATION
        ======================================================== */
     function switchView(view) {
       if (view === 'new') {
@@ -658,8 +1106,8 @@
       }
     }
 
-    // Εκκίνηση
-    renderLocationButtons();
+    // Έναρξη
+    renderSubAreas();
     renderPresets();
     loadTickets();
   </script>
