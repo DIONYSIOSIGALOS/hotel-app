@@ -275,12 +275,19 @@
   <!-- APPLICATION LOGIC & SUPABASE -->
   <script>
     /* ==========================================================
-       1. SUPABASE CREDENTIALS (CONNECTED)
+       1. SUPABASE CLIENT (SAFE INIT)
        ========================================================== */
     const SUPABASE_URL = 'https://garphnw1uhubbv1hwkuw.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtcnBobndpdWh1YmJ2bGh3a3V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzMzczMDMsImV4cCI6MjEwNTkxMzMwM30.MGBT1-OJkCM7c5H2YxEUsCHjx8nXeUhfnKDfnazdvGI';
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let sbClient = null;
+    try {
+      if (window.supabase && typeof window.supabase.createClient === 'function') {
+        sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+    } catch(err) {
+      console.warn('Supabase init warning:', err);
+    }
 
     /* RESORT STRUCTURE */
     const DEPARTMENTS = [
@@ -451,8 +458,9 @@
     let capturedPhotoBase64 = null;
     let activeClaimTicketId = null;
     let activeAdminResolveTicketId = null;
-    let tickets = [];
+    let tickets = JSON.parse(localStorage.getItem('w_tickets') || '[]');
 
+    // FIRST EXECUTION: RENDER DOM IMMEDIATELY
     document.addEventListener('DOMContentLoaded', () => {
       applyLanguage(currentLang);
       renderDeptGrid();
@@ -460,8 +468,10 @@
       renderPresetIssues();
       renderOfficeRolesGrid();
       checkSavedLogin();
-      initSupabase();
       renderBoard();
+      
+      // THEN ATTEMPT NETWORK / SUPABASE
+      initSupabase();
       setInterval(renderBoard, 60000);
     });
 
@@ -489,6 +499,7 @@
 
     function renderDeptGrid() {
       const container = document.getElementById('deptGrid');
+      if (!container) return;
       container.innerHTML = DEPARTMENTS.map(d => {
         const title = currentLang === 'el' ? d.el : d.en;
         const isSel = selectedDept === title;
@@ -509,6 +520,7 @@
 
     function renderZoneGrid() {
       const container = document.getElementById('zoneGrid');
+      if (!container) return;
       container.innerHTML = HOTEL_ZONES.map(z => {
         const isSel = selectedZone && selectedZone.id === z.id;
         const name = currentLang === 'el' ? z.nameEl : z.nameEn;
@@ -660,6 +672,7 @@
 
     function renderPresetIssues() {
       const container = document.getElementById('presetIssuesGrid');
+      if (!container) return;
       container.innerHTML = PRESET_ISSUES.map(p => {
         const text = currentLang === 'el' ? p.el : p.en;
         const isSel = selectedPreset && selectedPreset.id === p.id;
@@ -773,14 +786,22 @@
         resolved_note: null
       };
 
-      try {
-        const { error } = await supabase.from('tickets').insert([newTicket]);
-        if (error) throw error;
-        showToast(I18N[currentLang].toast_submitted);
-      } catch (err) {
-        console.error('Supabase insert error:', err);
-        showToast('Σφάλμα αποστολής στη βάση!');
+      // Always save locally immediately
+      tickets.unshift(mapRowToTicket(newTicket));
+      localStorage.setItem('w_tickets', JSON.stringify(tickets));
+      renderBoard();
+      playChime();
+
+      // Async push to Supabase
+      if (sbClient) {
+        try {
+          await sbClient.from('tickets').insert([newTicket]);
+        } catch(err) {
+          console.error('Supabase insert error:', err);
+        }
       }
+
+      showToast(I18N[currentLang].toast_submitted);
 
       // Reset Form
       selectedRoom = null;
@@ -876,6 +897,7 @@
 
     function renderOfficeRolesGrid() {
       const grid = document.getElementById('officeRolesPickerGrid');
+      if (!grid) return;
       grid.innerHTML = Object.entries(ROLES)
         .filter(([p, r]) => !r.isOffice && !r.isAdmin)
         .map(([p, r]) => `
@@ -890,6 +912,7 @@
       const listOpen = document.getElementById('listOpen');
       const listProg = document.getElementById('listProg');
       const listDone = document.getElementById('listDone');
+      if (!listOpen || !listProg || !listDone) return;
 
       const now = new Date();
       const cutoff24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -908,7 +931,6 @@
     }
 
     function renderTicketCard(t) {
-      const isOffice = currentRolePin === '8888';
       const isAdmin = currentRolePin === '9999';
       const createdStr = formatTime(t.createdAt);
       const claimedStr = t.claimedAt ? formatTime(t.claimedAt) : '';
@@ -1023,17 +1045,27 @@
 
     async function claimTicket(ticketId, claimedByName) {
       const claimedAt = new Date().toISOString();
-      try {
-        const { error } = await supabase.from('tickets').update({
-          status: 'in_progress',
-          claimed_at: claimedAt,
-          claimed_by: claimedByName
-        }).eq('id', ticketId);
-        if (error) throw error;
-        showToast(`Ανάληψη: ${claimedByName}`);
-      } catch (err) {
-        console.error('Claim error:', err);
+      const ticket = tickets.find(t => t.id === ticketId);
+      if (ticket) {
+        ticket.status = 'in_progress';
+        ticket.claimedAt = claimedAt;
+        ticket.claimedBy = claimedByName;
+        localStorage.setItem('w_tickets', JSON.stringify(tickets));
+        renderBoard();
       }
+
+      if (sbClient) {
+        try {
+          await sbClient.from('tickets').update({
+            status: 'in_progress',
+            claimed_at: claimedAt,
+            claimed_by: claimedByName
+          }).eq('id', ticketId);
+        } catch (err) {
+          console.error('Claim error:', err);
+        }
+      }
+      showToast(`Ανάληψη: ${claimedByName}`);
     }
 
     async function handleResolveClick(ticketId) {
@@ -1044,17 +1076,24 @@
         : (ticket.claimedBy || 'Τεχνικός');
 
       const resolvedAt = new Date().toISOString();
-      try {
-        const { error } = await supabase.from('tickets').update({
-          status: 'resolved',
-          resolved_at: resolvedAt,
-          resolved_by: resolverName
-        }).eq('id', ticketId);
-        if (error) throw error;
-        showToast('Η βλάβη ολοκληρώθηκε! ✅');
-      } catch (err) {
-        console.error('Resolve error:', err);
+      ticket.status = 'resolved';
+      ticket.resolvedAt = resolvedAt;
+      ticket.resolvedBy = resolverName;
+      localStorage.setItem('w_tickets', JSON.stringify(tickets));
+      renderBoard();
+
+      if (sbClient) {
+        try {
+          await sbClient.from('tickets').update({
+            status: 'resolved',
+            resolved_at: resolvedAt,
+            resolved_by: resolverName
+          }).eq('id', ticketId);
+        } catch (err) {
+          console.error('Resolve error:', err);
+        }
       }
+      showToast('Η βλάβη ολοκληρώθηκε! ✅');
     }
 
     function openAdminResolveModal(ticketId) {
@@ -1075,44 +1114,61 @@
         return;
       }
       const resolvedAt = new Date().toISOString();
-      try {
-        const { error } = await supabase.from('tickets').update({
-          status: 'resolved',
-          resolved_at: resolvedAt,
-          resolved_by: 'Admin (9999)',
-          resolved_note: note
-        }).eq('id', activeAdminResolveTicketId);
-        if (error) throw error;
-        closeAdminResolveModal();
-        showToast('Ολοκληρώθηκε από Admin');
-      } catch (err) {
-        console.error('Admin resolve error:', err);
+      const ticket = tickets.find(t => t.id === activeAdminResolveTicketId);
+      if (ticket) {
+        ticket.status = 'resolved';
+        ticket.resolvedAt = resolvedAt;
+        ticket.resolvedBy = 'Admin (9999)';
+        ticket.resolvedNote = note;
+        localStorage.setItem('w_tickets', JSON.stringify(tickets));
+        renderBoard();
       }
+
+      if (sbClient) {
+        try {
+          await sbClient.from('tickets').update({
+            status: 'resolved',
+            resolved_at: resolvedAt,
+            resolved_by: 'Admin (9999)',
+            resolved_note: note
+          }).eq('id', activeAdminResolveTicketId);
+        } catch (err) {
+          console.error('Admin resolve error:', err);
+        }
+      }
+      closeAdminResolveModal();
+      showToast('Ολοκληρώθηκε από Admin');
     }
 
     async function deleteTicketPermanent(ticketId) {
       if (confirm('Οριστική διαγραφή καταχώρησης;')) {
-        try {
-          const { error } = await supabase.from('tickets').delete().eq('id', ticketId);
-          if (error) throw error;
-          showToast('Η εγγραφή διαγράφηκε');
-        } catch (err) {
-          console.error('Delete error:', err);
+        tickets = tickets.filter(t => t.id !== ticketId);
+        localStorage.setItem('w_tickets', JSON.stringify(tickets));
+        renderBoard();
+
+        if (sbClient) {
+          try {
+            await sbClient.from('tickets').delete().eq('id', ticketId);
+          } catch (err) {
+            console.error('Delete error:', err);
+          }
         }
+        showToast('Η εγγραφή διαγράφηκε');
       }
     }
 
     /* REALTIME SYNC (MOBILE <-> PC) */
     async function initSupabase() {
+      if (!sbClient) return;
       try {
-        const { data, error } = await supabase.from('tickets').select('*').order('created_at', { ascending: false });
-        if (data && !error) {
+        const { data, error } = await sbClient.from('tickets').select('*').order('created_at', { ascending: false });
+        if (data && !error && data.length) {
           tickets = data.map(mapRowToTicket);
+          localStorage.setItem('w_tickets', JSON.stringify(tickets));
           renderBoard();
         }
 
-        // Live Realtime listener
-        supabase.channel('public:tickets')
+        sbClient.channel('public:tickets')
           .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, payload => {
             if (payload.eventType === 'INSERT') {
               const newT = mapRowToTicket(payload.new);
@@ -1126,11 +1182,12 @@
             } else if (payload.eventType === 'DELETE') {
               tickets = tickets.filter(t => t.id !== payload.old.id);
             }
+            localStorage.setItem('w_tickets', JSON.stringify(tickets));
             renderBoard();
           })
           .subscribe();
       } catch (err) {
-        console.error('Supabase setup error:', err);
+        console.warn('Supabase sync warning:', err);
       }
     }
 
