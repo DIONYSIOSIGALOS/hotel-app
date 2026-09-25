@@ -24,16 +24,16 @@
       --status-done: #10b981;
     }
 
-    /* Light Mode: Καθαρό λευκό φόντο & Navy / Μπλε σκούρες λεπτομέρειες */
+    /* Light Mode: White background & Navy / Dark Blue elements */
     body.light-theme {
-      --bg-main: #f8fafc;
+      --bg-main: #f1f5f9;
       --bg-card: #ffffff;
-      --bg-input: #f1f5f9;
+      --bg-input: #e2e8f0;
       --text-main: #0f172a;
       --text-muted: #475569;
       --border-color: #cbd5e1;
       --accent-green: #16a34a;
-      --accent-blue: #0369a1;
+      --accent-blue: #0284c7;
       --status-open: #dc2626;
       --status-progress: #d97706;
       --status-done: #059669;
@@ -106,7 +106,7 @@
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     }
 
-    /* PIN Box */
+    /* PIN Box - Clean & Professional */
     .pin-box {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
@@ -183,7 +183,7 @@
       border-color: var(--accent-green);
     }
 
-    /* Photo Preview */
+    /* Photo Upload */
     .photo-preview {
       width: 100%;
       max-height: 180px;
@@ -269,7 +269,7 @@
     <div id="viewNew">
       <div class="card">
         
-        <!-- 1. Τύπος Χώρου -->
+        <!-- Τύπος Χώρου -->
         <div class="section-label" data-t="secLocation">1. Επιλογή Χώρου:</div>
         <div class="grid-btn-group" id="locTypeGroup">
           <div class="select-pill active" onclick="setLocType('room', this)">🛏️ <span data-t="room">Δωμάτιο</span></div>
@@ -283,7 +283,7 @@
           <!-- Γεμίζει αυτόματα με JS -->
         </div>
 
-        <!-- 2. Κατηγορία Βλάβης -->
+        <!-- Κατηγορία Βλάβης -->
         <div class="section-label" data-t="secCategory">2. Ειδικότητα / Κατηγορία:</div>
         <div class="grid-btn-group">
           <div class="select-pill active" onclick="setCategory('Υδραυλικά', this)">🔧 Υδραυλικά</div>
@@ -293,13 +293,13 @@
           <div class="select-pill" onclick="setCategory('Ξυλουργικά', this)">🚪 Πόρτες/Έπιπλα</div>
         </div>
 
-        <!-- 3. Προκαθορισμένες Βλάβες (Zero Typing) -->
+        <!-- Προκαθορισμένες Βλάβες (Zero Typing) -->
         <div class="section-label" data-t="secIssue">3. Συχνή Βλάβη (Άμεσο κλικ):</div>
         <div class="issues-grid" id="presetIssues">
-          <!-- Γεμίζει αυτόματα -->
+          <!-- Γεμίζει ανάλογα με την κατηγορία -->
         </div>
 
-        <!-- 4. Φωτογραφία (Προαιρετικό) -->
+        <!-- Φωτογραφία (Προαιρετικό) -->
         <div class="section-label" data-t="secPhoto">4. Φωτογραφία (Προαιρετικά):</div>
         <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="previewPhoto(this)" />
         <button class="icon-btn" style="width:100%; justify-content:center; padding:12px; margin-bottom:12px;" onclick="document.getElementById('photoInput').click()">
@@ -318,7 +318,7 @@
     <!-- VIEW 2: ΤΑΜΠΛΟ ΕΛΕΓΧΟΥ / ENGINEERING DASHBOARD -->
     <div id="viewBoard" class="hidden">
       
-      <!-- PIN BOX (ΜΟΝΟ «ΣΥΝΔΕΣΗ ENGINEERING», ΚΑΘΑΡΟ ΧΩΡΙΣ ΚΩΔΙΚΟΥΣ ΑΠΟ ΚΑΤΩ) -->
+      <!-- PIN BOX (ΜΟΝΟ «ΣΥΝΔΕΣΗ ENGINEERING», ΧΩΡΙΣ ΚΩΔΙΚΟΥΣ ΑΠΟ ΚΑΤΩ) -->
       <div class="pin-box">
         <div class="pin-title" id="pinBoxTitle">ΣΥΝΔΕΣΗ ENGINEERING</div>
         <div class="pin-form" id="pinFormArea">
@@ -351,7 +351,7 @@
           <div id="listProgress"><p class="empty-text" data-t="noIssues">Καμία βλάβη</p></div>
         </div>
 
-        <!-- Ολοκληρωμένες -->
+        <!-- Ολοκληρωμένες (Τελευταίες 24h) -->
         <div class="card">
           <div class="column-header">
             <span style="color:var(--status-done)">🟢 <span data-t="colDone">ΟΛΟΚΛΗΡΩΜΕΝΕΣ</span></span>
@@ -367,10 +367,10 @@
 
   <script>
     /* ========================================================
-       1. ΡΥΘΜΙΣΕΙΣ SUPABASE (ΠΕΡΑΣΜΕΝΑ ΤΑ ΔΙΚΑ ΣΟΥ ΣΤΟΙΧΕΙΑ)
+       1. ΡΥΘΜΙΣΕΙΣ SUPABASE (ΒΑΛΕ ΕΔΩ ΤΑ ΔΙΚΑ ΣΟΥ ΣΤΟΙΧΕΙΑ)
        ======================================================== */
-    const SUPABASE_URL = "https://gmrphnwiuhubbvlhwkuw.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtcnBobndpdWh1YmJ2bGh3a3V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzMzczMDMsImV4cCI6MjEwNTkxMzMwM30.MGBT1-OJkCM7c5H2YxEUsCHjx8nXeUhfnKDfnazdvGI";
+    const SUPABASE_URL = "https://EDW_VAZEIS_TO_URL_SOU.supabase.co";
+    const SUPABASE_KEY = "EDW_VAZEIS_TO_ANON_PUBLIC_KEY_SOU";
     
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -536,6 +536,7 @@
         alert("Σφάλμα καταχώρησης: " + error.message);
       } else {
         alert("✅ Η βλάβη καταχωρήθηκε επιτυχώς!");
+        // Reset photo
         photoBase64 = null;
         document.getElementById("photoPreviewImg").style.display = "none";
         document.getElementById("photoInput").value = "";
@@ -589,6 +590,7 @@
       let htmlOpen = "", htmlProg = "", htmlDone = "";
 
       tickets.forEach(t => {
+        // Αν είναι συνδεδεμένος τεχνικός, φιλτράρουμε (εκτός αν είναι Admin/Office)
         if (currentUser && currentUser.role !== "admin" && currentUser.role !== "office") {
           if (currentUser.role === "electrician" && t.category !== "Ηλεκτρολογικά") return;
           if (currentUser.role === "plumber" && t.category !== "Υδραυλικά") return;
@@ -631,7 +633,7 @@
       else loadTickets();
     }
 
-    // Ακροατής Realtime
+    // Ακροατής Realtime: Όταν μπαίνει νέα βλάβη, ανανεώνεται ακαριαία το PC
     db.channel('realtime:tickets')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, () => {
         loadTickets();
