@@ -3,190 +3,832 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>W Hotel Engineering & Ops</title>
+  <title>W Maintenance Ops</title>
+  <!-- Tailwind CSS CDN για άμεσο, μοντέρνο styling -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body { background-color: #0d0f12; color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    .glass { background: rgba(23, 27, 34, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    /* Custom scrollbars & Touch optimisations */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .tap-highlight-none { -webkit-tap-highlight-color: transparent; }
+    .badge-pulse { animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
   </style>
 </head>
-<body class="min-h-screen pb-12">
+<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col tap-highlight-none pb-12">
 
-  <!-- Header -->
-  <header class="glass sticky top-0 z-50 px-4 py-3 border-b border-neutral-800 flex items-center justify-between">
-    <div class="flex items-center gap-2">
-      <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
-      <h1 class="font-black text-lg tracking-wider bg-gradient-to-r from-white via-neutral-200 to-neutral-400 bg-clip-text text-transparent">W HOTEL OPS</h1>
+  <!-- TOP APP BAR -->
+  <header class="bg-slate-900 text-white sticky top-0 z-50 shadow-md">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <span class="text-xl font-black tracking-wider text-amber-400">W</span>
+        <span class="text-xs uppercase tracking-widest text-slate-300 font-semibold border-l border-slate-700 pl-2" id="uiHeaderSub">Ops & Maintenance</span>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <!-- Language Switcher -->
+        <button id="langToggleBtn" onclick="toggleLanguage()" class="px-2.5 py-1 text-xs font-bold rounded bg-slate-800 border border-slate-700 hover:bg-slate-700 transition">
+          🇬🇧 EN
+        </button>
+        <!-- Bell / Permissions -->
+        <button id="notifBtn" onclick="requestNotificationPermission()" class="p-1.5 rounded-full bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Ενεργοποίηση Ειδοποιήσεων">
+          🔔
+        </button>
+        <!-- Mode indicator / logout -->
+        <div id="roleTag" class="hidden text-xs bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded font-mono font-bold"></div>
+        <button id="logoutBtn" onclick="logoutRole()" class="hidden text-xs text-red-400 hover:text-red-300 ml-1">✕</button>
+      </div>
     </div>
-    <span id="role-badge" class="text-xs px-2.5 py-1 rounded-full bg-neutral-800 text-neutral-300 font-medium">Live System</span>
+
+    <!-- TABS -->
+    <nav class="max-w-6xl mx-auto px-2 flex border-t border-slate-800 text-xs font-bold">
+      <button onclick="switchTab('report')" id="tabReport" class="flex-1 py-2.5 text-center border-b-2 border-amber-400 text-amber-400 flex items-center justify-center gap-1">
+        <span>📝</span> <span data-i18n="tab_report">Δήλωση Βλάβης</span>
+      </button>
+      <button onclick="switchTab('board')" id="tabBoard" class="flex-1 py-2.5 text-center border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center justify-center gap-1">
+        <span>📋</span> <span data-i18n="tab_board">Ταμπλό / Τεχνικοί</span>
+      </button>
+    </nav>
   </header>
 
-  <!-- Role Navigation Tabs -->
-  <div class="max-w-4xl mx-auto px-4 mt-4">
-    <div class="grid grid-cols-3 gap-1 bg-neutral-900 p-1 rounded-xl border border-neutral-800 text-xs sm:text-sm font-semibold text-center">
-      <button onclick="switchTab('report')" id="tab-report" class="py-2.5 rounded-lg bg-neutral-800 text-white shadow">🛎️ Style / WW</button>
-      <button onclick="switchTab('tech')" id="tab-tech" class="py-2.5 rounded-lg text-neutral-400 hover:text-white">🛠️ Τεχνικοί</button>
-      <button onclick="switchTab('desk')" id="tab-desk" class="py-2.5 rounded-lg text-neutral-400 hover:text-white">🖥️ Γραφείο</button>
-    </div>
-  </div>
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-6xl mx-auto w-full px-3 py-4 flex-grow">
 
-  <main class="max-w-4xl mx-auto px-4 mt-6">
+    <!-- ========================================== -->
+    <!-- TAB 1: ZERO-TYPING FORM (STYLE / RECEPTION) -->
+    <!-- ========================================== -->
+    <section id="reportSection" class="space-y-4">
+      
+      <!-- STEP 1: ZONE PICKER -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
+        <label class="block text-xs font-black uppercase text-slate-500 tracking-wider mb-2" data-i18n="lbl_step1">
+          1. Επιλέξτε Πτέρυγα / Τοποθεσία
+        </label>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="zoneGrid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
 
-    <!-- 1. TAB: STYLE / WHATEVER WHENEVER (REPORT ISSUE) -->
-    <section id="view-report" class="space-y-6">
-      <div class="glass p-5 rounded-2xl">
-        <h2 class="text-base font-bold mb-4 flex items-center gap-2 text-white">
-          <span>➕</span> Δήλωση Νέας Βλάβης
-        </h2>
-        <form id="ticket-form" onsubmit="submitTicket(event)" class="space-y-4">
-          <div>
-            <label class="block text-xs font-semibold text-neutral-400 mb-1">ΔΩΜΑΤΙΟ / ΧΩΡΟΣ</label>
-            <input type="text" id="form-room" required placeholder="π.χ. 104, Villa 12, Spa, Reception" 
-              class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3.5 py-2.5 text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-500">
+      <!-- STEP 2: FLOOR & ROOM PICKER (Dynamic) -->
+      <div id="roomPickerCard" class="hidden bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
+        <div class="flex items-center justify-between mb-2">
+          <label class="text-xs font-black uppercase text-slate-500 tracking-wider" id="roomPickerTitle" data-i18n="lbl_step2">
+            2. Επιλέξτε Δωμάτιο
+          </label>
+          <span id="selectedZoneBadge" class="text-xs font-bold px-2 py-0.5 bg-slate-100 text-slate-600 rounded"></span>
+        </div>
+
+        <!-- Floor Buttons (if applicable) -->
+        <div id="floorRow" class="flex gap-2 mb-3 hidden"></div>
+
+        <!-- Room Buttons Grid -->
+        <div id="roomGrid" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 max-h-56 overflow-y-auto p-1 bg-slate-50 rounded-xl border border-slate-100">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Sub-Area for Villas & Suites (Master, Twin, Pool, etc.) -->
+        <div id="subAreaBox" class="mt-3 pt-3 border-t border-slate-200 hidden">
+          <label class="block text-xs font-black uppercase text-slate-500 tracking-wider mb-1.5" data-i18n="lbl_subarea">
+            Χώρος Δωματίου / Σουίτας
+          </label>
+          <div id="subAreaGrid" class="flex flex-wrap gap-1.5">
+            <!-- Populated by JS -->
           </div>
+        </div>
+      </div>
 
-          <div>
-            <label class="block text-xs font-semibold text-neutral-400 mb-1">ΕΙΔΙΚΟΤΗΤΑ / ΚΑΤΗΓΟΡΙΑ</label>
-            <select id="form-category" required class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-neutral-500">
-              <option value="Ηλεκτρολογικά">⚡ Ηλεκτρολογικά</option>
-              <option value="Υδραυλικά">💧 Υδραυλικά</option>
-              <option value="Κλιματισμός / A/C">❄️ Κλιματισμός / A/C</option>
-              <option value="Πισίνες">🏊‍♂️ Πισίνες</option>
-              <option value="Εξοπλισμός Κουζίνας">🍳 Εξοπλισμός Κουζίνας</option>
-              <option value="Ξυλουργικά / Κλειδαριές">🚪 Ξυλουργικά / Κλειδαριές</option>
-              <option value="Χρωματισμοί / Painter">🎨 Χρωματισμοί / Painter</option>
-              <option value="A/V & Συστήματα">📺 A/V & Συστήματα</option>
-            </select>
-          </div>
+      <!-- STEP 3: PRESET ISSUES (ONE-TOUCH TILES) -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
+        <div class="flex items-center justify-between mb-2">
+          <label class="text-xs font-black uppercase text-slate-500 tracking-wider" data-i18n="lbl_step3">
+            3. Επιλέξτε Βλάβη (Έτοιμα Πλήκτρα)
+          </label>
+          <span id="selectedLocationBadge" class="text-xs font-bold text-amber-600"></span>
+        </div>
 
-          <div>
-            <label class="block text-xs font-semibold text-neutral-400 mb-1">ΠΕΡΙΓΡΑΦΗ ΠΡΟΒΛΗΜΑΤΟΣ</label>
-            <textarea id="form-desc" rows="2" placeholder="π.χ. Δεν ανάβει το φωτιστικό δαπέδου" 
-              class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3.5 py-2.5 text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-500"></textarea>
-          </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="presetIssuesGrid">
+          <!-- Populated by JS -->
+        </div>
 
-          <div>
-            <label class="block text-xs font-semibold text-neutral-400 mb-1">ΠΡΟΤΕΡΑΙΟΤΗΤΑ</label>
-            <div class="grid grid-cols-2 gap-2">
-              <button type="button" onclick="setPriority('Normal')" id="prio-normal" class="py-2 rounded-xl text-xs font-bold border border-neutral-700 bg-neutral-800 text-white">Κανονικό</button>
-              <button type="button" onclick="setPriority('Urgent / VIP')" id="prio-urgent" class="py-2 rounded-xl text-xs font-bold border border-neutral-800 bg-neutral-950 text-neutral-400">🚨 Επείγον / VIP</button>
-            </div>
-          </div>
-
-          <button type="submit" id="submit-btn" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 font-bold text-black tracking-wide shadow-lg active:scale-95 transition">
-            ΑΠΟΣΤΟΛΗ ΣΤΟ ENGINEERING
+        <!-- Special Cinema / AV Preset for Villa 3 & 5 -->
+        <div id="specialVillaAvBox" class="mt-2 hidden">
+          <button type="button" onclick="selectPreset('av_villa', '🎛️ Cinema / Projector / AV Systems', 'av')" class="w-full p-2.5 bg-indigo-50 border border-indigo-200 text-indigo-900 rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-indigo-100 transition">
+            <span>📽️</span> <span>Cinema / Projector / Tablet (Villa Special)</span>
           </button>
-        </form>
-      </div>
-
-      <!-- Live Follow up for Reporter -->
-      <div>
-        <h3 class="text-xs font-bold tracking-wider text-neutral-400 mb-3 uppercase">Τελευταίες Βλάβες & Εξέλιξη</h3>
-        <div id="reporter-tickets-list" class="space-y-2.5"></div>
-      </div>
-    </section>
-
-    <!-- 2. TAB: ENGINEERS (CLAIM & RESOLVE) -->
-    <section id="view-tech" class="hidden space-y-5">
-      <!-- Device / Tech Identity -->
-      <div class="glass p-3.5 rounded-xl flex items-center justify-between">
-        <div>
-          <span class="text-[10px] text-neutral-400 uppercase font-bold block">Τρέχον Κινητό / Τεχνικός:</span>
-          <select id="current-tech-device" class="bg-transparent font-bold text-white text-sm focus:outline-none cursor-pointer">
-            <option value="Κινητό Βάρδιας 1" class="bg-neutral-900">📱 Κινητό Βάρδιας 1</option>
-            <option value="Κινητό Βάρδιας 2" class="bg-neutral-900">📱 Κινητό Βάρδιας 2</option>
-            <option value="Ηλεκτρολόγος" class="bg-neutral-900">⚡ Ηλεκτρολόγος</option>
-            <option value="Υδραυλικός" class="bg-neutral-900">💧 Υδραυλικός</option>
-            <option value="Ψυκτικός (A/C)" class="bg-neutral-900">❄️ Ψυκτικός (A/C)</option>
-            <option value="Πισινάς" class="bg-neutral-900">🏊‍♂️ Πισινάς</option>
-            <option value="Κουζινάς" class="bg-neutral-900">🍳 Κουζινάς</option>
-            <option value="Ξυλουργός" class="bg-neutral-900">🚪 Ξυλουργός</option>
-            <option value="Painter" class="bg-neutral-900">🎨 Painter</option>
-            <option value="A/V Συστήματα" class="bg-neutral-900">📺 A/V Συστήματα</option>
-          </select>
         </div>
-        <span class="text-xs text-neutral-400 bg-neutral-900 px-2 py-1 rounded-md border border-neutral-800">Auto Sync 🟢</span>
-      </div>
 
-      <!-- Filter Categories -->
-      <div class="flex gap-2 overflow-x-auto pb-1 text-xs">
-        <button onclick="setFilter('all')" class="px-3 py-1.5 rounded-full bg-white text-black font-semibold shrink-0">Όλες</button>
-        <button onclick="setFilter('Open')" class="px-3 py-1.5 rounded-full bg-neutral-800 text-neutral-300 font-semibold shrink-0">🔴 Ανοιχτές</button>
-        <button onclick="setFilter('In Progress')" class="px-3 py-1.5 rounded-full bg-neutral-800 text-neutral-300 font-semibold shrink-0">🟡 Σε Εξέλιξη</button>
-        <button onclick="setFilter('Done')" class="px-3 py-1.5 rounded-full bg-neutral-800 text-neutral-300 font-semibold shrink-0">🟢 Ολοκληρωμένες</button>
-      </div>
-
-      <!-- Tickets Feed -->
-      <div id="tech-tickets-list" class="space-y-3"></div>
-    </section>
-
-    <!-- 3. TAB: OFFICE / DESK DASHBOARD -->
-    <section id="view-desk" class="hidden space-y-5">
-      <div class="flex items-center justify-between">
-        <div>
-          <h2 class="text-lg font-bold text-white">Live Ταμπλό Γραφείου</h2>
-          <p class="text-xs text-neutral-400">Επισκόπηση σε πραγματικό χρόνο για γραμματεία & διεύθυνση</p>
+        <!-- Security Warning Prompt (Visible when Safe or Door Lock is picked) -->
+        <div id="securityBanner" class="hidden mt-3 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2.5">
+          <span class="text-xl">🛡️</span>
+          <div>
+            <div class="text-xs font-black text-red-800 uppercase tracking-wide" data-i18n="sec_title">ΠΡΩΤΟΚΟΛΛΟ ΑΣΦΑΛΕΙΑΣ / SECURITY SOP</div>
+            <div class="text-xs text-red-700 mt-0.5" data-i18n="sec_desc">Για άνοιγμα χρηματοκιβωτίου ή πόρτας απαιτείται υποχρεωτικά η φυσική παρουσία μέλους του Security Department.</div>
+          </div>
         </div>
-        <button onclick="testChime()" class="text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-3 py-1.5 rounded-lg border border-neutral-700">
-          🔔 Test Ήχου
+
+        <!-- Optional Custom Note -->
+        <div class="mt-3">
+          <input type="text" id="customNoteInput" placeholder="Επιπλέον παρατήρηση αν χρειάζεται (προαιρετικό)..." class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:border-amber-400">
+        </div>
+      </div>
+
+      <!-- STEP 4: PHOTO & SUBMIT -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col sm:flex-row items-center gap-3">
+        <!-- Direct Camera Trigger -->
+        <label class="w-full sm:w-auto flex-1 cursor-pointer flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 border-dashed border-slate-300 hover:border-slate-400 bg-slate-50 text-slate-600 text-xs font-bold transition">
+          <span class="text-lg">📷</span>
+          <span id="photoStatusLabel" data-i18n="btn_take_photo">Λήψη Φωτογραφίας</span>
+          <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="handlePhotoCapture(event)">
+        </label>
+        
+        <!-- Thumbnail Preview -->
+        <div id="photoPreviewContainer" class="hidden relative">
+          <img id="photoThumb" class="w-12 h-12 rounded-lg object-cover border border-slate-300" src="" alt="preview">
+          <button onclick="removePhoto()" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center font-bold">✕</button>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="button" onclick="submitTicket()" id="submitBtn" class="w-full sm:w-auto px-8 py-3.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-sm shadow-md transition flex items-center justify-center gap-2">
+          <span>🚀</span>
+          <span data-i18n="btn_submit">Αποστολή Βλάβης</span>
         </button>
       </div>
 
-      <!-- Search Bar -->
-      <input type="text" id="desk-search" oninput="renderAll()" placeholder="🔍 Αναζήτηση δωματίου ή ειδικότητας (π.χ. 104, A/C)..." 
-        class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-600">
+    </section>
 
-      <!-- Kanban 3 Columns -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <!-- Col 1: Open -->
-        <div class="glass p-3 rounded-2xl flex flex-col min-h-[350px]">
-          <div class="flex items-center justify-between pb-2 mb-2 border-b border-neutral-800">
-            <span class="text-xs font-bold text-red-400 flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-red-500"></span> ΑΝΟΙΧΤΕΣ
-            </span>
-            <span id="count-open" class="text-xs font-bold bg-neutral-800 px-2 py-0.5 rounded text-neutral-300">0</span>
-          </div>
-          <div id="desk-open-list" class="space-y-2 flex-1"></div>
+    <!-- ========================================== -->
+    <!-- TAB 2: LIVE BOARD / TECHNICIANS / OFFICE   -->
+    <!-- ========================================== -->
+    <section id="boardSection" class="hidden space-y-4">
+      
+      <!-- PIN Login Bar (if not logged in) -->
+      <div id="pinLoginCard" class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
+        <div class="text-xs font-black uppercase text-slate-500 tracking-wider mb-2" data-i18n="pin_box_title">
+          Σύνδεση Τεχνικού / Γραφείου / Admin
         </div>
-
-        <!-- Col 2: In Progress -->
-        <div class="glass p-3 rounded-2xl flex flex-col min-h-[350px]">
-          <div class="flex items-center justify-between pb-2 mb-2 border-b border-neutral-800">
-            <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-amber-500"></span> ΣΕ ΕΞΕΛΙΞΗ
-            </span>
-            <span id="count-progress" class="text-xs font-bold bg-neutral-800 px-2 py-0.5 rounded text-neutral-300">0</span>
-          </div>
-          <div id="desk-progress-list" class="space-y-2 flex-1"></div>
+        <div class="flex gap-2 max-w-sm">
+          <input type="password" pattern="[0-9]*" inputmode="numeric" id="pinInput" placeholder="Εισάγετε PIN..." class="flex-1 px-3 py-2 text-sm rounded-xl border border-slate-300 font-mono tracking-widest text-center focus:outline-none focus:border-amber-500">
+          <button onclick="loginWithPin()" class="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition" data-i18n="btn_login">
+            Είσοδος
+          </button>
         </div>
-
-        <!-- Col 3: Done -->
-        <div class="glass p-3 rounded-2xl flex flex-col min-h-[350px]">
-          <div class="flex items-center justify-between pb-2 mb-2 border-b border-neutral-800">
-            <span class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-emerald-500"></span> ΟΛΟΚΛΗΡΩΘΗΚΑΝ
-            </span>
-            <span id="count-done" class="text-xs font-bold bg-neutral-800 px-2 py-0.5 rounded text-neutral-300">0</span>
-          </div>
-          <div id="desk-done-list" class="space-y-2 flex-1"></div>
-        </div>
+        <p class="text-[11px] text-slate-400 mt-1.5" data-i18n="pin_hint">
+          (Ηλεκτρολόγος 1: 1001, Υδραυλικός 1: 2001, AV: 7000, PC Γραφείου: 8888, Admin: 9999)
+        </p>
       </div>
+
+      <!-- ACTIVE ROLE SUMMARY BANNER (Shown when logged in) -->
+      <div id="activeRoleBanner" class="hidden bg-slate-900 text-white p-3 rounded-2xl flex items-center justify-between shadow-sm">
+        <div>
+          <span class="text-xs text-slate-400" data-i18n="logged_as">Συνδεδεμένος ως:</span>
+          <span id="activeRoleName" class="text-sm font-bold text-amber-400 ml-1"></span>
+          <span id="activeShiftTimeBadge" class="ml-2 text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-mono"></span>
+        </div>
+        <button onclick="playChime()" class="text-xs px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg flex items-center gap-1 border border-slate-700">
+          <span>🔊</span> <span data-i18n="test_sound">Δοκιμή Ήχου</span>
+        </button>
+      </div>
+
+      <!-- 3 COLUMNS BOARD (OPEN / IN-PROGRESS / RESOLVED 24H) -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        
+        <!-- COLUMN 1: OPEN -->
+        <div class="bg-white rounded-2xl p-3 border border-red-100 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between border-b border-red-50 pb-2 mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-red-500 badge-pulse"></span>
+              <span class="font-black text-xs uppercase text-slate-700 tracking-wider" data-i18n="col_open">Ανοιχτές</span>
+            </div>
+            <span id="countOpen" class="text-xs font-black bg-red-100 text-red-800 px-2 py-0.5 rounded-full">0</span>
+          </div>
+          <div id="listOpen" class="space-y-2 flex-grow overflow-y-auto max-h-[650px] pr-1">
+            <!-- Open cards -->
+          </div>
+        </div>
+
+        <!-- COLUMN 2: IN PROGRESS -->
+        <div class="bg-white rounded-2xl p-3 border border-amber-100 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between border-b border-amber-50 pb-2 mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+              <span class="font-black text-xs uppercase text-slate-700 tracking-wider" data-i18n="col_prog">Σε Εξέλιξη</span>
+            </div>
+            <span id="countProg" class="text-xs font-black bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">0</span>
+          </div>
+          <div id="listProg" class="space-y-2 flex-grow overflow-y-auto max-h-[650px] pr-1">
+            <!-- In progress cards -->
+          </div>
+        </div>
+
+        <!-- COLUMN 3: RESOLVED (24H FILTER) -->
+        <div class="bg-white rounded-2xl p-3 border border-emerald-100 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between border-b border-emerald-50 pb-2 mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              <span class="font-black text-xs uppercase text-slate-700 tracking-wider" data-i18n="col_done">Ολοκληρωμένες (24ωρο)</span>
+            </div>
+            <span id="countDone" class="text-xs font-black bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">0</span>
+          </div>
+          <div id="listDone" class="space-y-2 flex-grow overflow-y-auto max-h-[650px] pr-1">
+            <!-- Done cards -->
+          </div>
+        </div>
+
+      </div>
+
     </section>
 
   </main>
 
+  <!-- OFFICE MODAL: 1-CLICK ROLE PICKER (NO PIN REQUIRED IN OFFICE) -->
+  <div id="officeClaimModal" class="hidden fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl p-4 max-w-sm w-full shadow-2xl border border-slate-200">
+      <h3 class="text-sm font-black text-slate-800 mb-1" data-i18n="modal_claim_title">Ανάληψη Βλάβης (Γραφείο)</h3>
+      <p class="text-xs text-slate-500 mb-3" data-i18n="modal_claim_sub">Επιλέξτε την ειδικότητά σας με 1 κλικ:</p>
+      
+      <div class="grid grid-cols-1 gap-1.5 max-h-72 overflow-y-auto pr-1" id="officeRolesPickerGrid">
+        <!-- Roles populated dynamically -->
+      </div>
+
+      <button onclick="closeOfficeClaimModal()" class="w-full mt-3 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 bg-slate-100 rounded-xl" data-i18n="btn_cancel">
+        Ακύρωση
+      </button>
+    </div>
+  </div>
+
+  <!-- ADMIN RESOLVE MODAL (Prompt for Note) -->
+  <div id="adminResolveModal" class="hidden fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl p-4 max-w-sm w-full shadow-2xl border border-slate-200">
+      <h3 class="text-sm font-black text-slate-800 mb-1" data-i18n="modal_admin_close_title">Ολοκλήρωση από Admin</h3>
+      <p class="text-xs text-slate-500 mb-2" data-i18n="modal_admin_close_sub">Σημειώστε τον λόγο ολοκλήρωσης:</p>
+      <input type="text" id="adminResolveNote" placeholder="π.χ. Ενημέρωση από guest, ελέγχθηκε..." class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:border-amber-400 mb-3">
+      
+      <div class="flex gap-2">
+        <button onclick="confirmAdminResolve()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition" data-i18n="btn_confirm_done">
+          Ολοκλήρωση
+        </button>
+        <button onclick="closeAdminResolveModal()" class="px-4 py-2 bg-slate-100 text-slate-600 font-bold text-xs rounded-xl" data-i18n="btn_cancel">
+          Ακύρωση
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-all opacity-0 pointer-events-none z-50"></div>
+
+  <!-- JAVASCRIPT LOGIC -->
   <script>
-    // 1. SUPABASE CLIENT
-    const SUPABASE_URL = 'https://gmrphnwiuhubbvlhwkuw.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_kwWI5dK0s6MdN0kTd6sxFA__3Iq0GwU';
-    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    /* ==========================================================
+       1. DATA STRUCTURES (HOTEL ROOMS & HIERARCHY)
+       ========================================================== */
+    const HOTEL_ZONES = [
+      { id: 'north', nameEl: '🏢 Βόρεια Πτέρυγα', nameEn: '🏢 North Wing', type: 'floors' },
+      { id: 'south', nameEl: '🏢 Νότια Πτέρυγα', nameEn: '🏢 South Wing', type: 'floors' },
+      { id: 'villas', nameEl: '🏡 Βίλες', nameEn: '🏡 Villas', type: 'villas' },
+      { id: 'suites400', nameEl: '🏛️ 400 Suites', nameEn: '🏛️ 400 Suites', type: 'list' },
+      { id: 'suites600', nameEl: '🏛️ 600 Suites Αγορά', nameEn: '🏛️ 600 Suites Agora', type: 'list' },
+      { id: 'rooms500', nameEl: '🏢 500 Αγορά Rooms', nameEn: '🏢 500 Agora Rooms', type: 'list' },
+      { id: 'diving', nameEl: '🤿 Diving Rooms', nameEn: '🤿 Diving Rooms', type: 'list' },
+      { id: 'common', nameEl: '📍 Κοινόχρηστοι Χώροι', nameEn: '📍 Common Areas', type: 'common' }
+    ];
 
-    let tickets = [];
-    let activePriority = 'Normal';
-    let activeFilter = 'all';
+    // Room lists according to actual resort room sheet
+    const ROOM_DATA = {
+      north: {
+        floor1: Array.from({length: 32}, (_, i) => 101 + i), // 101 - 132
+        floor2: Array.from({length: 32}, (_, i) => 201 + i), // 201 - 232
+        floor3: Array.from({length: 26}, (_, i) => 301 + i)  // 301 - 326
+      },
+      south: {
+        floor1: Array.from({length: 24}, (_, i) => 151 + i), // 151 - 174
+        floor2: Array.from({length: 24}, (_, i) => 251 + i), // 251 - 274
+        floor3: Array.from({length: 20}, (_, i) => 351 + i)  // 351 - 370
+      },
+      villas: {
+        north: [1, 3, 5, 7, 9, 11, 6, 8, 10, 12],
+        south: [21, 23, 25, 27, 29, 31, 33, 35, 37, 39, 22, 24, 26, 28, 30, 32]
+      },
+      suites400: [411, 412, 413, 414, 415, 416, 417, 418, 421, 422, 423, 424, 425, 426, 427, 428],
+      suites600: Array.from({length: 20}, (_, i) => 610 + i), // 610 - 629
+      rooms500: [...Array.from({length: 38}, (_, i) => 501 + i), 540], // 501 - 538 + 540
+      diving: [241, 242, 243, 244, 245, 246],
+      common: [
+        'Welcome Desk / Reception', 'W Lounge', 'Platea', 'Parelia', 'Wet Deck', 'Away Spa', 'FIT Gym'
+      ]
+    };
 
-    // 2. AUDIO CHIME (For new tickets on PC)
+    // Sub-areas
+    const SUB_AREAS = {
+      villas: [
+        { id: 'master_bed', el: '🛏️ Master Bedroom', en: '🛏️ Master Bedroom' },
+        { id: 'master_bath', el: '🚿 Master Bathroom', en: '🚿 Master Bathroom' },
+        { id: 'twin_bed', el: '🛏️ Twin Bedroom', en: '🛏️ Twin Bedroom' },
+        { id: 'twin_bath', el: '🚿 Twin Bathroom', en: '🚿 Twin Bathroom' },
+        { id: 'sofa_bed', el: '🛋️ Sofa Bed Room', en: '🛋️ Sofa Bed Room' },
+        { id: 'sofa_bath', el: '🚿 Sofa Bathroom', en: '🚿 Sofa Bathroom' },
+        { id: 'living', el: '🛋️ Σαλόνι', en: '🛋️ Living Room' },
+        { id: 'pool', el: '🏊‍♂️ Πισίνα / Αυλή', en: '🏊‍♂️ Pool / Patio' }
+      ],
+      suites: [
+        { id: 'master_bed', el: '🛏️ Master Bedroom', en: '🛏️ Master Bedroom' },
+        { id: 'master_bath', el: '🚿 Master Bathroom', en: '🚿 Master Bathroom' },
+        { id: 'twin_bed', el: '🛏️ Twin Bedroom', en: '🛏️ Twin Bedroom' },
+        { id: 'twin_bath', el: '🚿 Twin Bathroom', en: '🚿 Twin Bathroom' },
+        { id: 'living', el: '🛋️ Σαλόνι', en: '🛋️ Living Room' }
+      ],
+      regular: [
+        { id: 'bed', el: '🛏️ Υπνοδωμάτιο', en: '🛏️ Bedroom' },
+        { id: 'bath', el: '🚿 Μπάνιο', en: '🚿 Bathroom' },
+        { id: 'balcony', el: '🌅 Μπαλκόνι / Βεράντα', en: '🌅 Balcony / Terrace' }
+      ]
+    };
+
+    // Preset Issues with Routing rules & Security flags
+    const PRESET_ISSUES = [
+      { id: 'leak', icon: '💧', el: 'Νερό στο πάτωμα / Διαρροή', en: 'Water leak / Flooding', trade: 'plumbing', color: 'border-blue-200 bg-blue-50/50 text-blue-950' },
+      { id: 'hotwater', icon: '🔥', el: 'Δεν έχει ζεστό νερό', en: 'No hot water', trade: 'plumbing', color: 'border-orange-200 bg-orange-50/50 text-orange-950' },
+      { id: 'drain', icon: '🚿', el: 'Βουλωμένο ντους / Σιφόνι', en: 'Clogged drain / shower', trade: 'plumbing', color: 'border-cyan-200 bg-cyan-50/50 text-cyan-950' },
+      { id: 'ac', icon: '❄️', el: 'Ζέστη / Πρόβλημα A/C', en: 'AC not cooling / Issue', trade: 'ac', color: 'border-sky-200 bg-sky-50/50 text-sky-950' },
+      { id: 'lights', icon: '💡', el: 'Φώτα / Έπεσε το ρεύμα', en: 'No lights / Power trip', trade: 'electrical', color: 'border-amber-200 bg-amber-50/50 text-amber-950' },
+      { id: 'safe', icon: '🔐', el: 'Χρηματοκιβώτιο (Safe Box)', en: 'Safe Box Locked / Issue', trade: 'electrical', security: true, color: 'border-red-200 bg-red-50/50 text-red-950' },
+      { id: 'lock', icon: '💳', el: 'Πόρτα / Κλειδαριά δεν ανοίγει', en: 'Door RFID lock issue', trade: 'carpentry', security: true, color: 'border-purple-200 bg-purple-50/50 text-purple-950' },
+      { id: 'tv', icon: '📺', el: 'TV / Chromecast / Ήχος', en: 'TV / Chromecast / Audio', trade: 'av_dual', color: 'border-indigo-200 bg-indigo-50/50 text-indigo-950' },
+      { id: 'curtains', icon: '🪟', el: 'Κουρτίνες / Blackout κόλλησαν', en: 'Curtains / Blackout stuck', trade: 'carpentry', color: 'border-stone-200 bg-stone-50/50 text-stone-950' },
+      { id: 'unknown', icon: '❓', el: 'Άλλο / Δεν γνωρίζω', en: 'Other / Not sure', trade: 'general', color: 'border-slate-200 bg-slate-50/50 text-slate-800' }
+    ];
+
+    // Staff Roles and PINs
+    const ROLES = {
+      '1001': { id: 'elec1', nameEl: '⚡ Ηλεκτρολόγος 1 (Shift 24/7)', nameEn: '⚡ Electrician 1 (Shift 24/7)', trade: 'electrical' },
+      '1002': { id: 'elec_team', nameEl: '⚡ Ηλεκτρολόγοι (Team)', nameEn: '⚡ Electrical Team', trade: 'electrical' },
+      '2001': { id: 'plumb1', nameEl: '💧 Υδραυλικός 1 (Shift)', nameEn: '💧 Plumber 1 (Shift)', trade: 'plumbing' },
+      '2002': { id: 'plumb_team', nameEl: '💧 Υδραυλικοί (Team)', nameEn: '💧 Plumbing Team', trade: 'plumbing' },
+      '3000': { id: 'ac', nameEl: '❄️ Κλιματισμός / A/C', nameEn: '❄️ HVAC / AC', trade: 'ac' },
+      '4000': { id: 'civil', nameEl: '🏗️ Civil Leader Team', nameEn: '🏗️ Civil Works Team', trade: 'civil' },
+      '5000': { id: 'pool', nameEl: '🏊‍♂️ Pool Leader Team', nameEn: '🏊‍♂️ Pool Team', trade: 'pool' },
+      '6000': { id: 'carpenter', nameEl: '🚪 Carpentry / Woodworks', nameEn: '🚪 Carpentry', trade: 'carpentry' },
+      '7000': { id: 'av', nameEl: '🎛️ A/V & Systems', nameEn: '🎛️ A/V & Systems', trade: 'av' },
+      '8888': { id: 'office', nameEl: '🖥️ PC Γραφείου (Master)', nameEn: '🖥️ Maintenance Office (Master)', isOffice: true },
+      '9999': { id: 'admin', nameEl: '👑 Management / Admin', nameEn: '👑 Management / Admin', isAdmin: true }
+    };
+
+    /* ==========================================================
+       2. BILINGUAL DICTIONARY (EL / EN)
+       ========================================================== */
+    const I18N = {
+      el: {
+        tab_report: 'Δήλωση Βλάβης',
+        tab_board: 'Ταμπλό / Τεχνικοί',
+        lbl_step1: '1. Επιλέξτε Πτέρυγα / Τοποθεσία',
+        lbl_step2: '2. Επιλέξτε Δωμάτιο',
+        lbl_subarea: 'Χώρος Δωματίου / Σουίτας',
+        lbl_step3: '3. Επιλέξτε Βλάβη (Έτοιμα Πλήκτρα)',
+        sec_title: 'ΠΡΩΤΟΚΟΛΛΟ ΑΣΦΑΛΕΙΑΣ / SECURITY SOP',
+        sec_desc: 'Για άνοιγμα χρηματοκιβωτίου ή πόρτας απαιτείται υποχρεωτικά η φυσική παρουσία μέλους του Security Department.',
+        btn_take_photo: 'Λήψη Φωτογραφίας',
+        btn_submit: 'Αποστολή Βλάβης',
+        pin_box_title: 'Σύνδεση Τεχνικού / Γραφείου / Admin',
+        btn_login: 'Είσοδος',
+        pin_hint: '(Ηλεκτρολόγος 1: 1001, Υδραυλικός 1: 2001, AV: 7000, PC Γραφείου: 8888, Admin: 9999)',
+        logged_as: 'Συνδεδεμένος ως:',
+        test_sound: 'Δοκιμή Ήχου',
+        col_open: 'Ανοιχτές',
+        col_prog: 'Σε Εξέλιξη',
+        col_done: 'Ολοκληρωμένες (24ωρο)',
+        modal_claim_title: 'Ανάληψη Βλάβης (Γραφείο)',
+        modal_claim_sub: 'Επιλέξτε την ειδικότητά σας με 1 κλικ:',
+        modal_admin_close_title: 'Ολοκλήρωση από Admin',
+        modal_admin_close_sub: 'Σημειώστε τον λόγο ολοκλήρωσης:',
+        btn_confirm_done: 'Ολοκλήρωση',
+        btn_cancel: 'Ακύρωση',
+        toast_submitted: 'Η βλάβη καταχωρήθηκε επιτυχώς!',
+        toast_pick_room: 'Παρακαλώ επιλέξτε δωμάτιο πρώτα!',
+        toast_pick_issue: 'Παρακαλώ επιλέξτε είδος βλάβης!'
+      },
+      en: {
+        tab_report: 'Report Damage',
+        tab_board: 'Board / Technicians',
+        lbl_step1: '1. Select Wing / Location',
+        lbl_step2: '2. Select Room',
+        lbl_subarea: 'Room / Suite Area',
+        lbl_step3: '3. Select Issue (Quick Presets)',
+        sec_title: 'SECURITY PROTOCOL / SOP',
+        sec_desc: 'Opening a safe box or guestroom door strictly requires physical presence of a Security Officer.',
+        btn_take_photo: 'Take Photo',
+        btn_submit: 'Submit Damage',
+        pin_box_title: 'Technician / Office / Admin Login',
+        btn_login: 'Login',
+        pin_hint: '(Electrician 1: 1001, Plumber 1: 2001, AV: 7000, Office: 8888, Admin: 9999)',
+        logged_as: 'Logged in as:',
+        test_sound: 'Test Sound',
+        col_open: 'Open',
+        col_prog: 'In Progress',
+        col_done: 'Completed (24h)',
+        modal_claim_title: 'Assign Task (Office)',
+        modal_claim_sub: 'Click your trade below with 1 tap:',
+        modal_admin_close_title: 'Resolve as Admin',
+        modal_admin_close_sub: 'Enter resolution notes:',
+        btn_confirm_done: 'Resolve',
+        btn_cancel: 'Cancel',
+        toast_submitted: 'Issue reported successfully!',
+        toast_pick_room: 'Please select a room first!',
+        toast_pick_issue: 'Please select an issue type!'
+      }
+    };
+
+    /* ==========================================================
+       3. STATE MANAGEMENT
+       ========================================================== */
+    let currentLang = localStorage.getItem('w_lang') || 'el';
+    let currentRolePin = localStorage.getItem('w_pin') || null;
+    let selectedZone = null;
+    let selectedRoom = null;
+    let selectedSubArea = null;
+    let selectedPreset = null;
+    let capturedPhotoBase64 = null;
+    let activeClaimTicketId = null;
+    let activeAdminResolveTicketId = null;
+
+    // In-memory / local storage tickets for instant testing
+    let tickets = JSON.parse(localStorage.getItem('w_tickets') || '[]');
+
+    /* ==========================================================
+       4. INITIALIZATION
+       ========================================================== */
+    document.addEventListener('DOMContentLoaded', () => {
+      applyLanguage(currentLang);
+      renderZoneGrid();
+      renderPresetIssues();
+      renderOfficeRolesGrid();
+      checkSavedLogin();
+      renderBoard();
+      setInterval(renderBoard, 60000); // 1 minute auto refresh for times
+    });
+
+    function toggleLanguage() {
+      currentLang = currentLang === 'el' ? 'en' : 'el';
+      localStorage.setItem('w_lang', currentLang);
+      applyLanguage(currentLang);
+      renderZoneGrid();
+      renderPresetIssues();
+      renderOfficeRolesGrid();
+      renderBoard();
+    }
+
+    function applyLanguage(lang) {
+      document.getElementById('langToggleBtn').textContent = lang === 'el' ? '🇬🇧 EN' : '🇬🇷 ΕΛ';
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (I18N[lang][key]) el.textContent = I18N[lang][key];
+      });
+      document.getElementById('customNoteInput').placeholder = lang === 'el' 
+        ? 'Επιπλέον παρατήρηση αν χρειάζεται (προαιρετικό)...' 
+        : 'Additional notes if needed (optional)...';
+    }
+
+    /* ==========================================================
+       5. FORM SELECTION LOGIC (ZERO-TYPING)
+       ========================================================== */
+    function renderZoneGrid() {
+      const container = document.getElementById('zoneGrid');
+      container.innerHTML = HOTEL_ZONES.map(z => {
+        const isSel = selectedZone && selectedZone.id === z.id;
+        const name = currentLang === 'el' ? z.nameEl : z.nameEn;
+        return `
+          <button type="button" onclick="selectZone('${z.id}')" class="p-3 text-left rounded-xl border text-xs font-bold transition flex flex-col justify-between h-16 ${
+            isSel ? 'border-amber-500 bg-amber-50 text-slate-900 shadow-sm ring-2 ring-amber-400' : 'border-slate-200 bg-white hover:border-slate-300 text-slate-700'
+          }">
+            <span class="truncate">${name}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectZone(zoneId) {
+      selectedZone = HOTEL_ZONES.find(z => z.id === zoneId);
+      selectedRoom = null;
+      selectedSubArea = null;
+      renderZoneGrid();
+      
+      const card = document.getElementById('roomPickerCard');
+      card.classList.remove('hidden');
+      document.getElementById('selectedZoneBadge').textContent = currentLang === 'el' ? selectedZone.nameEl : selectedZone.nameEn;
+      
+      const floorRow = document.getElementById('floorRow');
+      const roomGrid = document.getElementById('roomGrid');
+      document.getElementById('subAreaBox').classList.add('hidden');
+      document.getElementById('specialVillaAvBox').classList.add('hidden');
+
+      // Populate based on Zone type
+      if (selectedZone.type === 'floors') {
+        floorRow.classList.remove('hidden');
+        floorRow.innerHTML = `
+          <button type="button" onclick="renderFloorRooms('${zoneId}', 'floor1')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold">1ος Όροφος (1xx)</button>
+          <button type="button" onclick="renderFloorRooms('${zoneId}', 'floor2')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold">2ος Όροφος (2xx)</button>
+          <button type="button" onclick="renderFloorRooms('${zoneId}', 'floor3')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold">3ος Όροφος (3xx)</button>
+        `;
+        renderFloorRooms(zoneId, 'floor1');
+      } else if (selectedZone.type === 'villas') {
+        floorRow.classList.remove('hidden');
+        floorRow.innerHTML = `
+          <button type="button" onclick="renderVillaSide('north')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold">Βόρειες Βίλες</button>
+          <button type="button" onclick="renderVillaSide('south')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold">Νότιες Βίλες</button>
+        `;
+        renderVillaSide('north');
+      } else if (selectedZone.type === 'common') {
+        floorRow.classList.add('hidden');
+        roomGrid.innerHTML = ROOM_DATA.common.map(c => `
+          <button type="button" onclick="selectFinalRoom('${c}', 'common')" class="col-span-2 p-2.5 bg-slate-50 hover:bg-amber-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 text-left truncate">
+            ${c}
+          </button>
+        `).join('');
+      } else {
+        // Direct List (Suites 400, Suites 600, 500 rooms, Diving)
+        floorRow.classList.add('hidden');
+        const list = ROOM_DATA[zoneId] || [];
+        roomGrid.innerHTML = list.map(num => `
+          <button type="button" onclick="selectFinalRoom('${num}', '${zoneId}')" class="p-2.5 bg-slate-50 hover:bg-amber-100 border border-slate-200 rounded-xl text-xs font-bold text-center">
+            ${num}
+          </button>
+        `).join('');
+      }
+    }
+
+    function renderFloorRooms(zoneId, floorKey) {
+      const rooms = ROOM_DATA[zoneId][floorKey] || [];
+      const grid = document.getElementById('roomGrid');
+      grid.innerHTML = rooms.map(r => `
+        <button type="button" onclick="selectFinalRoom('${r}', 'regular')" class="p-2.5 bg-slate-50 hover:bg-amber-100 border border-slate-200 rounded-xl text-xs font-bold text-center">
+          ${r}
+        </button>
+      `).join('');
+    }
+
+    function renderVillaSide(side) {
+      const villas = ROOM_DATA.villas[side] || [];
+      const grid = document.getElementById('roomGrid');
+      grid.innerHTML = villas.map(v => `
+        <button type="button" onclick="selectFinalRoom('Villa ${v}', 'villa', ${v})" class="col-span-2 p-2.5 bg-slate-50 hover:bg-amber-100 border border-slate-200 rounded-xl text-xs font-bold text-center">
+          Villa ${v}
+        </button>
+      `).join('');
+    }
+
+    function selectFinalRoom(roomName, category, villaNumber = null) {
+      selectedRoom = roomName;
+      updateLocationBadge();
+
+      // Highlight selected room in grid
+      document.querySelectorAll('#roomGrid button').forEach(b => {
+        b.classList.remove('bg-amber-400', 'text-slate-950', 'border-amber-500');
+        if (b.textContent.trim() === roomName.toString().trim() || b.textContent.trim() === `Villa ${villaNumber}`) {
+          b.classList.add('bg-amber-400', 'text-slate-950', 'border-amber-500');
+        }
+      });
+
+      // Handle sub-areas
+      const subBox = document.getElementById('subAreaBox');
+      const subGrid = document.getElementById('subAreaGrid');
+      const villaAvBox = document.getElementById('specialVillaAvBox');
+      
+      villaAvBox.classList.add('hidden');
+
+      if (category === 'villa') {
+        subBox.classList.remove('hidden');
+        subGrid.innerHTML = SUB_AREAS.villas.map(s => `
+          <button type="button" onclick="selectSubArea('${currentLang === 'el' ? s.el : s.en}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg text-xs font-bold">
+            ${currentLang === 'el' ? s.el : s.en}
+          </button>
+        `).join('');
+
+        // SPECIAL CASE: Villa 3 & Villa 5 AV Room / Cinema
+        if (villaNumber === 3 || villaNumber === 5) {
+          villaAvBox.classList.remove('hidden');
+        }
+      } else if (category === 'suites400' || category === 'suites600') {
+        subBox.classList.remove('hidden');
+        subGrid.innerHTML = SUB_AREAS.suites.map(s => `
+          <button type="button" onclick="selectSubArea('${currentLang === 'el' ? s.el : s.en}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg text-xs font-bold">
+            ${currentLang === 'el' ? s.el : s.en}
+          </button>
+        `).join('');
+      } else if (category === 'regular') {
+        subBox.classList.remove('hidden');
+        subGrid.innerHTML = SUB_AREAS.regular.map(s => `
+          <button type="button" onclick="selectSubArea('${currentLang === 'el' ? s.el : s.en}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg text-xs font-bold">
+            ${currentLang === 'el' ? s.el : s.en}
+          </button>
+        `).join('');
+      } else {
+        subBox.classList.add('hidden');
+      }
+    }
+
+    function selectSubArea(subName) {
+      selectedSubArea = subName;
+      updateLocationBadge();
+      document.querySelectorAll('#subAreaGrid button').forEach(b => {
+        b.classList.remove('bg-amber-400', 'text-slate-950', 'border-amber-500');
+        if (b.textContent.trim() === subName.trim()) {
+          b.classList.add('bg-amber-400', 'text-slate-950', 'border-amber-500');
+        }
+      });
+    }
+
+    function updateLocationBadge() {
+      const locText = formatDisplayLocation(selectedRoom, selectedSubArea);
+      document.getElementById('selectedLocationBadge').textContent = locText ? `📍 ${locText}` : '';
+    }
+
+    function formatDisplayLocation(room, subArea) {
+      if (!room) return '';
+      let roomStr = /^\d+$/.test(room.toString().trim()) ? `Δωμ. ${room}` : room;
+      if (subArea) {
+        return `${roomStr} ➔ ${subArea}`;
+      }
+      return roomStr;
+    }
+
+    /* ==========================================================
+       6. PRESET ISSUES & SECURITY PROTOCOL
+       ========================================================== */
+    function renderPresetIssues() {
+      const container = document.getElementById('presetIssuesGrid');
+      container.innerHTML = PRESET_ISSUES.map(p => {
+        const text = currentLang === 'el' ? p.el : p.en;
+        const isSel = selectedPreset && selectedPreset.id === p.id;
+        return `
+          <button type="button" onclick="selectPreset('${p.id}', '${text}', '${p.trade}', ${!!p.security})" class="p-3 border rounded-xl text-left text-xs font-bold transition flex items-center gap-2 h-16 ${p.color} ${
+            isSel ? 'ring-2 ring-amber-500 shadow-sm' : 'hover:shadow-sm'
+          }">
+            <span class="text-xl">${p.icon}</span>
+            <span class="leading-tight">${text}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectPreset(presetId, title, trade, requiresSecurity = false) {
+      selectedPreset = { id: presetId, title, trade, requiresSecurity };
+      renderPresetIssues();
+
+      // Show / hide security banner
+      const banner = document.getElementById('securityBanner');
+      if (requiresSecurity) {
+        banner.classList.remove('hidden');
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+
+    /* ==========================================================
+       7. PHOTO CAPTURE & CANVAS AUTO-COMPRESSION (< 120KB)
+       ========================================================== */
+    function handlePhotoCapture(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 800; // Optimal resolution for fast mobile loading
+
+          if (width > height && width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Compress to lightweight JPEG (0.7 quality)
+          capturedPhotoBase64 = canvas.toDataURL('image/jpeg', 0.7);
+          
+          document.getElementById('photoThumb').src = capturedPhotoBase64;
+          document.getElementById('photoPreviewContainer').classList.remove('hidden');
+          document.getElementById('photoStatusLabel').textContent = currentLang === 'el' ? 'Φωτογραφία Έτοιμη ✅' : 'Photo Attached ✅';
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removePhoto() {
+      capturedPhotoBase64 = null;
+      document.getElementById('cameraInput').value = '';
+      document.getElementById('photoPreviewContainer').classList.add('hidden');
+      document.getElementById('photoStatusLabel').textContent = currentLang === 'el' ? 'Λήψη Φωτογραφίας' : 'Take Photo';
+    }
+
+    /* ==========================================================
+       8. SUBMISSION & ROUTING ENGINE
+       ========================================================== */
+    function submitTicket() {
+      if (!selectedRoom) {
+        showToast(I18N[currentLang].toast_pick_room);
+        return;
+      }
+      if (!selectedPreset) {
+        showToast(I18N[currentLang].toast_pick_issue);
+        return;
+      }
+
+      const now = new Date();
+      const currentHour = now.getHours() + (now.getMinutes() / 60);
+
+      // Shift calculation
+      // 07:00 - 15:00: Targeted
+      // 15:00 - 22:30: Shift Techs (1001 & 2001)
+      // 22:30 - 07:00: Night Shift (1001 with 2001 backup)
+      let routedRoles = [];
+      let shiftType = 'morning';
+
+      if (currentHour >= 22.5 || currentHour < 7.0) {
+        shiftType = 'night';
+        routedRoles = ['1001', '2001']; // Night electrician + Plumber backup
+      } else if (currentHour >= 15.0 && currentHour < 22.5) {
+        shiftType = 'afternoon';
+        if (selectedPreset.trade === 'electrical') routedRoles = ['1001'];
+        else if (selectedPreset.trade === 'plumbing') routedRoles = ['2001'];
+        else routedRoles = ['1001', '2001']; // Both shift phones ring
+      } else {
+        shiftType = 'morning';
+        if (selectedPreset.trade === 'electrical') routedRoles = ['1001', '1002'];
+        else if (selectedPreset.trade === 'plumbing') routedRoles = ['2001', '2002'];
+        else if (selectedPreset.trade === 'ac') routedRoles = ['3000'];
+        else if (selectedPreset.trade === 'civil') routedRoles = ['4000'];
+        else if (selectedPreset.trade === 'pool') routedRoles = ['5000'];
+        else if (selectedPreset.trade === 'carpentry') routedRoles = ['6000'];
+        else if (selectedPreset.trade === 'av') routedRoles = ['7000'];
+        else if (selectedPreset.trade === 'av_dual') routedRoles = ['7000', '1001']; // AV + Shift Electrician
+        else routedRoles = ['1001', '2001']; // General
+      }
+
+      // Always routed to Office PC
+      routedRoles.push('8888');
+
+      const customNote = document.getElementById('customNoteInput').value.trim();
+
+      const ticket = {
+        id: 'T-' + Date.now().toString().slice(-6),
+        zoneId: selectedZone ? selectedZone.id : 'unknown',
+        zoneName: selectedZone ? (currentLang === 'el' ? selectedZone.nameEl : selectedZone.nameEn) : '',
+        room: selectedRoom,
+        subArea: selectedSubArea,
+        locationDisplay: formatDisplayLocation(selectedRoom, selectedSubArea),
+        issueId: selectedPreset.id,
+        issueTitle: selectedPreset.title,
+        customNote: customNote,
+        photo: capturedPhotoBase64,
+        securitySop: selectedPreset.requiresSecurity,
+        routedRoles: [...new Set(routedRoles)],
+        status: 'open', // open, in_progress, resolved
+        createdAt: now.toISOString(),
+        claimedAt: null,
+        claimedBy: null,
+        resolvedAt: null,
+        resolvedBy: null,
+        resolvedNote: null
+      };
+
+      // Save to memory / local storage
+      tickets.unshift(ticket);
+      localStorage.setItem('w_tickets', JSON.stringify(tickets));
+
+      // Trigger Alert Sound & System Push Notification
+      playChime();
+      triggerSystemNotification(ticket);
+
+      showToast(I18N[currentLang].toast_submitted);
+
+      // Reset form fields
+      selectedRoom = null;
+      selectedSubArea = null;
+      selectedPreset = null;
+      removePhoto();
+      document.getElementById('customNoteInput').value = '';
+      document.getElementById('securityBanner').classList.add('hidden');
+      document.getElementById('roomPickerCard').classList.add('hidden');
+      updateLocationBadge();
+      renderZoneGrid();
+      renderPresetIssues();
+      renderBoard();
+    }
+
+    /* ==========================================================
+       9. PIERCING CHIME & SYSTEM NOTIFICATIONS
+       ========================================================== */
     function playChime() {
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -194,242 +836,387 @@
         const gain = ctx.createGain();
         osc.connect(gain);
         gain.connect(ctx.destination);
-        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
-        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12);
-        gain.gain.setValueAtTime(0.15, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+
+        // High-penetration dual-tone alert (B5 to E6)
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(987.77, ctx.currentTime);
+        osc.frequency.setValueAtTime(1318.51, ctx.currentTime + 0.12);
+
+        gain.gain.setValueAtTime(0.95, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.55);
+
         osc.start();
-        osc.stop(ctx.currentTime + 0.5);
-      } catch(e) {}
-    }
-    function testChime() { playChime(); }
-
-    // 3. TAB NAVIGATION
-    function switchTab(tab) {
-      ['report', 'tech', 'desk'].forEach(t => {
-        document.getElementById('view-' + t).classList.toggle('hidden', t !== tab);
-        const btn = document.getElementById('tab-' + t);
-        if (t === tab) {
-          btn.className = "py-2.5 rounded-lg bg-neutral-800 text-white shadow";
-        } else {
-          btn.className = "py-2.5 rounded-lg text-neutral-400 hover:text-white";
-        }
-      });
-    }
-
-    function setPriority(prio) {
-      activePriority = prio;
-      const bNorm = document.getElementById('prio-normal');
-      const bUrg = document.getElementById('prio-urgent');
-      if (prio === 'Normal') {
-        bNorm.className = "py-2 rounded-xl text-xs font-bold border border-neutral-700 bg-neutral-800 text-white";
-        bUrg.className = "py-2 rounded-xl text-xs font-bold border border-neutral-800 bg-neutral-950 text-neutral-400";
-      } else {
-        bUrg.className = "py-2 rounded-xl text-xs font-bold border border-red-500 bg-red-950 text-red-200";
-        bNorm.className = "py-2 rounded-xl text-xs font-bold border border-neutral-800 bg-neutral-950 text-neutral-400";
+        osc.stop(ctx.currentTime + 0.55);
+      } catch (err) {
+        console.warn('AudioContext blocked or unavailable:', err);
       }
     }
 
-    function setFilter(filter) {
-      activeFilter = filter;
-      renderTechView();
-    }
-
-    // 4. FETCH & REALTIME
-    async function loadTickets() {
-      const { data, error } = await db.from('tickets').select('*').order('created_at', { ascending: false });
-      if (!error && data) {
-        tickets = data;
-        renderAll();
-      }
-    }
-
-    function setupRealtime() {
-      db.channel('realtime:tickets')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, (payload) => {
-          if (payload.eventType === 'INSERT') {
-            playChime();
+    function requestNotificationPermission() {
+      if ('Notification' in window) {
+        Notification.requestPermission().then(perm => {
+          if (perm === 'granted') {
+            showToast('Ειδοποιήσεις Ενεργές! 🔔');
           }
-          loadTickets();
-        })
-        .subscribe();
+        });
+      }
     }
 
-    // 5. SUBMIT TICKET (STYLE)
-    async function submitTicket(e) {
-      e.preventDefault();
-      const room = document.getElementById('form-room').value.trim();
-      const category = document.getElementById('form-category').value;
-      const description = document.getElementById('form-desc').value.trim();
-      const btn = document.getElementById('submit-btn');
+    function triggerSystemNotification(ticket) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        const secTag = ticket.securitySop ? ' [🛡️ SECURITY PROTOCOL]' : '';
+        const title = `🚨 [W OPS] ${ticket.locationDisplay}${secTag}`;
+        const options = {
+          body: `${ticket.issueTitle}\n${ticket.customNote ? 'Σημείωση: ' + ticket.customNote : ''}`,
+          icon: 'https://cdn-icons-png.flaticon.com/512/811/811462.png',
+          vibrate: [300, 100, 300, 100, 300]
+        };
+        new Notification(title, options);
+      }
+    }
 
-      btn.disabled = true;
-      btn.innerText = "ΑΠΟΣΤΟΛΗ...";
+    /* ==========================================================
+       10. AUTH & PIN SYSTEM
+       ========================================================== */
+    function loginWithPin() {
+      const pin = document.getElementById('pinInput').value.trim();
+      if (!ROLES[pin]) {
+        alert('Μη έγκυρο PIN!');
+        return;
+      }
+      currentRolePin = pin;
+      localStorage.setItem('w_pin', pin);
+      document.getElementById('pinInput').value = '';
+      checkSavedLogin();
+      renderBoard();
+    }
 
-      const { error } = await db.from('tickets').insert([{
-        room_number: room,
-        category: category,
-        description: description,
-        priority: activePriority,
-        status: 'Open'
-      }]);
+    function logoutRole() {
+      currentRolePin = null;
+      localStorage.removeItem('w_pin');
+      checkSavedLogin();
+      renderBoard();
+    }
 
-      btn.disabled = false;
-      btn.innerText = "ΑΠΟΣΤΟΛΗ ΣΤΟ ENGINEERING";
+    function checkSavedLogin() {
+      const pinBox = document.getElementById('pinLoginCard');
+      const banner = document.getElementById('activeRoleBanner');
+      const roleTag = document.getElementById('roleTag');
+      const logoutBtn = document.getElementById('logoutBtn');
 
-      if (!error) {
-        document.getElementById('form-room').value = '';
-        document.getElementById('form-desc').value = '';
-        setPriority('Normal');
-        loadTickets();
+      if (currentRolePin && ROLES[currentRolePin]) {
+        const role = ROLES[currentRolePin];
+        pinBox.classList.add('hidden');
+        banner.classList.remove('hidden');
+        roleTag.classList.remove('hidden');
+        logoutBtn.classList.remove('hidden');
+
+        const roleName = currentLang === 'el' ? role.nameEl : role.nameEn;
+        document.getElementById('activeRoleName').textContent = roleName;
+        roleTag.textContent = roleName.split(' ')[0];
       } else {
-        alert('Σφάλμα: ' + error.message);
+        pinBox.classList.remove('hidden');
+        banner.classList.add('hidden');
+        roleTag.classList.add('hidden');
+        logoutBtn.classList.add('hidden');
       }
     }
 
-    // 6. ACTIONS (CLAIM / RESOLVE)
-    async function claimJob(ticketId) {
-      const techDevice = document.getElementById('current-tech-device').value;
-      await db.from('tickets').update({
-        status: 'In Progress',
-        claimed_by: techDevice,
-        claimed_at: new Date().toISOString()
-      }).eq('id', ticketId);
-      loadTickets();
+    function renderOfficeRolesGrid() {
+      const grid = document.getElementById('officeRolesPickerGrid');
+      grid.innerHTML = Object.entries(ROLES)
+        .filter(([p, r]) => !r.isOffice && !r.isAdmin)
+        .map(([p, r]) => `
+          <button type="button" onclick="confirmOfficeClaim('${currentLang === 'el' ? r.nameEl : r.nameEn}')" class="p-2.5 text-left border border-slate-200 hover:border-amber-400 bg-slate-50 hover:bg-amber-50 rounded-xl text-xs font-bold transition">
+            ${currentLang === 'el' ? r.nameEl : r.nameEn}
+          </button>
+        `).join('');
     }
 
-    async function resolveJob(ticketId) {
-      const note = prompt('Σημείωση επισκευής (προαιρετικό):', 'Επισκευάστηκε κανονικά');
-      await db.from('tickets').update({
-        status: 'Done',
-        completed_at: new Date().toISOString(),
-        resolution_notes: note || 'Ολοκληρώθηκε'
-      }).eq('id', ticketId);
-      loadTickets();
+    /* ==========================================================
+       11. BOARD RENDERING & TIME-TRACKING (24h FILTER)
+       ========================================================== */
+    function renderBoard() {
+      const listOpen = document.getElementById('listOpen');
+      const listProg = document.getElementById('listProg');
+      const listDone = document.getElementById('listDone');
+
+      const now = new Date();
+      const cutoff24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+      // Filter tickets
+      const openTickets = tickets.filter(t => t.status === 'open');
+      const progTickets = tickets.filter(t => t.status === 'in_progress');
+      // 24H FILTER ON RESOLVED
+      const doneTickets = tickets.filter(t => t.status === 'resolved' && new Date(t.resolvedAt) >= cutoff24h);
+
+      document.getElementById('countOpen').textContent = openTickets.length;
+      document.getElementById('countProg').textContent = progTickets.length;
+      document.getElementById('countDone').textContent = doneTickets.length;
+
+      listOpen.innerHTML = openTickets.length ? openTickets.map(renderTicketCard).join('') : emptyPlaceholder();
+      listProg.innerHTML = progTickets.length ? progTickets.map(renderTicketCard).join('') : emptyPlaceholder();
+      listDone.innerHTML = doneTickets.length ? doneTickets.map(renderTicketCard).join('') : emptyPlaceholder();
     }
 
-    // 7. RENDER FUNCTIONS
-    function renderAll() {
-      renderReporterView();
-      renderTechView();
-      renderDeskView();
-    }
+    function renderTicketCard(t) {
+      const isOffice = currentRolePin === '8888';
+      const isAdmin = currentRolePin === '9999';
+      const roleObj = currentRolePin ? ROLES[currentRolePin] : null;
 
-    function renderReporterView() {
-      const container = document.getElementById('reporter-tickets-list');
-      const latest = tickets.slice(0, 5);
-      if (latest.length === 0) {
-        container.innerHTML = `<p class="text-xs text-neutral-500">Δεν υπάρχουν πρόσφατες βλάβες.</p>`;
-        return;
-      }
-      container.innerHTML = latest.map(t => {
-        let statusBadge = '';
-        if (t.status === 'Open') statusBadge = `<span class="text-[11px] font-bold text-red-400 bg-red-950/80 px-2 py-0.5 rounded-full border border-red-900">🔴 Σε Αναμονή</span>`;
-        else if (t.status === 'In Progress') statusBadge = `<span class="text-[11px] font-bold text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded-full border border-amber-900">🟡 Ανέλαβε: ${t.claimed_by || 'Τεχνικός'}</span>`;
-        else statusBadge = `<span class="text-[11px] font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-900">🟢 Ολοκληρώθηκε</span>`;
+      // Time formatting
+      const createdStr = formatTime(t.createdAt);
+      const claimedStr = t.claimedAt ? formatTime(t.claimedAt) : '';
+      const resolvedStr = t.resolvedAt ? formatTime(t.resolvedAt) : '';
+      const durationStr = t.resolvedAt ? calculateDuration(t.createdAt, t.resolvedAt) : '';
 
-        return `
-          <div class="glass p-3 rounded-xl flex items-center justify-between text-xs">
+      return `
+        <div class="bg-white rounded-xl p-3 border ${t.securitySop ? 'border-red-300 ring-1 ring-red-300' : 'border-slate-200'} shadow-sm space-y-2">
+          
+          <!-- Top Row: Location & Security Tag -->
+          <div class="flex items-start justify-between gap-1">
             <div>
-              <div class="font-bold text-white text-sm">Δωμάτιο ${t.room_number} <span class="text-neutral-400 text-xs font-normal">(${t.category})</span></div>
-              <div class="text-neutral-400 mt-0.5">${t.description || 'Χωρίς περιγραφή'}</div>
+              <span class="text-xs font-black text-slate-900">${t.locationDisplay}</span>
+              ${t.zoneName ? `<span class="block text-[10px] text-slate-400 font-semibold">${t.zoneName}</span>` : ''}
             </div>
-            <div>${statusBadge}</div>
+            <span class="text-[10px] font-mono text-slate-400 font-bold">${createdStr}</span>
           </div>
-        `;
-      }).join('');
-    }
 
-    function renderTechView() {
-      const container = document.getElementById('tech-tickets-list');
-      let filtered = tickets;
-      if (activeFilter !== 'all') {
-        filtered = tickets.filter(t => t.status === activeFilter);
-      }
+          <!-- Issue Title -->
+          <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+            <span>${t.issueTitle}</span>
+          </div>
 
-      if (filtered.length === 0) {
-        container.innerHTML = `<p class="text-xs text-neutral-500 text-center py-8">Καμία εκκρεμότητα.</p>`;
-        return;
-      }
-
-      container.innerHTML = filtered.map(t => {
-        const isUrgent = t.priority.includes('Urgent');
-        return `
-          <div class="glass p-4 rounded-xl space-y-3 ${isUrgent ? 'border-l-4 border-l-red-500' : ''}">
-            <div class="flex justify-between items-start">
-              <div>
-                <span class="text-xs font-bold text-neutral-400">${t.category}</span>
-                <h3 class="text-lg font-black text-white">Δωμάτιο ${t.room_number}</h3>
-              </div>
-              ${isUrgent ? `<span class="text-[10px] font-black tracking-wider bg-red-600 text-white px-2 py-0.5 rounded">URGENT VIP</span>` : ''}
+          <!-- Security Protocol Tag if applicable -->
+          ${t.securitySop ? `
+            <div class="text-[10px] bg-red-100 text-red-800 px-2 py-0.5 rounded font-black tracking-wide inline-flex items-center gap-1">
+              <span>🛡️</span> <span>SECURITY SOP REQUIRED</span>
             </div>
+          ` : ''}
 
-            <p class="text-sm text-neutral-300">${t.description || '—'}</p>
+          <!-- Optional custom note -->
+          ${t.customNote ? `<div class="text-[11px] text-slate-600 bg-slate-50 p-1.5 rounded-lg border border-slate-100 italic">"${t.customNote}"</div>` : ''}
 
-            <div class="pt-2 border-t border-neutral-800 flex items-center justify-between">
-              <div>
-                ${t.status === 'Open' ? `<span class="text-xs text-red-400 font-bold">● Κανείς δεν έχει πάει ακόμα</span>` : ''}
-                ${t.status === 'In Progress' ? `<span class="text-xs text-amber-300 font-bold">● Ανέλαβε: ${t.claimed_by}</span>` : ''}
-                ${t.status === 'Done' ? `<span class="text-xs text-emerald-400 font-bold">● Έκλεισε (${t.resolution_notes || 'OK'})</span>` : ''}
-              </div>
-
-              <div>
-                ${t.status === 'Open' ? `
-                  <button onclick="claimJob('${t.id}')" class="bg-amber-400 hover:bg-amber-300 text-black font-bold text-xs px-3.5 py-1.5 rounded-lg shadow active:scale-95 transition">
-                    ✋ Το ανέλαβα
-                  </button>
-                ` : ''}
-                ${t.status === 'In Progress' ? `
-                  <button onclick="resolveJob('${t.id}')" class="bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs px-3.5 py-1.5 rounded-lg shadow active:scale-95 transition">
-                    ✅ Ολοκλήρωση
-                  </button>
-                ` : ''}
-              </div>
+          <!-- Photo Thumbnail if present -->
+          ${t.photo ? `
+            <div class="pt-1">
+              <img src="${t.photo}" class="w-16 h-16 rounded-lg object-cover border border-slate-200 cursor-pointer" onclick="window.open('${t.photo}', '_blank')">
             </div>
+          ` : ''}
+
+          <!-- Status & Time details -->
+          <div class="text-[10px] text-slate-500 pt-1 border-t border-slate-100 flex flex-col gap-0.5">
+            ${t.status === 'in_progress' ? `
+              <div>✋ <b>${t.claimedBy}</b> (${claimedStr})</div>
+            ` : ''}
+            ${t.status === 'resolved' ? `
+              <div>✅ <b>${t.resolvedBy}</b> (${resolvedStr})</div>${durationStr ? `<div class="text-emerald-700 font-semibold">⏱️ Διάρκεια: ${durationStr}</div>` : ''}
+              ${t.resolvedNote ? `<div class="text-slate-400 italic">"${t.resolvedNote}"</div>` : ''}
+            ` : ''}
           </div>
-        `;
-      }).join('');
-    }
 
-    function renderDeskView() {
-      const search = (document.getElementById('desk-search').value || '').toLowerCase();
-      const openEl = document.getElementById('desk-open-list');
-      const progEl = document.getElementById('desk-progress-list');
-      const doneEl = document.getElementById('desk-done-list');
+          <!-- Action Buttons -->
+          <div class="flex items-center gap-1.5 pt-1">
+            ${t.status === 'open' ? `
+              <button onclick="handleClaimClick('${t.id}')" class="flex-1 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-lg transition">
+                ✋ Το ανέλαβα
+              </button>
+            ` : ''}
 
-      const filtered = tickets.filter(t => 
-        t.room_number.toLowerCase().includes(search) || 
-        t.category.toLowerCase().includes(search) ||
-        (t.description && t.description.toLowerCase().includes(search))
-      );
+            ${t.status === 'in_progress' ? `
+              <button onclick="handleResolveClick('${t.id}')" class="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition">
+                ✅ Ολοκλήρωση
+              </button>
+            ` : ''}
 
-      const openTickets = filtered.filter(t => t.status === 'Open');
-      const progTickets = filtered.filter(t => t.status === 'In Progress');
-      const doneTickets = filtered.filter(t => t.status === 'Done');
-
-      document.getElementById('count-open').innerText = openTickets.length;
-      document.getElementById('count-progress').innerText = progTickets.length;
-      document.getElementById('count-done').innerText = doneTickets.length;
-
-      const card = (t) => `
-        <div class="bg-neutral-900 border border-neutral-800 p-2.5 rounded-xl text-xs space-y-1">
-          <div class="flex justify-between font-bold text-white">
-            <span>Δωμ. ${t.room_number}</span>
-            <span class="text-neutral-400 text-[10px]">${t.category}</span>
+            <!-- Admin Force Action / Delete -->
+            ${isAdmin ? `
+              <button onclick="openAdminResolveModal('${t.id}')" class="px-2 py-1.5 bg-slate-800 text-white font-bold text-[10px] rounded-lg">
+                Admin Close
+              </button>
+              <button onclick="deleteTicketPermanent('${t.id}')" class="px-2 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 font-bold text-[10px] rounded-lg" title="Διαγραφή / Void">
+                🗑️
+              </button>
+            ` : ''}
           </div>
-          <div class="text-neutral-300 text-[11px]">${t.description || '—'}</div>
-          ${t.claimed_by ? `<div class="text-[10px] text-amber-400 font-semibold pt-1">Ανάληψη: ${t.claimed_by}</div>` : ''}
+
         </div>
       `;
-
-      openEl.innerHTML = openTickets.map(card).join('') || `<div class="text-neutral-600 text-xs text-center py-4">Κενό</div>`;
-      progEl.innerHTML = progTickets.map(card).join('') || `<div class="text-neutral-600 text-xs text-center py-4">Κενό</div>`;
-      doneEl.innerHTML = doneTickets.map(card).join('') || `<div class="text-neutral-600 text-xs text-center py-4">Κενό</div>`;
     }
 
-    // INIT
-    loadTickets();
-    setupRealtime();
+    function emptyPlaceholder() {
+      return `<div class="py-8 text-center text-xs text-slate-400 italic">Καμία βλάβη</div>`;
+    }
+
+    /* ==========================================================
+       12. TASK ACTIONS (CLAIM / RESOLVE / DELETE)
+       ========================================================== */
+    function handleClaimClick(ticketId) {
+      const ticket = tickets.find(t => t.id === ticketId);
+      if (!ticket) return;
+
+      // SOP check warning
+      if (ticket.securitySop) {
+        const proceed = confirm('⚠️ ΠΡΟΣΟΧΗ:\nΓια άνοιγμα safe box ή πόρτας απαιτείται υποχρεωτικά η φυσική παρουσία μέλους του Security.\n\nΣυνεχίζετε;');
+        if (!proceed) return;
+      }
+
+      // If on Master Office PC (8888): 1-click role picker without PIN
+      if (currentRolePin === '8888') {
+        activeClaimTicketId = ticketId;
+        document.getElementById('officeClaimModal').classList.remove('hidden');
+        return;
+      }
+
+      // If logged in as specific technician phone
+      if (currentRolePin && ROLES[currentRolePin]) {
+        const role = ROLES[currentRolePin];
+        claimTicket(ticketId, currentLang === 'el' ? role.nameEl : role.nameEn);
+      } else {
+        // If not logged in, prompt for PIN
+        const pin = prompt('Εισάγετε το PIN σας για ανάληψη:');
+        if (pin && ROLES[pin]) {
+          const role = ROLES[pin];
+          claimTicket(ticketId, currentLang === 'el' ? role.nameEl : role.nameEn);
+        } else if (pin) {
+          alert('Μη έγκυρο PIN');
+        }
+      }
+    }
+
+    function confirmOfficeClaim(roleName) {
+      if (activeClaimTicketId) {
+        claimTicket(activeClaimTicketId, roleName);
+        closeOfficeClaimModal();
+      }
+    }
+
+    function closeOfficeClaimModal() {
+      activeClaimTicketId = null;
+      document.getElementById('officeClaimModal').classList.add('hidden');
+    }
+
+    function claimTicket(ticketId, claimedByName) {
+      const ticket = tickets.find(t => t.id === ticketId);
+      if (ticket) {
+        ticket.status = 'in_progress';
+        ticket.claimedAt = new Date().toISOString();
+        ticket.claimedBy = claimedByName;
+        localStorage.setItem('w_tickets', JSON.stringify(tickets));
+        renderBoard();
+        showToast(`Η βλάβη αναλήφθηκε από ${claimedByName}`);
+      }
+    }
+
+    function handleResolveClick(ticketId) {
+      const ticket = tickets.find(t => t.id === ticketId);
+      if (!ticket) return;
+
+      const resolverName = currentRolePin && ROLES[currentRolePin] 
+        ? (currentLang === 'el' ? ROLES[currentRolePin].nameEl : ROLES[currentRolePin].nameEn)
+        : (ticket.claimedBy || 'Τεχνικός');
+
+      ticket.status = 'resolved';
+      ticket.resolvedAt = new Date().toISOString();
+      ticket.resolvedBy = resolverName;
+      localStorage.setItem('w_tickets', JSON.stringify(tickets));
+      renderBoard();
+      showToast('Η βλάβη ολοκληρώθηκε! ✅');
+    }
+
+    // Admin Resolve with mandatory Note
+    function openAdminResolveModal(ticketId) {
+      activeAdminResolveTicketId = ticketId;
+      document.getElementById('adminResolveNote').value = '';
+      document.getElementById('adminResolveModal').classList.remove('hidden');
+    }
+
+    function closeAdminResolveModal() {
+      activeAdminResolveTicketId = null;
+      document.getElementById('adminResolveModal').classList.add('hidden');
+    }
+
+    function confirmAdminResolve() {
+      const note = document.getElementById('adminResolveNote').value.trim();
+      if (!note) {
+        alert('Παρακαλώ συμπληρώστε αιτιολογία ολοκλήρωσης.');
+        return;
+      }
+      const ticket = tickets.find(t => t.id === activeAdminResolveTicketId);
+      if (ticket) {
+        ticket.status = 'resolved';
+        ticket.resolvedAt = new Date().toISOString();
+        ticket.resolvedBy = 'Admin (9999)';
+        ticket.resolvedNote = note;
+        localStorage.setItem('w_tickets', JSON.stringify(tickets));
+        renderBoard();
+        closeAdminResolveModal();
+        showToast('Ολοκληρώθηκε από Admin');
+      }
+    }
+
+    // Permanent Void / Delete by Admin
+    function deleteTicketPermanent(ticketId) {
+      if (confirm('Θέλετε να διαγραφεί οριστικά η συγκεκριμένη καταχώρηση (Void/Delete);')) {
+        tickets = tickets.filter(t => t.id !== ticketId);
+        localStorage.setItem('w_tickets', JSON.stringify(tickets));
+        renderBoard();
+        showToast('Η εγγραφή διαγράφηκε οριστικά');
+      }
+    }
+
+    /* ==========================================================
+       13. HELPERS & FORMATTING
+       ========================================================== */
+    function formatTime(isoString) {
+      if (!isoString) return '';
+      const d = new Date(isoString);
+      const time = d.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+      const date = d.toLocaleDateString('el-GR', { day: '2-digit', month: '2-digit' });
+      return `${time} (${date})`;
+    }
+
+    function calculateDuration(startIso, endIso) {
+      if (!startIso || !endIso) return '';
+      const diffMinutes = Math.round((new Date(endIso) - new Date(startIso)) / 60000);
+      if (diffMinutes < 60) return `${diffMinutes} λεπτά`;
+      const hours = Math.floor(diffMinutes / 60);
+      const mins = diffMinutes % 60;
+      return `${hours}ω ${mins}λ`;
+    }
+
+    function switchTab(tab) {
+      const repSec = document.getElementById('reportSection');
+      const brdSec = document.getElementById('boardSection');
+      const tabRep = document.getElementById('tabReport');
+      const tabBrd = document.getElementById('tabBoard');
+
+      if (tab === 'report') {
+        repSec.classList.remove('hidden');
+        brdSec.classList.add('hidden');
+        tabRep.classList.add('border-amber-400', 'text-amber-400');
+        tabRep.classList.remove('border-transparent', 'text-slate-400');
+        tabBrd.classList.remove('border-amber-400', 'text-amber-400');
+        tabBrd.classList.add('border-transparent', 'text-slate-400');
+      } else {
+        repSec.classList.add('hidden');
+        brdSec.classList.remove('hidden');
+        tabBrd.classList.add('border-amber-400', 'text-amber-400');
+        tabBrd.classList.remove('border-transparent', 'text-slate-400');
+        tabRep.classList.remove('border-amber-400', 'text-amber-400');
+        tabRep.classList.add('border-transparent', 'text-slate-400');
+        renderBoard();
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 2500);
+    }
   </script>
 </body>
 </html>
