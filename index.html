@@ -411,7 +411,7 @@
           <div class="select-pill" onclick="setReporter('F&B', this)">F&B</div>
         </div>
 
-        <!-- 2. ΠΕΡΙΟΧΗ / ΕΝΟΤΗΤΑ (ΚΑΘΑΡΑ, ΧΩΡΙΣ EMOJI) -->
+        <!-- 2. ΠΕΡΙΟΧΗ / ΕΝΟΤΗΤΑ -->
         <div class="section-label" data-t="secWing">2. Περιοχή / Ενότητα:</div>
         <div class="grid-btn-group" id="areaGroup">
           <div class="select-pill active" onclick="setArea('north', this)">Βόρεια Πτέρυγα</div>
@@ -432,7 +432,7 @@
         <!-- ΑΡΙΘΜΟΣ ΔΩΜΑΤΙΟΥ / ΣΟΥΙΤΑΣ -->
         <div class="section-label" id="roomSelectLabel">Αριθμός Δωματίου / Χώρου:</div>
         <div class="rooms-grid" id="roomsList">
-          <!-- Φορτώνει όλα τα πραγματικά δωμάτια με JS -->
+          <!-- Φορτώνει τα δωμάτια με JS -->
         </div>
 
         <!-- ΥΠΟΧΩΡΟΣ (ΓΙΑ ΒΙΛΕΣ / ΣΟΥΙΤΕΣ) -->
@@ -490,7 +490,7 @@
     <!-- VIEW 2: ΤΑΜΠΛΟ ΕΛΕΓΧΟΥ / ENGINEERING DASHBOARD -->
     <div id="viewBoard" class="hidden">
       
-      <!-- PIN BOX (ΜΟΝΟ «ΣΥΝΔΕΣΗ ENGINEERING», ΧΩΡΙΣ ΚΩΔΙΚΟΥΣ ΑΠΟ ΚΑΤΩ) -->
+      <!-- PIN BOX -->
       <div class="pin-box">
         <div class="pin-title" id="pinBoxTitle">ΣΥΝΔΕΣΗ ENGINEERING</div>
         <div class="pin-form" id="pinFormArea">
@@ -537,21 +537,21 @@
 
   </div>
 
-  <!-- Modal για Zoom Φωτογραφίας -->
+  <!-- Modal Zoom -->
   <div id="photoModal" class="modal-overlay hidden" onclick="closePhotoModal()">
     <img id="modalImg" class="modal-img" src="" alt="Enlarged ticket view" />
   </div>
 
   <script>
     /* ========================================================
-       1. SUPABASE CLIENT & LIVE SETUP
+       1. SUPABASE CLIENT
        ======================================================== */
     const SUPABASE_URL = "https://gmrphnwiuhubbvlhwkuw.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtcnBobndpdWh1YmJ2bGh3a3V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzMzczMDMsImV4cCI6MjEwNTkxMzMwM30.MGBT1-OJkCM7c5H2YxEUsCHjx8nXeUhfnKDfnazdvGI";
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     /* ========================================================
-       2. PIN, ΡΟΛΟΙ & ΤΕΧΝΙΚΟΙ
+       2. PIN & ΡΟΛΟΙ
        ======================================================== */
     const PIN_ROLES = {
       "1001": { name: "Ηλεκτρολόγος Βάρδιας", role: "electrician" },
@@ -564,12 +564,11 @@
     let soundEnabled = true;
 
     /* ========================================================
-       3. ΗΧΗΤΙΚΕΣ ΕΙΔΟΠΟΙΗΣΕΙΣ & ΔΟΝΗΣΗ (WEB AUDIO SYNTH)
+       3. ΗΧΗΤΙΚΕΣ ΕΙΔΟΠΟΙΗΣΕΙΣ
        ======================================================== */
     function playAlarm() {
       if (!soundEnabled) return;
 
-      // Δόνηση κινητού (αν υποστηρίζεται)
       if (navigator.vibrate) {
         navigator.vibrate([200, 100, 200, 100, 400]);
       }
@@ -580,8 +579,8 @@
         const gain = audioCtx.createGain();
 
         osc.type = "sine";
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Note A5
-        osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.35); // Drop to A4
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.35);
 
         gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
@@ -592,18 +591,17 @@
         osc.start();
         osc.stop(audioCtx.currentTime + 0.4);
       } catch (e) {
-        console.log("Audio alert not triggered:", e);
+        console.log("Audio alert failed:", e);
       }
     }
 
     function toggleSound() {
       soundEnabled = !soundEnabled;
-      const btn = document.getElementById("soundBtn");
-      btn.innerHTML = soundEnabled ? "🔊 Ήχος" : "🔇 Σίγαση";
+      document.getElementById("soundBtn").innerHTML = soundEnabled ? "🔊 Ήχος" : "🔇 Σίγαση";
     }
 
     /* ========================================================
-       4. ΒΑΡΔΙΕΣ ΒΑΣΕΙ ΩΡΑΣ
+       4. ΒΑΡΔΙΕΣ
        ======================================================== */
     function updateClockAndShift() {
       const now = new Date();
@@ -624,7 +622,7 @@
     updateClockAndShift();
 
     /* ========================================================
-       5. ΓΛΩΣΣΑ & ΘΕΜΑ (LIGHT / DARK)
+       5. ΓΛΩΣΣΑ & THEME
        ======================================================== */
     let currentLang = "el";
     const i18n = {
@@ -663,7 +661,7 @@
     }
 
     /* ========================================================
-       6. ΔΟΜΗ ΔΩΜΑΤΙΩΝ & ΣΟΥΙΤΩΝ (ΠΛΗΡΗΣ ΛΙΣΤΑ, ΧΩΡΙΣ EMOJI)
+       6. ΔΟΜΗ ΧΩΡΩΝ & ΒΛΑΒΩΝ (ΧΩΡΙΣ EMOJI)
        ======================================================== */
     function makeRange(start, end) {
       const arr = [];
@@ -793,7 +791,6 @@
         subCont.appendChild(d);
       });
 
-      // Αν είναι Βίλα ή Σουίτα, εμφανίζεται επιλογή επιμέρους χώρου
       const subLocBlock = document.getElementById("subLocationBlock");
       if (selectedArea.includes("villas") || selectedArea === "agora_suites") {
         subLocBlock.classList.remove("hidden");
@@ -835,7 +832,6 @@
       elem.parentElement.querySelectorAll(".select-pill").forEach(p => p.classList.remove("active"));
       elem.classList.add("active");
 
-      // Εμφάνιση Security SOP Alert αν είναι χρηματοκιβώτιο
       const sopBanner = document.getElementById("sopBanner");
       if (cat.includes("Χρηματοκιβώτιο") || cat.includes("Safe")) {
         sopBanner.style.display = "block";
@@ -865,7 +861,7 @@
     }
 
     /* ========================================================
-       7. ΑΥΤΟΜΑΤΗ ΣΥΜΠΙΕΣΗ ΦΩΤΟΓΡΑΦΙΑΣ (CANVAS COMPRESSION)
+       7. ΑΥΤΟΜΑΤΗ ΣΥΜΠΙΕΣΗ ΦΩΤΟΓΡΑΦΙΑΣ
        ======================================================== */
     function handlePhotoUpload(input) {
       if (input.files && input.files[0]) {
@@ -875,7 +871,6 @@
         reader.onload = function(e) {
           const img = new Image();
           img.onload = function() {
-            // Αυτόματο resize σε max 1000px πλάτος για να είναι ελαφριά
             const canvas = document.createElement("canvas");
             let width = img.width;
             let height = img.height;
@@ -894,9 +889,7 @@
             const ctx = canvas.getContext("2d");
             ctx.drawImage(img, 0, 0, width, height);
 
-            // Συμπίεση σε JPEG 0.75 ποιότητα
             compressedPhotoBase64 = canvas.toDataURL("image/jpeg", 0.75);
-            
             const preview = document.getElementById("photoPreviewImg");
             preview.src = compressedPhotoBase64;
             preview.style.display = "block";
@@ -916,7 +909,7 @@
     }
 
     /* ========================================================
-       8. ΚΑΤΑΧΩΡΗΣΗ ΒΛΑΒΗΣ ΣΤΟ SUPABASE
+       8. ΚΑΤΑΧΩΡΗΣΗ ΒΛΑΒΗΣ
        ======================================================== */
     async function submitTicket() {
       if (!selectedRoom || !selectedIssue) {
@@ -947,7 +940,6 @@
         alert("Σφάλμα καταχώρησης: " + error.message);
       } else {
         alert("✅ Η βλάβη καταχωρήθηκε επιτυχώς!");
-        // Reset φωτογραφίας
         compressedPhotoBase64 = null;
         document.getElementById("photoPreviewImg").style.display = "none";
         document.getElementById("photoInput").value = "";
@@ -980,7 +972,7 @@
     }
 
     /* ========================================================
-       10. ΦΟΡΤΩΣΗ, REALTIME & ΧΡΟΝΟΜΕΤΡΗΣΗ
+       10. ΦΟΡΤΩΣΗ, REALTIME & ΕΝΗΜΕΡΩΣΗ ΚΑΤΑΣΤΑΣΗΣ (ΔΙΟΡΘΩΜΕΝΟ)
        ======================================================== */
     function formatTimeAgo(dateString) {
       if (!dateString) return "";
@@ -1014,13 +1006,11 @@
       const oneDayAgo = now - (24 * 60 * 60 * 1000);
 
       tickets.forEach(t => {
-        // Φίλτρο 24ώρου για τις ολοκληρωμένες
         if (t.status === 'completed' && t.created_at) {
           const ticketTime = new Date(t.created_at).getTime();
-          if (ticketTime < oneDayAgo) return; // παράλειψη παλιών
+          if (ticketTime < oneDayAgo) return;
         }
 
-        // Φιλτράρισμα ανά ειδικότητα συνδεδεμένου τεχνικού
         if (currentUser && currentUser.role !== "admin" && currentUser.role !== "office") {
           if (currentUser.role === "electrician" && t.category !== "Ηλεκτρολογικά") return;
           if (currentUser.role === "plumber" && t.category !== "Υδραυλικά") return;
@@ -1031,6 +1021,7 @@
         const timeAgo = formatTimeAgo(t.created_at);
         const isSop = (t.priority && t.priority.includes("SOP")) || (t.category && t.category.includes("Χρηματοκιβώτιο"));
 
+        // Προσοχή: Εισαγωγικά γύρω από το '${t.id}' ώστε να μην παγώνει σε UUIDs
         const cardHtml = `
           <div class="ticket ${t.status}">
             <div class="ticket-head">
@@ -1046,8 +1037,8 @@
             ${t.assigned_role ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">👤 Τεχνικός: <strong>${t.assigned_role}</strong></div>` : ''}
             ${t.photo_url ? `<img src="${t.photo_url}" onclick="openPhotoModal('${t.photo_url}')" style="width:100%; border-radius:6px; margin:6px 0; max-height:120px; object-fit:cover; cursor:pointer;" />` : ''}
             <div class="ticket-actions">
-              ${t.status === 'pending' ? `<button class="action-btn" style="background:var(--status-progress);" onclick="updateStatus(${t.id}, 'in_progress')">Ανάληψη</button>` : ''}
-              ${t.status === 'in_progress' ? `<button class="action-btn" style="background:var(--status-done);" onclick="updateStatus(${t.id}, 'completed')">Ολοκλήρωση</button>` : ''}
+              ${t.status === 'pending' ? `<button class="action-btn" style="background:var(--status-progress);" onclick="updateStatus('${t.id}', 'in_progress')">Ανάληψη</button>` : ''}
+              ${t.status === 'in_progress' ? `<button class="action-btn" style="background:var(--status-done);" onclick="updateStatus('${t.id}', 'completed')">Ολοκλήρωση</button>` : ''}
               ${t.status === 'completed' ? `<span style="font-size:0.78rem; font-weight:700; color:var(--status-done);">✅ Ολοκληρώθηκε</span>` : ''}
             </div>
           </div>
@@ -1068,16 +1059,30 @@
     }
 
     async function updateStatus(id, newStatus) {
-      const updates = { status: newStatus };
-      if (currentUser && newStatus === 'in_progress') {
-        updates.assigned_role = currentUser.name;
+      // Έλεγχος σύνδεσης με PIN
+      if (!currentUser) {
+        alert("Παρακαλώ εισάγετε πρώτα το PIN σας στο πλαίσιο «ΣΥΝΔΕΣΗ ENGINEERING» παραπάνω!");
+        return;
       }
-      const { error } = await db.from("tickets").update(updates).eq("id", id);
-      if (error) alert("Σφάλμα ενημέρωσης: " + error.message);
-      else loadTickets();
+
+      try {
+        const updates = { status: newStatus };
+        if (newStatus === 'in_progress') {
+          updates.assigned_role = currentUser.name;
+        }
+
+        const { error } = await db.from("tickets").update(updates).eq("id", id);
+        if (error) {
+          alert("Σφάλμα ενημέρωσης: " + error.message);
+        } else {
+          loadTickets();
+        }
+      } catch (err) {
+        alert("Σφάλμα: " + err.message);
+      }
     }
 
-    // Live Realtime listener με ενεργοποίηση Alarm
+    // Live Realtime listener
     db.channel('realtime:tickets')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tickets' }, () => {
         playAlarm();
@@ -1089,7 +1094,7 @@
       .subscribe();
 
     /* ========================================================
-       11. INITIALIZATION & NAVIGATION
+       11. INITIALIZATION
        ======================================================== */
     function switchView(view) {
       if (view === 'new') {
@@ -1106,7 +1111,6 @@
       }
     }
 
-    // Έναρξη
     renderSubAreas();
     renderPresets();
     loadTickets();
