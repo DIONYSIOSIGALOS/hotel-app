@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>W Hotel Engineering & Ops</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { background-color: #0d0f12; color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .glass { background: rgba(23, 27, 34, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+  </style>
+</head>
+<body class="min-h-screen pb-12">
+
+  <!-- Header -->
+  <header class="glass sticky top-0 z-50 px-4 py-3 border-b border-neutral-800 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+      <h1 class="font-black text-lg tracking-wider bg-gradient-to-r from-white via-neutral-200 to-neutral-400 bg-clip-text text-transparent">W HOTEL OPS</h1>
+    </div>
+    <span id="role-badge" class="text-xs px-2.5 py-1 rounded-full bg-neutral-800 text-neutral-300 font-medium">Live System</span>
+  </header>
+
+  <!-- Role Navigation Tabs -->
+  <div class="max-w-4xl mx-auto px-4 mt-4">
+    <div class="grid grid-cols-3 gap-1 bg-neutral-900 p-1 rounded-xl border border-neutral-800 text-xs sm:text-sm font-semibold text-center">
+      <button onclick="switchTab('report')" id="tab-report" class="py-2.5 rounded-lg bg-neutral-800 text-white shadow">🛎️ Style / WW</button>
+      <button onclick="switchTab('tech')" id="tab-tech" class="py-2.5 rounded-lg text-neutral-400 hover:text-white">🛠️ Τεχνικοί</button>
+      <button onclick="switchTab('desk')" id="tab-desk" class="py-2.5 rounded-lg text-neutral-400 hover:text-white">🖥️ Γραφείο</button>
+    </div>
+  </div>
+
+  <main class="max-w-4xl mx-auto px-4 mt-6">
+
+    <!-- 1. TAB: STYLE / WHATEVER WHENEVER (REPORT ISSUE) -->
+    <section id="view-report" class="space-y-6">
+      <div class="glass p-5 rounded-2xl">
+        <h2 class="text-base font-bold mb-4 flex items-center gap-2 text-white">
+          <span>➕</span> Δήλωση Νέας Βλάβης
+        </h2>
+        <form id="ticket-form" onsubmit="submitTicket(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-neutral-400 mb-1">ΔΩΜΑΤΙΟ / ΧΩΡΟΣ</label>
+            <input type="text" id="form-room" required placeholder="π.χ. 104, Villa 12, Spa, Reception" 
+              class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3.5 py-2.5 text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-500">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-neutral-400 mb-1">ΕΙΔΙΚΟΤΗΤΑ / ΚΑΤΗΓΟΡΙΑ</label>
+            <select id="form-category" required class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-neutral-500">
+              <option value="Ηλεκτρολογικά">⚡ Ηλεκτρολογικά</option>
+              <option value="Υδραυλικά">💧 Υδραυλικά</option>
+              <option value="Κλιματισμός / A/C">❄️ Κλιματισμός / A/C</option>
+              <option value="Πισίνες">🏊‍♂️ Πισίνες</option>
+              <option value="Εξοπλισμός Κουζίνας">🍳 Εξοπλισμός Κουζίνας</option>
+              <option value="Ξυλουργικά / Κλειδαριές">🚪 Ξυλουργικά / Κλειδαριές</option>
+              <option value="Χρωματισμοί / Painter">🎨 Χρωματισμοί / Painter</option>
+              <option value="A/V & Συστήματα">📺 A/V & Συστήματα</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-neutral-400 mb-1">ΠΕΡΙΓΡΑΦΗ ΠΡΟΒΛΗΜΑΤΟΣ</label>
+            <textarea id="form-desc" rows="2" placeholder="π.χ. Δεν ανάβει το φωτιστικό δαπέδου" 
+              class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3.5 py-2.5 text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-500"></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-neutral-400 mb-1">ΠΡΟΤΕΡΑΙΟΤΗΤΑ</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" onclick="setPriority('Normal')" id="prio-normal" class="py-2 rounded-xl text-xs font-bold border border-neutral-700 bg-neutral-800 text-white">Κανονικό</button>
+              <button type="button" onclick="setPriority('Urgent / VIP')" id="prio-urgent" class="py-2 rounded-xl text-xs font-bold border border-neutral-800 bg-neutral-950 text-neutral-400">🚨 Επείγον / VIP</button>
+            </div>
+          </div>
+
+          <button type="submit" id="submit-btn" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 font-bold text-black tracking-wide shadow-lg active:scale-95 transition">
+            ΑΠΟΣΤΟΛΗ ΣΤΟ ENGINEERING
+          </button>
+        </form>
+      </div>
+
+      <!-- Live Follow up for Reporter -->
+      <div>
+        <h3 class="text-xs font-bold tracking-wider text-neutral-400 mb-3 uppercase">Τελευταίες Βλάβες & Εξέλιξη</h3>
+        <div id="reporter-tickets-list" class="space-y-2.5"></div>
+      </div>
+    </section>
+
+    <!-- 2. TAB: ENGINEERS (CLAIM & RESOLVE) -->
+    <section id="view-tech" class="hidden space-y-5">
+      <!-- Device / Tech Identity -->
+      <div class="glass p-3.5 rounded-xl flex items-center justify-between">
+        <div>
+          <span class="text-[10px] text-neutral-400 uppercase font-bold block">Τρέχον Κινητό / Τεχνικός:</span>
+          <select id="current-tech-device" class="bg-transparent font-bold text-white text-sm focus:outline-none cursor-pointer">
+            <option value="Κινητό Βάρδιας 1" class="bg-neutral-900">📱 Κινητό Βάρδιας 1</option>
+            <option value="Κινητό Βάρδιας 2" class="bg-neutral-900">📱 Κινητό Βάρδιας 2</option>
+            <option value="Ηλεκτρολόγος" class="bg-neutral-900">⚡ Ηλεκτρολόγος</option>
+            <option value="Υδραυλικός" class="bg-neutral-900">💧 Υδραυλικός</option>
+            <option value="Ψυκτικός (A/C)" class="bg-neutral-900">❄️ Ψυκτικός (A/C)</option>
+            <option value="Πισινάς" class="bg-neutral-900">🏊‍♂️ Πισινάς</option>
+            <option value="Κουζινάς" class="bg-neutral-900">🍳 Κουζινάς</option>
+            <option value="Ξυλουργός" class="bg-neutral-900">🚪 Ξυλουργός</option>
+            <option value="Painter" class="bg-neutral-900">🎨 Painter</option>
+            <option value="A/V Συστήματα" class="bg-neutral-900">📺 A/V Συστήματα</option>
+          </select>
+        </div>
+        <span class="text-xs text-neutral-400 bg-neutral-900 px-2 py-1 rounded-md border border-neutral-800">Auto Sync 🟢</span>
+      </div>
+
+      <!-- Filter Categories -->
+      <div class="flex gap-2 overflow-x-auto pb-1 text-xs">
+        <button onclick="setFilter('all')" class="px-3 py-1.5 rounded-full bg-white text-black font-semibold shrink-0">Όλες</button>
+        <button onclick="setFilter('Open')" class="px-3 py-1.5 rounded-full bg-neutral-800 text-neutral-300 font-semibold shrink-0">🔴 Ανοιχτές</button>
+        <button onclick="setFilter('In Progress')" class="px-3 py-1.5 rounded-full bg-neutral-800 text-neutral-300 font-semibold shrink-0">🟡 Σε Εξέλιξη</button>
+        <button onclick="setFilter('Done')" class="px-3 py-1.5 rounded-full bg-neutral-800 text-neutral-300 font-semibold shrink-0">🟢 Ολοκληρωμένες</button>
+      </div>
+
+      <!-- Tickets Feed -->
+      <div id="tech-tickets-list" class="space-y-3"></div>
+    </section>
+
+    <!-- 3. TAB: OFFICE / DESK DASHBOARD -->
+    <section id="view-desk" class="hidden space-y-5">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-white">Live Ταμπλό Γραφείου</h2>
+          <p class="text-xs text-neutral-400">Επισκόπηση σε πραγματικό χρόνο για γραμματεία & διεύθυνση</p>
+        </div>
+        <button onclick="testChime()" class="text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-3 py-1.5 rounded-lg border border-neutral-700">
+          🔔 Test Ήχου
+        </button>
+      </div>
+
+      <!-- Search Bar -->
+      <input type="text" id="desk-search" oninput="renderAll()" placeholder="🔍 Αναζήτηση δωματίου ή ειδικότητας (π.χ. 104, A/C)..." 
+        class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-600">
+
+      <!-- Kanban 3 Columns -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Col 1: Open -->
+        <div class="glass p-3 rounded-2xl flex flex-col min-h-[350px]">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-neutral-800">
+            <span class="text-xs font-bold text-red-400 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-red-500"></span> ΑΝΟΙΧΤΕΣ
+            </span>
+            <span id="count-open" class="text-xs font-bold bg-neutral-800 px-2 py-0.5 rounded text-neutral-300">0</span>
+          </div>
+          <div id="desk-open-list" class="space-y-2 flex-1"></div>
+        </div>
+
+        <!-- Col 2: In Progress -->
+        <div class="glass p-3 rounded-2xl flex flex-col min-h-[350px]">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-neutral-800">
+            <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span> ΣΕ ΕΞΕΛΙΞΗ
+            </span>
+            <span id="count-progress" class="text-xs font-bold bg-neutral-800 px-2 py-0.5 rounded text-neutral-300">0</span>
+          </div>
+          <div id="desk-progress-list" class="space-y-2 flex-1"></div>
+        </div>
+
+        <!-- Col 3: Done -->
+        <div class="glass p-3 rounded-2xl flex flex-col min-h-[350px]">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-neutral-800">
+            <span class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span> ΟΛΟΚΛΗΡΩΘΗΚΑΝ
+            </span>
+            <span id="count-done" class="text-xs font-bold bg-neutral-800 px-2 py-0.5 rounded text-neutral-300">0</span>
+          </div>
+          <div id="desk-done-list" class="space-y-2 flex-1"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // 1. SUPABASE CLIENT
+    const SUPABASE_URL = 'https://gmrphnwiuhubbvlhwkuw.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_kwWI5dK0s6MdN0kTd6sxFA__3Iq0GwU';
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let tickets = [];
+    let activePriority = 'Normal';
+    let activeFilter = 'all';
+
+    // 2. AUDIO CHIME (For new tickets on PC)
+    function playChime() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.5);
+      } catch(e) {}
+    }
+    function testChime() { playChime(); }
+
+    // 3. TAB NAVIGATION
+    function switchTab(tab) {
+      ['report', 'tech', 'desk'].forEach(t => {
+        document.getElementById('view-' + t).classList.toggle('hidden', t !== tab);
+        const btn = document.getElementById('tab-' + t);
+        if (t === tab) {
+          btn.className = "py-2.5 rounded-lg bg-neutral-800 text-white shadow";
+        } else {
+          btn.className = "py-2.5 rounded-lg text-neutral-400 hover:text-white";
+        }
+      });
+    }
+
+    function setPriority(prio) {
+      activePriority = prio;
+      const bNorm = document.getElementById('prio-normal');
+      const bUrg = document.getElementById('prio-urgent');
+      if (prio === 'Normal') {
+        bNorm.className = "py-2 rounded-xl text-xs font-bold border border-neutral-700 bg-neutral-800 text-white";
+        bUrg.className = "py-2 rounded-xl text-xs font-bold border border-neutral-800 bg-neutral-950 text-neutral-400";
+      } else {
+        bUrg.className = "py-2 rounded-xl text-xs font-bold border border-red-500 bg-red-950 text-red-200";
+        bNorm.className = "py-2 rounded-xl text-xs font-bold border border-neutral-800 bg-neutral-950 text-neutral-400";
+      }
+    }
+
+    function setFilter(filter) {
+      activeFilter = filter;
+      renderTechView();
+    }
+
+    // 4. FETCH & REALTIME
+    async function loadTickets() {
+      const { data, error } = await db.from('tickets').select('*').order('created_at', { ascending: false });
+      if (!error && data) {
+        tickets = data;
+        renderAll();
+      }
+    }
+
+    function setupRealtime() {
+      db.channel('realtime:tickets')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, (payload) => {
+          if (payload.eventType === 'INSERT') {
+            playChime();
+          }
+          loadTickets();
+        })
+        .subscribe();
+    }
+
+    // 5. SUBMIT TICKET (STYLE)
+    async function submitTicket(e) {
+      e.preventDefault();
+      const room = document.getElementById('form-room').value.trim();
+      const category = document.getElementById('form-category').value;
+      const description = document.getElementById('form-desc').value.trim();
+      const btn = document.getElementById('submit-btn');
+
+      btn.disabled = true;
+      btn.innerText = "ΑΠΟΣΤΟΛΗ...";
+
+      const { error } = await db.from('tickets').insert([{
+        room_number: room,
+        category: category,
+        description: description,
+        priority: activePriority,
+        status: 'Open'
+      }]);
+
+      btn.disabled = false;
+      btn.innerText = "ΑΠΟΣΤΟΛΗ ΣΤΟ ENGINEERING";
+
+      if (!error) {
+        document.getElementById('form-room').value = '';
+        document.getElementById('form-desc').value = '';
+        setPriority('Normal');
+        loadTickets();
+      } else {
+        alert('Σφάλμα: ' + error.message);
+      }
+    }
+
+    // 6. ACTIONS (CLAIM / RESOLVE)
+    async function claimJob(ticketId) {
+      const techDevice = document.getElementById('current-tech-device').value;
+      await db.from('tickets').update({
+        status: 'In Progress',
+        claimed_by: techDevice,
+        claimed_at: new Date().toISOString()
+      }).eq('id', ticketId);
+      loadTickets();
+    }
+
+    async function resolveJob(ticketId) {
+      const note = prompt('Σημείωση επισκευής (προαιρετικό):', 'Επισκευάστηκε κανονικά');
+      await db.from('tickets').update({
+        status: 'Done',
+        completed_at: new Date().toISOString(),
+        resolution_notes: note || 'Ολοκληρώθηκε'
+      }).eq('id', ticketId);
+      loadTickets();
+    }
+
+    // 7. RENDER FUNCTIONS
+    function renderAll() {
+      renderReporterView();
+      renderTechView();
+      renderDeskView();
+    }
+
+    function renderReporterView() {
+      const container = document.getElementById('reporter-tickets-list');
+      const latest = tickets.slice(0, 5);
+      if (latest.length === 0) {
+        container.innerHTML = `<p class="text-xs text-neutral-500">Δεν υπάρχουν πρόσφατες βλάβες.</p>`;
+        return;
+      }
+      container.innerHTML = latest.map(t => {
+        let statusBadge = '';
+        if (t.status === 'Open') statusBadge = `<span class="text-[11px] font-bold text-red-400 bg-red-950/80 px-2 py-0.5 rounded-full border border-red-900">🔴 Σε Αναμονή</span>`;
+        else if (t.status === 'In Progress') statusBadge = `<span class="text-[11px] font-bold text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded-full border border-amber-900">🟡 Ανέλαβε: ${t.claimed_by || 'Τεχνικός'}</span>`;
+        else statusBadge = `<span class="text-[11px] font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-900">🟢 Ολοκληρώθηκε</span>`;
+
+        return `
+          <div class="glass p-3 rounded-xl flex items-center justify-between text-xs">
+            <div>
+              <div class="font-bold text-white text-sm">Δωμάτιο ${t.room_number} <span class="text-neutral-400 text-xs font-normal">(${t.category})</span></div>
+              <div class="text-neutral-400 mt-0.5">${t.description || 'Χωρίς περιγραφή'}</div>
+            </div>
+            <div>${statusBadge}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTechView() {
+      const container = document.getElementById('tech-tickets-list');
+      let filtered = tickets;
+      if (activeFilter !== 'all') {
+        filtered = tickets.filter(t => t.status === activeFilter);
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<p class="text-xs text-neutral-500 text-center py-8">Καμία εκκρεμότητα.</p>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(t => {
+        const isUrgent = t.priority.includes('Urgent');
+        return `
+          <div class="glass p-4 rounded-xl space-y-3 ${isUrgent ? 'border-l-4 border-l-red-500' : ''}">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-xs font-bold text-neutral-400">${t.category}</span>
+                <h3 class="text-lg font-black text-white">Δωμάτιο ${t.room_number}</h3>
+              </div>
+              ${isUrgent ? `<span class="text-[10px] font-black tracking-wider bg-red-600 text-white px-2 py-0.5 rounded">URGENT VIP</span>` : ''}
+            </div>
+
+            <p class="text-sm text-neutral-300">${t.description || '—'}</p>
+
+            <div class="pt-2 border-t border-neutral-800 flex items-center justify-between">
+              <div>
+                ${t.status === 'Open' ? `<span class="text-xs text-red-400 font-bold">● Κανείς δεν έχει πάει ακόμα</span>` : ''}
+                ${t.status === 'In Progress' ? `<span class="text-xs text-amber-300 font-bold">● Ανέλαβε: ${t.claimed_by}</span>` : ''}
+                ${t.status === 'Done' ? `<span class="text-xs text-emerald-400 font-bold">● Έκλεισε (${t.resolution_notes || 'OK'})</span>` : ''}
+              </div>
+
+              <div>
+                ${t.status === 'Open' ? `
+                  <button onclick="claimJob('${t.id}')" class="bg-amber-400 hover:bg-amber-300 text-black font-bold text-xs px-3.5 py-1.5 rounded-lg shadow active:scale-95 transition">
+                    ✋ Το ανέλαβα
+                  </button>
+                ` : ''}
+                ${t.status === 'In Progress' ? `
+                  <button onclick="resolveJob('${t.id}')" class="bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs px-3.5 py-1.5 rounded-lg shadow active:scale-95 transition">
+                    ✅ Ολοκλήρωση
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderDeskView() {
+      const search = (document.getElementById('desk-search').value || '').toLowerCase();
+      const openEl = document.getElementById('desk-open-list');
+      const progEl = document.getElementById('desk-progress-list');
+      const doneEl = document.getElementById('desk-done-list');
+
+      const filtered = tickets.filter(t => 
+        t.room_number.toLowerCase().includes(search) || 
+        t.category.toLowerCase().includes(search) ||
+        (t.description && t.description.toLowerCase().includes(search))
+      );
+
+      const openTickets = filtered.filter(t => t.status === 'Open');
+      const progTickets = filtered.filter(t => t.status === 'In Progress');
+      const doneTickets = filtered.filter(t => t.status === 'Done');
+
+      document.getElementById('count-open').innerText = openTickets.length;
+      document.getElementById('count-progress').innerText = progTickets.length;
+      document.getElementById('count-done').innerText = doneTickets.length;
+
+      const card = (t) => `
+        <div class="bg-neutral-900 border border-neutral-800 p-2.5 rounded-xl text-xs space-y-1">
+          <div class="flex justify-between font-bold text-white">
+            <span>Δωμ. ${t.room_number}</span>
+            <span class="text-neutral-400 text-[10px]">${t.category}</span>
+          </div>
+          <div class="text-neutral-300 text-[11px]">${t.description || '—'}</div>
+          ${t.claimed_by ? `<div class="text-[10px] text-amber-400 font-semibold pt-1">Ανάληψη: ${t.claimed_by}</div>` : ''}
+        </div>
+      `;
+
+      openEl.innerHTML = openTickets.map(card).join('') || `<div class="text-neutral-600 text-xs text-center py-4">Κενό</div>`;
+      progEl.innerHTML = progTickets.map(card).join('') || `<div class="text-neutral-600 text-xs text-center py-4">Κενό</div>`;
+      doneEl.innerHTML = doneTickets.map(card).join('') || `<div class="text-neutral-600 text-xs text-center py-4">Κενό</div>`;
+    }
+
+    // INIT
+    loadTickets();
+    setupRealtime();
+  </script>
+</body>
+</html>
