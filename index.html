@@ -10,8 +10,8 @@
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
     .tap-highlight-none { -webkit-tap-highlight-color: transparent; }
-    .pulse-green { animation: pulseGlow 2s infinite; }
-    @keyframes pulseGlow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .pulse-alert { animation: pulseGlow 1.5s infinite; }
+    @keyframes pulseGlow { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
   </style>
 </head>
 <body class="bg-zinc-950 text-zinc-100 font-sans antialiased min-h-screen flex flex-col tap-highlight-none pb-12 selection:bg-emerald-500 selection:text-black">
@@ -51,18 +51,16 @@
   <main class="max-w-6xl mx-auto w-full px-3 py-4 flex-grow">
 
     <!-- ========================================== -->
-    <!-- TAB 1: FORM (STYLE / FRONT DESK / ZERO-TYPING) -->
+    <!-- TAB 1: ZERO-TYPING FORM -->
     <!-- ========================================== -->
     <section id="reportSection" class="space-y-4">
       
-      <!-- STEP 0: WHO IS REPORTING (DEPARTMENT) -->
+      <!-- STEP 0: DEPARTMENT -->
       <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 shadow-xl">
         <label class="block text-[11px] font-black uppercase text-zinc-400 tracking-wider mb-2.5" data-i18n="lbl_step0">
           Ποιος δηλώνει τη βλάβη; (Τμήμα)
         </label>
-        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2" id="deptGrid">
-          <!-- Populated by JS -->
-        </div>
+        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2" id="deptGrid"></div>
       </div>
 
       <!-- STEP 1: ZONE PICKER -->
@@ -70,9 +68,7 @@
         <label class="block text-[11px] font-black uppercase text-zinc-400 tracking-wider mb-2.5" data-i18n="lbl_step1">
           1. Επιλέξτε Πτέρυγα / Τοποθεσία
         </label>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="zoneGrid">
-          <!-- Populated by JS -->
-        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="zoneGrid"></div>
       </div>
 
       <!-- STEP 2: FLOOR & ROOM PICKER -->
@@ -85,19 +81,14 @@
         </div>
 
         <div id="floorRow" class="flex gap-2 mb-3 hidden"></div>
-
-        <div id="roomGrid" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 max-h-60 overflow-y-auto p-1.5 bg-zinc-950/60 rounded-xl border border-zinc-800">
-          <!-- Populated by JS -->
-        </div>
+        <div id="roomGrid" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 max-h-60 overflow-y-auto p-1.5 bg-zinc-950/60 rounded-xl border border-zinc-800"></div>
 
         <!-- Sub-Area for Villas & Suites -->
         <div id="subAreaBox" class="mt-3 pt-3 border-t border-zinc-800 hidden">
           <label class="block text-[11px] font-black uppercase text-zinc-400 tracking-wider mb-2" data-i18n="lbl_subarea">
             Χώρος Δωματίου / Σουίτας
           </label>
-          <div id="subAreaGrid" class="flex flex-wrap gap-2">
-            <!-- Populated by JS -->
-          </div>
+          <div id="subAreaGrid" class="flex flex-wrap gap-2"></div>
         </div>
       </div>
 
@@ -105,14 +96,12 @@
       <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 shadow-xl">
         <div class="flex items-center justify-between mb-2.5">
           <label class="text-[11px] font-black uppercase text-zinc-400 tracking-wider" data-i18n="lbl_step3">
-            3. Επιλέξτε Βλάβη (Έτοιμα Πλήκτρα)
+            3. Επιλέξτε Βλάβη
           </label>
           <span id="selectedLocationBadge" class="text-xs font-bold text-emerald-400 font-mono"></span>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="presetIssuesGrid">
-          <!-- Populated by JS -->
-        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="presetIssuesGrid"></div>
 
         <!-- Special Cinema / AV Preset for Villa 3 & 5 -->
         <div id="specialVillaAvBox" class="mt-2.5 hidden">
@@ -196,7 +185,7 @@
         <div class="bg-zinc-900/80 rounded-2xl p-3.5 border border-red-500/20 shadow-xl flex flex-col">
           <div class="flex items-center justify-between border-b border-zinc-800 pb-2.5 mb-2.5">
             <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-red-500 pulse-green"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-red-500 pulse-alert"></span>
               <span class="font-black text-xs uppercase text-zinc-200 tracking-wider" data-i18n="col_open">Ανοιχτές</span>
             </div>
             <span id="countOpen" class="text-xs font-black bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded-full">0</span>
@@ -234,6 +223,23 @@
 
   </main>
 
+  <!-- MODAL: CUSTOM ISSUE POPUP ("ΑΛΛΟ / ΔΕΝ ΓΝΩΡΙΖΩ") -->
+  <div id="customIssueModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-3">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 max-w-sm w-full shadow-2xl">
+      <h3 class="text-sm font-black text-zinc-100 mb-1">Περιγραφή Βλάβης</h3>
+      <p class="text-xs text-zinc-400 mb-3">Γράψτε σύντομα τι συμβαίνει στο δωμάτιο:</p>
+      <input type="text" id="customIssueTextInput" placeholder="π.χ. Σπασμένο ποτήρι, χαλασμένο μίνι μπαρ..." class="w-full px-3 py-2 text-xs rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-100 focus:outline-none focus:border-emerald-500 mb-3">
+      <div class="flex gap-2">
+        <button onclick="confirmCustomIssue()" class="flex-1 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs rounded-xl transition">
+          OK / Επιλογή
+        </button>
+        <button onclick="closeCustomIssueModal()" class="px-4 py-2 bg-zinc-800 text-zinc-300 font-bold text-xs rounded-xl">
+          Ακύρωση
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- OFFICE MODAL: 1-CLICK TRADE PICKER -->
   <div id="officeClaimModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-3">
     <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 max-w-sm w-full shadow-2xl">
@@ -266,22 +272,17 @@
   <!-- TOAST NOTIFICATION -->
   <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-zinc-800 border border-zinc-700 text-emerald-400 px-4 py-2.5 rounded-xl text-xs font-bold shadow-2xl transition-all opacity-0 pointer-events-none z-50"></div>
 
-  <!-- LOGIC & SUPABASE -->
+  <!-- APPLICATION LOGIC & SUPABASE -->
   <script>
     /* ==========================================================
-       SUPABASE CREDENTIALS (PASTE FROM YOUR SUPABASE TAB)
+       1. SUPABASE CREDENTIALS (CONNECTED)
        ========================================================== */
-    const SUPABASE_URL = ''; // π.χ. https://xyz.supabase.co
-    const SUPABASE_ANON_KEY = ''; // π.χ. eyJhbGci...
+    const SUPABASE_URL = 'https://garphnw1uhubbv1hwkuw.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtcnBobndpdWh1YmJ2bGh3a3V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzMzczMDMsImV4cCI6MjEwNTkxMzMwM30.MGBT1-OJkCM7c5H2YxEUsCHjx8nXeUhfnKDfnazdvGI';
 
-    let supabase = null;
-    if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    }
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    /* ==========================================================
-       HOTEL RESORT DATA STRUCTURE
-       ========================================================== */
+    /* RESORT STRUCTURE */
     const DEPARTMENTS = [
       { id: 'style', el: '🧹 Style', en: '🧹 Style' },
       { id: 'ww', el: '🛎️ Whatever/Whenever', en: '🛎️ Whatever/Whenever' },
@@ -321,9 +322,7 @@
       suites600: Array.from({length: 20}, (_, i) => 610 + i),
       rooms500: [...Array.from({length: 38}, (_, i) => 501 + i), 540],
       diving: [241, 242, 243, 244, 245, 246],
-      common: [
-        'Welcome Desk / Reception', 'W Lounge', 'Platea', 'Parelia', 'Wet Deck', 'Away Spa', 'FIT Gym'
-      ]
+      common: ['Welcome Desk / Reception', 'W Lounge', 'Platea', 'Parelia', 'Wet Deck', 'Away Spa', 'FIT Gym']
     };
 
     const SUB_AREAS = {
@@ -352,16 +351,16 @@
     };
 
     const PRESET_ISSUES = [
-      { id: 'leak', icon: '💧', el: 'Νερό / Διαρροή', en: 'Water leak', trade: 'plumbing' },
+      { id: 'leak', icon: '💧', el: 'Νερό στο πάτωμα / Διαρροή', en: 'Water leak / Flooding', trade: 'plumbing' },
       { id: 'hotwater', icon: '🔥', el: 'Δεν έχει ζεστό νερό', en: 'No hot water', trade: 'plumbing' },
-      { id: 'drain', icon: '🚿', el: 'Βουλωμένο ντους / Σιφόνι', en: 'Clogged drain', trade: 'plumbing' },
-      { id: 'ac', icon: '❄️', el: 'Ζέστη / Πρόβλημα A/C', en: 'AC problem', trade: 'ac' },
-      { id: 'lights', icon: '💡', el: 'Φώτα / Ρεύμα', en: 'Lights / Power trip', trade: 'electrical' },
-      { id: 'safe', icon: '🔐', el: 'Χρηματοκιβώτιο (Safe)', en: 'Safe Box issue', trade: 'electrical', security: true },
-      { id: 'lock', icon: '💳', el: 'Πόρτα / Κάρτα', en: 'Door RFID lock', trade: 'carpentry', security: true },
-      { id: 'tv', icon: '📺', el: 'TV / Chromecast / Ήχος', en: 'TV / Chromecast', trade: 'av_dual' },
-      { id: 'curtains', icon: '🪟', el: 'Κουρτίνες / Blackout', en: 'Curtains stuck', trade: 'carpentry' },
-      { id: 'unknown', icon: '❓', el: 'Άλλο / Δεν γνωρίζω', en: 'Other / Not sure', trade: 'general' }
+      { id: 'drain', icon: '🚿', el: 'Βουλωμένο ντους / Σιφόνι', en: 'Clogged drain / shower', trade: 'plumbing' },
+      { id: 'ac', icon: '❄️', el: 'Ζέστη / Πρόβλημα A/C', en: 'AC problem / Not cooling', trade: 'ac' },
+      { id: 'lights', icon: '💡', el: 'Φώτα / Έπεσε το ρεύμα', en: 'Lights / Power trip', trade: 'electrical' },
+      { id: 'safe', icon: '🔐', el: 'Χρηματοκιβώτιο (Safe Box)', en: 'Safe Box issue', trade: 'electrical', security: true },
+      { id: 'lock', icon: '💳', el: 'Πόρτα / Κλειδαριά δεν ανοίγει', en: 'Door RFID lock issue', trade: 'carpentry', security: true },
+      { id: 'tv', icon: '📺', el: 'TV / Chromecast / Ήχος', en: 'TV / Chromecast / Audio', trade: 'av_dual' },
+      { id: 'window', icon: '🪟', el: 'Παράθυρο / Σίτα κόλλησε', en: 'Window / Screen stuck', trade: 'carpentry' },
+      { id: 'unknown', icon: '❓', el: 'Άλλο / Δεν γνωρίζω', en: 'Other / Not sure', trade: 'general', isCustomPrompt: true }
     ];
 
     const ROLES = {
@@ -386,7 +385,7 @@
         lbl_step1: '1. Επιλέξτε Πτέρυγα / Τοποθεσία',
         lbl_step2: '2. Επιλέξτε Δωμάτιο',
         lbl_subarea: 'Χώρος Δωματίου / Σουίτας',
-        lbl_step3: '3. Επιλέξτε Βλάβη (Έτοιμα Πλήκτρα)',
+        lbl_step3: '3. Επιλέξτε Βλάβη',
         sec_title: 'ΠΡΩΤΟΚΟΛΛΟ ΑΣΦΑΛΕΙΑΣ / SECURITY SOP',
         sec_desc: 'Για άνοιγμα χρηματοκιβωτίου ή πόρτας απαιτείται υποχρεωτικά η φυσική παρουσία μέλους του Security Department.',
         btn_take_photo: 'Λήψη Φωτογραφίας',
@@ -416,7 +415,7 @@
         lbl_step1: '1. Select Wing / Location',
         lbl_step2: '2. Select Room',
         lbl_subarea: 'Room / Suite Area',
-        lbl_step3: '3. Select Issue (Quick Presets)',
+        lbl_step3: '3. Select Issue',
         sec_title: 'SECURITY PROTOCOL / SOP',
         sec_desc: 'Opening a safe box or guestroom door strictly requires physical presence of a Security Officer.',
         btn_take_photo: 'Take Photo',
@@ -452,7 +451,7 @@
     let capturedPhotoBase64 = null;
     let activeClaimTicketId = null;
     let activeAdminResolveTicketId = null;
-    let tickets = JSON.parse(localStorage.getItem('w_tickets') || '[]');
+    let tickets = [];
 
     document.addEventListener('DOMContentLoaded', () => {
       applyLanguage(currentLang);
@@ -461,7 +460,7 @@
       renderPresetIssues();
       renderOfficeRolesGrid();
       checkSavedLogin();
-      initSupabaseRealtime();
+      initSupabase();
       renderBoard();
       setInterval(renderBoard, 60000);
     });
@@ -665,7 +664,7 @@
         const text = currentLang === 'el' ? p.el : p.en;
         const isSel = selectedPreset && selectedPreset.id === p.id;
         return `
-          <button type="button" onclick="selectPreset('${p.id}', '${text}', '${p.trade}', ${!!p.security})" class="p-3 border rounded-xl text-left text-xs font-bold transition flex items-center gap-2 h-16 ${
+          <button type="button" onclick="handlePresetClick('${p.id}', '${text}', '${p.trade}', ${!!p.security}, ${!!p.isCustomPrompt})" class="p-3 border rounded-xl text-left text-xs font-bold transition flex items-center gap-2 h-16 ${
             isSel ? 'border-emerald-500 bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500' : 'border-zinc-800 bg-zinc-950 text-zinc-300 hover:border-zinc-700'
           }">
             <span class="text-xl">${p.icon}</span>
@@ -673,6 +672,26 @@
           </button>
         `;
       }).join('');
+    }
+
+    function handlePresetClick(presetId, title, trade, requiresSecurity, isCustomPrompt) {
+      if (isCustomPrompt) {
+        document.getElementById('customIssueTextInput').value = '';
+        document.getElementById('customIssueModal').classList.remove('hidden');
+        return;
+      }
+      selectPreset(presetId, title, trade, requiresSecurity);
+    }
+
+    function confirmCustomIssue() {
+      const text = document.getElementById('customIssueTextInput').value.trim();
+      const issueTitle = text ? `❓ ${text}` : '❓ Άλλο / Δεν γνωρίζω';
+      selectPreset('unknown', issueTitle, 'general', false);
+      closeCustomIssueModal();
+    }
+
+    function closeCustomIssueModal() {
+      document.getElementById('customIssueModal').classList.add('hidden');
     }
 
     function selectPreset(presetId, title, trade, requiresSecurity = false) {
@@ -722,7 +741,7 @@
       document.getElementById('photoStatusLabel').textContent = currentLang === 'el' ? 'Λήψη Φωτογραφίας' : 'Take Photo';
     }
 
-    /* SUBMISSION ENGINE */
+    /* SUBMISSION TO SUPABASE */
     async function submitTicket() {
       if (!selectedRoom) {
         showToast(I18N[currentLang].toast_pick_room);
@@ -734,66 +753,36 @@
       }
 
       const now = new Date();
-      const currentHour = now.getHours() + (now.getMinutes() / 60);
-
-      let routedRoles = [];
-      if (currentHour >= 22.5 || currentHour < 7.0) {
-        routedRoles = ['1001', '2001'];
-      } else if (currentHour >= 15.0 && currentHour < 22.5) {
-        if (selectedPreset.trade === 'electrical') routedRoles = ['1001'];
-        else if (selectedPreset.trade === 'plumbing') routedRoles = ['2001'];
-        else routedRoles = ['1001', '2001'];
-      } else {
-        if (selectedPreset.trade === 'electrical') routedRoles = ['1001', '1002'];
-        else if (selectedPreset.trade === 'plumbing') routedRoles = ['2001', '2002'];
-        else if (selectedPreset.trade === 'ac') routedRoles = ['3000'];
-        else if (selectedPreset.trade === 'civil') routedRoles = ['4000'];
-        else if (selectedPreset.trade === 'pool') routedRoles = ['5000'];
-        else if (selectedPreset.trade === 'carpentry') routedRoles = ['6000'];
-        else if (selectedPreset.trade === 'av') routedRoles = ['7000'];
-        else if (selectedPreset.trade === 'av_dual') routedRoles = ['7000', '1001'];
-        else routedRoles = ['1001', '2001'];
-      }
-      routedRoles.push('8888');
-
       const customNote = document.getElementById('customNoteInput').value.trim();
 
       const newTicket = {
         id: 'T-' + Date.now().toString().slice(-6),
         dept: selectedDept,
-        zoneName: selectedZone ? (currentLang === 'el' ? selectedZone.nameEl : selectedZone.nameEn) : '',
-        room: selectedRoom,
-        subArea: selectedSubArea,
-        locationDisplay: formatDisplayLocation(selectedRoom, selectedSubArea),
-        issueTitle: selectedPreset.title,
-        customNote: customNote,
+        zone_name: selectedZone ? (currentLang === 'el' ? selectedZone.nameEl : selectedZone.nameEn) : '',
+        location_display: formatDisplayLocation(selectedRoom, selectedSubArea),
+        issue_title: selectedPreset.title,
+        custom_note: customNote,
         photo: capturedPhotoBase64,
-        securitySop: selectedPreset.requiresSecurity,
-        routedRoles: [...new Set(routedRoles)],
+        security_sop: selectedPreset.requiresSecurity,
         status: 'open',
-        createdAt: now.toISOString(),
-        claimedAt: null,
-        claimedBy: null,
-        resolvedAt: null,
-        resolvedBy: null,
-        resolvedNote: null
+        created_at: now.toISOString(),
+        claimed_at: null,
+        claimed_by: null,
+        resolved_at: null,
+        resolved_by: null,
+        resolved_note: null
       };
 
-      tickets.unshift(newTicket);
-      localStorage.setItem('w_tickets', JSON.stringify(tickets));
-
-      // Broadcast or Supabase push
-      if (supabase) {
-        try {
-          await supabase.from('tickets').insert([newTicket]);
-        } catch(e) { console.error('Supabase insert failed:', e); }
+      try {
+        const { error } = await supabase.from('tickets').insert([newTicket]);
+        if (error) throw error;
+        showToast(I18N[currentLang].toast_submitted);
+      } catch (err) {
+        console.error('Supabase insert error:', err);
+        showToast('Σφάλμα αποστολής στη βάση!');
       }
 
-      playChime();
-      triggerSystemNotification(newTicket);
-      showToast(I18N[currentLang].toast_submitted);
-
-      // Reset
+      // Reset Form
       selectedRoom = null;
       selectedSubArea = null;
       selectedPreset = null;
@@ -804,10 +793,9 @@
       updateLocationBadge();
       renderZoneGrid();
       renderPresetIssues();
-      renderBoard();
     }
 
-    /* CHIME & AUDIO */
+    /* AUDIO & SYSTEM NOTIFICATIONS */
     function playChime() {
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -842,7 +830,7 @@
       }
     }
 
-    /* AUTH & PIN */
+    /* PIN LOGIN */
     function loginWithPin() {
       const pin = document.getElementById('pinInput').value.trim();
       if (!ROLES[pin]) {
@@ -929,7 +917,6 @@
 
       return `
         <div class="bg-zinc-950 rounded-xl p-3 border ${t.securitySop ? 'border-red-500/50 ring-1 ring-red-500/30' : 'border-zinc-800'} shadow-sm space-y-2">
-          
           <div class="flex items-start justify-between gap-1">
             <div>
               <span class="text-xs font-black text-emerald-400 font-mono tracking-tight">${t.locationDisplay}</span>
@@ -989,7 +976,6 @@
               </button>
             ` : ''}
           </div>
-
         </div>
       `;
     }
@@ -1036,17 +1022,17 @@
     }
 
     async function claimTicket(ticketId, claimedByName) {
-      const ticket = tickets.find(t => t.id === ticketId);
-      if (ticket) {
-        ticket.status = 'in_progress';
-        ticket.claimedAt = new Date().toISOString();
-        ticket.claimedBy = claimedByName;
-        localStorage.setItem('w_tickets', JSON.stringify(tickets));
-        if (supabase) {
-          try { await supabase.from('tickets').update({ status: 'in_progress', claimedAt: ticket.claimedAt, claimedBy: ticket.claimedBy }).eq('id', ticketId); } catch(e){}
-        }
-        renderBoard();
+      const claimedAt = new Date().toISOString();
+      try {
+        const { error } = await supabase.from('tickets').update({
+          status: 'in_progress',
+          claimed_at: claimedAt,
+          claimed_by: claimedByName
+        }).eq('id', ticketId);
+        if (error) throw error;
         showToast(`Ανάληψη: ${claimedByName}`);
+      } catch (err) {
+        console.error('Claim error:', err);
       }
     }
 
@@ -1057,15 +1043,18 @@
         ? (currentLang === 'el' ? ROLES[currentRolePin].nameEl : ROLES[currentRolePin].nameEn)
         : (ticket.claimedBy || 'Τεχνικός');
 
-      ticket.status = 'resolved';
-      ticket.resolvedAt = new Date().toISOString();
-      ticket.resolvedBy = resolverName;
-      localStorage.setItem('w_tickets', JSON.stringify(tickets));
-      if (supabase) {
-        try { await supabase.from('tickets').update({ status: 'resolved', resolvedAt: ticket.resolvedAt, resolvedBy: ticket.resolvedBy }).eq('id', ticketId); } catch(e){}
+      const resolvedAt = new Date().toISOString();
+      try {
+        const { error } = await supabase.from('tickets').update({
+          status: 'resolved',
+          resolved_at: resolvedAt,
+          resolved_by: resolverName
+        }).eq('id', ticketId);
+        if (error) throw error;
+        showToast('Η βλάβη ολοκληρώθηκε! ✅');
+      } catch (err) {
+        console.error('Resolve error:', err);
       }
-      renderBoard();
-      showToast('Η βλάβη ολοκληρώθηκε! ✅');
     }
 
     function openAdminResolveModal(ticketId) {
@@ -1085,53 +1074,84 @@
         alert('Συμπληρώστε αιτιολογία');
         return;
       }
-      const ticket = tickets.find(t => t.id === activeAdminResolveTicketId);
-      if (ticket) {
-        ticket.status = 'resolved';
-        ticket.resolvedAt = new Date().toISOString();
-        ticket.resolvedBy = 'Admin (9999)';
-        ticket.resolvedNote = note;
-        localStorage.setItem('w_tickets', JSON.stringify(tickets));
-        if (supabase) {
-          try { await supabase.from('tickets').update({ status: 'resolved', resolvedAt: ticket.resolvedAt, resolvedBy: ticket.resolvedBy, resolvedNote: note }).eq('id', ticket.id); } catch(e){}
-        }
-        renderBoard();
+      const resolvedAt = new Date().toISOString();
+      try {
+        const { error } = await supabase.from('tickets').update({
+          status: 'resolved',
+          resolved_at: resolvedAt,
+          resolved_by: 'Admin (9999)',
+          resolved_note: note
+        }).eq('id', activeAdminResolveTicketId);
+        if (error) throw error;
         closeAdminResolveModal();
         showToast('Ολοκληρώθηκε από Admin');
+      } catch (err) {
+        console.error('Admin resolve error:', err);
       }
     }
 
     async function deleteTicketPermanent(ticketId) {
       if (confirm('Οριστική διαγραφή καταχώρησης;')) {
-        tickets = tickets.filter(t => t.id !== ticketId);
-        localStorage.setItem('w_tickets', JSON.stringify(tickets));
-        if (supabase) {
-          try { await supabase.from('tickets').delete().eq('id', ticketId); } catch(e){}
+        try {
+          const { error } = await supabase.from('tickets').delete().eq('id', ticketId);
+          if (error) throw error;
+          showToast('Η εγγραφή διαγράφηκε');
+        } catch (err) {
+          console.error('Delete error:', err);
         }
-        renderBoard();
-        showToast('Η εγγραφή διαγράφηκε');
       }
     }
 
-    /* REALTIME & HELPERS */
-    function initSupabaseRealtime() {
-      if (!supabase) return;
-      supabase.channel('public:tickets')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, payload => {
-          if (payload.eventType === 'INSERT') {
-            tickets.unshift(payload.new);
-            playChime();
-            triggerSystemNotification(payload.new);
-          } else if (payload.eventType === 'UPDATE') {
-            const idx = tickets.findIndex(t => t.id === payload.new.id);
-            if (idx !== -1) tickets[idx] = payload.new;
-          } else if (payload.eventType === 'DELETE') {
-            tickets = tickets.filter(t => t.id !== payload.old.id);
-          }
-          localStorage.setItem('w_tickets', JSON.stringify(tickets));
+    /* REALTIME SYNC (MOBILE <-> PC) */
+    async function initSupabase() {
+      try {
+        const { data, error } = await supabase.from('tickets').select('*').order('created_at', { ascending: false });
+        if (data && !error) {
+          tickets = data.map(mapRowToTicket);
           renderBoard();
-        })
-        .subscribe();
+        }
+
+        // Live Realtime listener
+        supabase.channel('public:tickets')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, payload => {
+            if (payload.eventType === 'INSERT') {
+              const newT = mapRowToTicket(payload.new);
+              tickets.unshift(newT);
+              playChime();
+              triggerSystemNotification(newT);
+            } else if (payload.eventType === 'UPDATE') {
+              const updatedT = mapRowToTicket(payload.new);
+              const idx = tickets.findIndex(t => t.id === updatedT.id);
+              if (idx !== -1) tickets[idx] = updatedT;
+            } else if (payload.eventType === 'DELETE') {
+              tickets = tickets.filter(t => t.id !== payload.old.id);
+            }
+            renderBoard();
+          })
+          .subscribe();
+      } catch (err) {
+        console.error('Supabase setup error:', err);
+      }
+    }
+
+    function mapRowToTicket(row) {
+      return {
+        id: row.id,
+        dept: row.dept,
+        locationDisplay: row.location_display,
+        zoneName: row.zone_name,
+        issueTitle: row.issue_title,
+        customNote: row.custom_note,
+        photo: row.photo,
+        securitySop: row.security_sop,
+        status: row.status,
+        createdAt: row.created_at,
+        claimedAt: row.claimed_at,
+        claimedBy: row.claimed_by,
+        resolvedAt: row.resolved_at,
+        resolvedBy: row.resolved_by,
+        resolvedNote: row.resolved_note
+      };
     }
 
     function formatTime(isoString) {
