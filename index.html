@@ -1,1259 +1,665 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>W Maintenance</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Supabase JS Client v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
   <style>
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
-    .tap-highlight-none { -webkit-tap-highlight-color: transparent; }
-    .pulse-alert { animation: pulseGlow 1.5s infinite; }
-    @keyframes pulseGlow { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    /* CSS Variables: Dark Mode (Default) */
+    :root {
+      --bg-main: #0f172a;
+      --bg-card: #1e293b;
+      --bg-input: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --accent-green: #22c55e;
+      --accent-blue: #38bdf8;
+      --status-open: #ef4444;
+      --status-progress: #f59e0b;
+      --status-done: #10b981;
+    }
+
+    /* Light Mode: Καθαρό λευκό φόντο & Navy / Μπλε σκούρες λεπτομέρειες */
+    body.light-theme {
+      --bg-main: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-input: #f1f5f9;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --border-color: #cbd5e1;
+      --accent-green: #16a34a;
+      --accent-blue: #0369a1;
+      --status-open: #dc2626;
+      --status-progress: #d97706;
+      --status-done: #059669;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; padding-bottom: 40px; transition: background-color 0.25s, color 0.25s; }
+
+    /* Top Navigation Header */
+    header {
+      background-color: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .brand { font-size: 1.25rem; font-weight: 800; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+    .brand span.w { color: var(--accent-green); font-size: 1.5rem; font-weight: 900; }
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+    .icon-btn {
+      background: var(--bg-input);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* Container & Navigation Tabs */
+    .container { max-width: 1000px; margin: 15px auto; padding: 0 15px; }
+    .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+    .tab-btn {
+      flex: 1;
+      padding: 12px;
+      background: var(--bg-card);
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: var(--accent-green);
+      color: #ffffff;
+      border-color: var(--accent-green);
+    }
+
+    /* Panels & Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    /* PIN Box */
+    .pin-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+    }
+    .pin-title {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .pin-form { display: flex; gap: 10px; }
+    .pin-input {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-input);
+      color: var(--text-main);
+      font-size: 1rem;
+      font-weight: 600;
+      outline: none;
+    }
+    .btn-green {
+      background: var(--accent-green);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 22px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Quick Grid Selectors (No Typing Needed) */
+    .section-label { font-size: 0.9rem; font-weight: 700; margin-bottom: 10px; color: var(--text-muted); }
+    .grid-btn-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin-bottom: 16px; }
+    .select-pill {
+      background: var(--bg-input);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .select-pill.active {
+      background: var(--accent-blue);
+      color: #ffffff;
+      border-color: var(--accent-blue);
+    }
+
+    /* Preset Issues Grid */
+    .issues-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-bottom: 16px; }
+    .issue-card {
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px 10px;
+      text-align: center;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .issue-card.active {
+      background: var(--accent-green);
+      color: #ffffff;
+      border-color: var(--accent-green);
+    }
+
+    /* Photo Preview */
+    .photo-preview {
+      width: 100%;
+      max-height: 180px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-top: 8px;
+      display: none;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Dashboard Columns */
+    .board { display: grid; grid-template-columns: 1fr; gap: 15px; }
+    @media(min-width: 768px) { .board { grid-template-columns: 1fr 1fr 1fr; } }
+    .column-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+      border-bottom: 2px solid var(--border-color);
+      font-weight: 800;
+      font-size: 0.95rem;
+    }
+    .badge { border-radius: 20px; padding: 2px 10px; font-size: 0.8rem; color: #ffffff; font-weight: 700; }
+    .badge-open { background: var(--status-open); }
+    .badge-progress { background: var(--status-progress); }
+    .badge-done { background: var(--status-done); }
+
+    /* Ticket Item */
+    .ticket {
+      background: var(--bg-input);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-left: 4px solid var(--accent-blue);
+    }
+    .ticket.open { border-left-color: var(--status-open); }
+    .ticket.in_progress { border-left-color: var(--status-progress); }
+    .ticket.completed { border-left-color: var(--status-done); opacity: 0.85; }
+    .ticket-head { display: flex; justify-content: space-between; font-weight: 700; font-size: 0.95rem; }
+    .ticket-cat { color: var(--accent-blue); font-size: 0.8rem; font-weight: 700; }
+    .ticket-issue { margin: 6px 0; font-size: 0.9rem; }
+    .ticket-actions { display: flex; gap: 6px; margin-top: 8px; }
+    .action-btn {
+      flex: 1;
+      padding: 6px;
+      font-size: 0.75rem;
+      border-radius: 6px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      color: #fff;
+    }
+
+    .hidden { display: none !important; }
+    .empty-text { text-align: center; color: var(--text-muted); padding: 30px 10px; font-size: 0.9rem; }
   </style>
 </head>
-<body class="bg-zinc-950 text-zinc-100 font-sans antialiased min-h-screen flex flex-col tap-highlight-none pb-12 selection:bg-emerald-500 selection:text-black">
+<body>
 
-  <!-- TOP APP BAR -->
-  <header class="bg-zinc-900/90 backdrop-blur-md border-b border-zinc-800 sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-      <div class="flex items-center space-x-2">
-        <span class="text-2xl font-black tracking-tighter text-emerald-400">W</span>
-        <span class="text-sm font-bold tracking-widest text-zinc-100 uppercase">MAINTENANCE</span>
-      </div>
-
-      <div class="flex items-center space-x-2">
-        <button id="langToggleBtn" onclick="toggleLanguage()" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-zinc-300 transition">
-          🇬🇧 EN
-        </button>
-        <button id="notifBtn" onclick="requestNotificationPermission()" class="p-1.5 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-emerald-400 transition" title="Ενεργοποίηση Ειδοποιήσεων">
-          🔔
-        </button>
-        <div id="roleTag" class="hidden text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded font-mono font-bold"></div>
-        <button id="logoutBtn" onclick="logoutRole()" class="hidden text-xs text-red-400 hover:text-red-300 ml-1">✕</button>
-      </div>
+  <!-- Top Header -->
+  <header>
+    <div class="brand">
+      <span class="w">W</span> MAINTENANCE
     </div>
-
-    <!-- TABS -->
-    <nav class="max-w-6xl mx-auto px-2 flex border-t border-zinc-800/80 text-xs font-bold">
-      <button onclick="switchTab('report')" id="tabReport" class="flex-1 py-3 text-center border-b-2 border-emerald-400 text-emerald-400 flex items-center justify-center gap-1.5 transition">
-        <span>📝</span> <span data-i18n="tab_report">Δήλωση Βλάβης</span>
-      </button>
-      <button onclick="switchTab('board')" id="tabBoard" class="flex-1 py-3 text-center border-b-2 border-transparent text-zinc-400 hover:text-zinc-200 flex items-center justify-center gap-1.5 transition">
-        <span>📋</span> <span data-i18n="tab_board">Ταμπλό / Τεχνικοί</span>
-      </button>
-    </nav>
+    <div class="header-actions">
+      <!-- Light / Dark Theme Switch -->
+      <button class="icon-btn" id="themeBtn" onclick="toggleTheme()">☀️ Ημέρα</button>
+      <!-- Language Switch -->
+      <button class="icon-btn" id="langBtn" onclick="toggleLanguage()">🇬🇧 EN</button>
+    </div>
   </header>
 
-  <!-- MAIN CONTAINER -->
-  <main class="max-w-6xl mx-auto w-full px-3 py-4 flex-grow">
+  <div class="container">
+    
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" id="tabNewBtn" onclick="switchView('new')">📝 <span data-t="tabNew">Δήλωση Βλάβης</span></button>
+      <button class="tab-btn" id="tabBoardBtn" onclick="switchView('board')">📋 <span data-t="tabBoard">Έλεγχος & Ταμπλό</span></button>
+    </div>
 
-    <!-- ========================================== -->
-    <!-- TAB 1: ZERO-TYPING FORM -->
-    <!-- ========================================== -->
-    <section id="reportSection" class="space-y-4">
-      
-      <!-- STEP 0: DEPARTMENT -->
-      <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 shadow-xl">
-        <label class="block text-[11px] font-black uppercase text-zinc-400 tracking-wider mb-2.5" data-i18n="lbl_step0">
-          Ποιος δηλώνει τη βλάβη; (Τμήμα)
-        </label>
-        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2" id="deptGrid"></div>
-      </div>
-
-      <!-- STEP 1: ZONE PICKER -->
-      <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 shadow-xl">
-        <label class="block text-[11px] font-black uppercase text-zinc-400 tracking-wider mb-2.5" data-i18n="lbl_step1">
-          1. Επιλέξτε Πτέρυγα / Τοποθεσία
-        </label>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="zoneGrid"></div>
-      </div>
-
-      <!-- STEP 2: FLOOR & ROOM PICKER -->
-      <div id="roomPickerCard" class="hidden bg-zinc-900 p-4 rounded-2xl border border-zinc-800 shadow-xl">
-        <div class="flex items-center justify-between mb-2.5">
-          <label class="text-[11px] font-black uppercase text-zinc-400 tracking-wider" data-i18n="lbl_step2">
-            2. Επιλέξτε Δωμάτιο
-          </label>
-          <span id="selectedZoneBadge" class="text-xs font-bold px-2 py-0.5 bg-zinc-800 text-emerald-400 rounded border border-zinc-700"></span>
-        </div>
-
-        <div id="floorRow" class="flex gap-2 mb-3 hidden"></div>
-        <div id="roomGrid" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 max-h-60 overflow-y-auto p-1.5 bg-zinc-950/60 rounded-xl border border-zinc-800"></div>
-
-        <!-- Sub-Area for Villas & Suites -->
-        <div id="subAreaBox" class="mt-3 pt-3 border-t border-zinc-800 hidden">
-          <label class="block text-[11px] font-black uppercase text-zinc-400 tracking-wider mb-2" data-i18n="lbl_subarea">
-            Χώρος Δωματίου / Σουίτας
-          </label>
-          <div id="subAreaGrid" class="flex flex-wrap gap-2"></div>
-        </div>
-      </div>
-
-      <!-- STEP 3: PRESET ISSUES -->
-      <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 shadow-xl">
-        <div class="flex items-center justify-between mb-2.5">
-          <label class="text-[11px] font-black uppercase text-zinc-400 tracking-wider" data-i18n="lbl_step3">
-            3. Επιλέξτε Βλάβη
-          </label>
-          <span id="selectedLocationBadge" class="text-xs font-bold text-emerald-400 font-mono"></span>
-        </div>
-
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="presetIssuesGrid"></div>
-
-        <!-- Special Cinema / AV Preset for Villa 3 & 5 -->
-        <div id="specialVillaAvBox" class="mt-2.5 hidden">
-          <button type="button" onclick="selectPreset('av_villa', '🎛️ Cinema / Projector / AV Systems', 'av')" class="w-full p-3 bg-zinc-800/80 border border-indigo-500/40 text-indigo-300 rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-zinc-800 transition">
-            <span class="text-lg">📽️</span> <span>Cinema / Projector / Tablet (Villa Special)</span>
-          </button>
-        </div>
-
-        <!-- Security Warning Prompt -->
-        <div id="securityBanner" class="hidden mt-3 p-3 bg-red-950/50 border border-red-500/40 rounded-xl flex items-start gap-2.5">
-          <span class="text-xl">🛡️</span>
-          <div>
-            <div class="text-xs font-black text-red-300 uppercase tracking-wide" data-i18n="sec_title">ΠΡΩΤΟΚΟΛΛΟ ΑΣΦΑΛΕΙΑΣ / SECURITY SOP</div>
-            <div class="text-xs text-red-200/80 mt-0.5" data-i18n="sec_desc">Για άνοιγμα χρηματοκιβωτίου ή πόρτας απαιτείται υποχρεωτικά η φυσική παρουσία μέλους του Security Department.</div>
-          </div>
-        </div>
-
-        <!-- Optional Custom Note -->
-        <div class="mt-3">
-          <input type="text" id="customNoteInput" placeholder="Επιπλέον παρατήρηση αν χρειάζεται (προαιρετικό)..." class="w-full px-3.5 py-2.5 text-xs rounded-xl bg-zinc-950 border border-zinc-800 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-emerald-500 transition">
-        </div>
-      </div>
-
-      <!-- STEP 4: PHOTO & SUBMIT -->
-      <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 shadow-xl flex flex-col sm:flex-row items-center gap-3">
-        <label class="w-full sm:w-auto flex-1 cursor-pointer flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl border border-dashed border-zinc-700 hover:border-zinc-500 bg-zinc-950 text-zinc-300 text-xs font-bold transition">
-          <span class="text-lg">📷</span>
-          <span id="photoStatusLabel" data-i18n="btn_take_photo">Λήψη Φωτογραφίας</span>
-          <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="handlePhotoCapture(event)">
-        </label>
+    <!-- VIEW 1: ΔΗΛΩΣΗ ΒΛΑΒΗΣ -->
+    <div id="viewNew">
+      <div class="card">
         
-        <div id="photoPreviewContainer" class="hidden relative">
-          <img id="photoThumb" class="w-12 h-12 rounded-lg object-cover border border-zinc-700" src="" alt="preview">
-          <button onclick="removePhoto()" class="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center font-bold">✕</button>
+        <!-- 1. Τύπος Χώρου -->
+        <div class="section-label" data-t="secLocation">1. Επιλογή Χώρου:</div>
+        <div class="grid-btn-group" id="locTypeGroup">
+          <div class="select-pill active" onclick="setLocType('room', this)">🛏️ <span data-t="room">Δωμάτιο</span></div>
+          <div class="select-pill" onclick="setLocType('villa', this)">🏡 <span data-t="villa">Βίλα</span></div>
+          <div class="select-pill" onclick="setLocType('public', this)">🏛️ <span data-t="public">Κοινόχρηστο</span></div>
         </div>
 
-        <button type="button" onclick="submitTicket()" id="submitBtn" class="w-full sm:w-auto px-8 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-xl text-sm shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2">
-          <span>🚀</span>
-          <span data-i18n="btn_submit">Αποστολή Βλάβης</span>
+        <!-- Επιλογή Συγκεκριμένου Χώρου / Δωματίου -->
+        <div class="section-label" id="locSelectLabel" data-t="secRoomNum">Αριθμός Δωματίου / Χώρου:</div>
+        <div class="grid-btn-group" id="locationButtons">
+          <!-- Γεμίζει αυτόματα με JS -->
+        </div>
+
+        <!-- 2. Κατηγορία Βλάβης -->
+        <div class="section-label" data-t="secCategory">2. Ειδικότητα / Κατηγορία:</div>
+        <div class="grid-btn-group">
+          <div class="select-pill active" onclick="setCategory('Υδραυλικά', this)">🔧 Υδραυλικά</div>
+          <div class="select-pill" onclick="setCategory('Ηλεκτρολογικά', this)">⚡ Ηλεκτρολογικά</div>
+          <div class="select-pill" onclick="setCategory('A/C', this)">❄️ A/C</div>
+          <div class="select-pill" onclick="setCategory('A/V', this)">📺 A/V</div>
+          <div class="select-pill" onclick="setCategory('Ξυλουργικά', this)">🚪 Πόρτες/Έπιπλα</div>
+        </div>
+
+        <!-- 3. Προκαθορισμένες Βλάβες (Zero Typing) -->
+        <div class="section-label" data-t="secIssue">3. Συχνή Βλάβη (Άμεσο κλικ):</div>
+        <div class="issues-grid" id="presetIssues">
+          <!-- Γεμίζει αυτόματα -->
+        </div>
+
+        <!-- 4. Φωτογραφία (Προαιρετικό) -->
+        <div class="section-label" data-t="secPhoto">4. Φωτογραφία (Προαιρετικά):</div>
+        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="previewPhoto(this)" />
+        <button class="icon-btn" style="width:100%; justify-content:center; padding:12px; margin-bottom:12px;" onclick="document.getElementById('photoInput').click()">
+          📷 <span data-t="takePhoto">Λήψη / Επιλογή Φωτογραφίας</span>
         </button>
+        <img id="photoPreviewImg" class="photo-preview" alt="Preview" />
+
+        <!-- Κουμπί Αποστολής -->
+        <button class="btn-green" style="width:100%; font-size:1.1rem; padding:15px; margin-top:10px;" onclick="submitTicket()">
+          🚀 <span data-t="sendIssue">ΚΑΤΑΧΩΡΗΣΗ ΒΛΑΒΗΣ</span>
+        </button>
+
       </div>
+    </div>
 
-    </section>
-
-    <!-- ========================================== -->
-    <!-- TAB 2: LIVE BOARD / TECHNICIANS / OFFICE   -->
-    <!-- ========================================== -->
-    <section id="boardSection" class="hidden space-y-4">
+    <!-- VIEW 2: ΤΑΜΠΛΟ ΕΛΕΓΧΟΥ / ENGINEERING DASHBOARD -->
+    <div id="viewBoard" class="hidden">
       
-      <!-- PIN Login Bar -->
-      <div id="pinLoginCard" class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 shadow-xl">
-        <div class="text-[11px] font-black uppercase text-zinc-400 tracking-wider mb-2.5" data-i18n="pin_box_title">
-          Σύνδεση Τεχνικού / Γραφείου / Admin
+      <!-- PIN BOX (ΜΟΝΟ «ΣΥΝΔΕΣΗ ENGINEERING», ΚΑΘΑΡΟ ΧΩΡΙΣ ΚΩΔΙΚΟΥΣ ΑΠΟ ΚΑΤΩ) -->
+      <div class="pin-box">
+        <div class="pin-title" id="pinBoxTitle">ΣΥΝΔΕΣΗ ENGINEERING</div>
+        <div class="pin-form" id="pinFormArea">
+          <input type="password" id="pinInput" class="pin-input" placeholder="Εισάγετε PIN..." />
+          <button class="btn-green" onclick="handlePinLogin()">Είσοδος</button>
         </div>
-        <div class="flex gap-2 max-w-sm">
-          <input type="password" pattern="[0-9]*" inputmode="numeric" id="pinInput" placeholder="Εισάγετε PIN..." class="flex-1 px-3 py-2 text-sm rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-100 font-mono tracking-widest text-center focus:outline-none focus:border-emerald-500">
-          <button onclick="loginWithPin()" class="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black rounded-xl transition" data-i18n="btn_login">
-            Είσοδος
-          </button>
+        <div id="userLoggedInBar" class="hidden" style="display:flex; justify-content:space-between; align-items:center;">
+          <span id="loggedUserText" style="font-weight:700; color:var(--accent-green);"></span>
+          <button class="icon-btn" onclick="logout()">Αποσύνδεση</button>
         </div>
-        <p class="text-[11px] text-zinc-500 mt-1.5" data-i18n="pin_hint">
-          (Ηλεκτρολόγος 1: 1001, Υδραυλικός 1: 2001, AV: 7000, PC Γραφείου: 8888, Admin: 9999)
-        </p>
       </div>
 
-      <!-- Active Role Banner -->
-      <div id="activeRoleBanner" class="hidden bg-zinc-900 border border-zinc-800 text-zinc-100 p-3 rounded-2xl flex items-center justify-between shadow-xl">
-        <div>
-          <span class="text-xs text-zinc-400" data-i18n="logged_as">Συνδεδεμένος ως:</span>
-          <span id="activeRoleName" class="text-sm font-bold text-emerald-400 ml-1"></span>
-        </div>
-        <button onclick="playChime()" class="text-xs px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg flex items-center gap-1.5 border border-zinc-700">
-          <span>🔊</span> <span data-i18n="test_sound">Δοκιμή Ήχου</span>
-        </button>
-      </div>
-
-      <!-- 3 COLUMNS BOARD -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-        
-        <!-- OPEN -->
-        <div class="bg-zinc-900/80 rounded-2xl p-3.5 border border-red-500/20 shadow-xl flex flex-col">
-          <div class="flex items-center justify-between border-b border-zinc-800 pb-2.5 mb-2.5">
-            <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-red-500 pulse-alert"></span>
-              <span class="font-black text-xs uppercase text-zinc-200 tracking-wider" data-i18n="col_open">Ανοιχτές</span>
-            </div>
-            <span id="countOpen" class="text-xs font-black bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded-full">0</span>
+      <!-- 3 Στήλες: ΑΝΟΙΧΤΕΣ | ΣΕ ΕΞΕΛΙΞΗ | ΟΛΟΚΛΗΡΩΜΕΝΕΣ -->
+      <div class="board">
+        <!-- Ανοιχτές -->
+        <div class="card">
+          <div class="column-header">
+            <span style="color:var(--status-open)">🔴 <span data-t="colOpen">ΑΝΟΙΧΤΕΣ</span></span>
+            <span class="badge badge-open" id="countOpen">0</span>
           </div>
-          <div id="listOpen" class="space-y-2.5 flex-grow overflow-y-auto max-h-[650px] pr-1"></div>
+          <div id="listOpen"><p class="empty-text" data-t="noIssues">Καμία βλάβη</p></div>
         </div>
 
-        <!-- IN PROGRESS -->
-        <div class="bg-zinc-900/80 rounded-2xl p-3.5 border border-amber-500/20 shadow-xl flex flex-col">
-          <div class="flex items-center justify-between border-b border-zinc-800 pb-2.5 mb-2.5">
-            <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-              <span class="font-black text-xs uppercase text-zinc-200 tracking-wider" data-i18n="col_prog">Σε Εξέλιξη</span>
-            </div>
-            <span id="countProg" class="text-xs font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full">0</span>
+        <!-- Σε Εξέλιξη -->
+        <div class="card">
+          <div class="column-header">
+            <span style="color:var(--status-progress)">🟠 <span data-t="colProgress">ΣΕ ΕΞΕΛΙΞΗ</span></span>
+            <span class="badge badge-progress" id="countProgress">0</span>
           </div>
-          <div id="listProg" class="space-y-2.5 flex-grow overflow-y-auto max-h-[650px] pr-1"></div>
+          <div id="listProgress"><p class="empty-text" data-t="noIssues">Καμία βλάβη</p></div>
         </div>
 
-        <!-- RESOLVED (24H) -->
-        <div class="bg-zinc-900/80 rounded-2xl p-3.5 border border-emerald-500/20 shadow-xl flex flex-col">
-          <div class="flex items-center justify-between border-b border-zinc-800 pb-2.5 mb-2.5">
-            <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-              <span class="font-black text-xs uppercase text-zinc-200 tracking-wider" data-i18n="col_done">Ολοκληρωμένες (24ωρο)</span>
-            </div>
-            <span id="countDone" class="text-xs font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">0</span>
+        <!-- Ολοκληρωμένες -->
+        <div class="card">
+          <div class="column-header">
+            <span style="color:var(--status-done)">🟢 <span data-t="colDone">ΟΛΟΚΛΗΡΩΜΕΝΕΣ</span></span>
+            <span class="badge badge-done" id="countDone">0</span>
           </div>
-          <div id="listDone" class="space-y-2.5 flex-grow overflow-y-auto max-h-[650px] pr-1"></div>
+          <div id="listDone"><p class="empty-text" data-t="noIssues">Καμία βλάβη</p></div>
         </div>
-
       </div>
 
-    </section>
-
-  </main>
-
-  <!-- MODAL: CUSTOM ISSUE POPUP ("ΑΛΛΟ / ΔΕΝ ΓΝΩΡΙΖΩ") -->
-  <div id="customIssueModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-3">
-    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 max-w-sm w-full shadow-2xl">
-      <h3 class="text-sm font-black text-zinc-100 mb-1">Περιγραφή Βλάβης</h3>
-      <p class="text-xs text-zinc-400 mb-3">Γράψτε σύντομα τι συμβαίνει στο δωμάτιο:</p>
-      <input type="text" id="customIssueTextInput" placeholder="π.χ. Σπασμένο ποτήρι, χαλασμένο μίνι μπαρ..." class="w-full px-3 py-2 text-xs rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-100 focus:outline-none focus:border-emerald-500 mb-3">
-      <div class="flex gap-2">
-        <button onclick="confirmCustomIssue()" class="flex-1 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs rounded-xl transition">
-          OK / Επιλογή
-        </button>
-        <button onclick="closeCustomIssueModal()" class="px-4 py-2 bg-zinc-800 text-zinc-300 font-bold text-xs rounded-xl">
-          Ακύρωση
-        </button>
-      </div>
     </div>
+
   </div>
 
-  <!-- OFFICE MODAL: 1-CLICK TRADE PICKER -->
-  <div id="officeClaimModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-3">
-    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 max-w-sm w-full shadow-2xl">
-      <h3 class="text-sm font-black text-zinc-100 mb-1" data-i18n="modal_claim_title">Ανάληψη Βλάβης (Γραφείο)</h3>
-      <p class="text-xs text-zinc-400 mb-3" data-i18n="modal_claim_sub">Επιλέξτε την ειδικότητά σας με 1 κλικ:</p>
-      <div class="grid grid-cols-1 gap-1.5 max-h-72 overflow-y-auto pr-1" id="officeRolesPickerGrid"></div>
-      <button onclick="closeOfficeClaimModal()" class="w-full mt-3 py-2 text-xs font-bold text-zinc-400 hover:text-zinc-200 bg-zinc-800 rounded-xl" data-i18n="btn_cancel">
-        Ακύρωση
-      </button>
-    </div>
-  </div>
-
-  <!-- ADMIN RESOLVE MODAL -->
-  <div id="adminResolveModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-3">
-    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 max-w-sm w-full shadow-2xl">
-      <h3 class="text-sm font-black text-zinc-100 mb-1" data-i18n="modal_admin_close_title">Ολοκλήρωση από Admin</h3>
-      <p class="text-xs text-zinc-400 mb-2" data-i18n="modal_admin_close_sub">Σημειώστε τον λόγο ολοκλήρωσης:</p>
-      <input type="text" id="adminResolveNote" placeholder="π.χ. Ενημέρωση από guest, ελέγχθηκε..." class="w-full px-3 py-2 text-xs rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-100 focus:outline-none focus:border-emerald-500 mb-3">
-      <div class="flex gap-2">
-        <button onclick="confirmAdminResolve()" class="flex-1 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs rounded-xl transition" data-i18n="btn_confirm_done">
-          Ολοκλήρωση
-        </button>
-        <button onclick="closeAdminResolveModal()" class="px-4 py-2 bg-zinc-800 text-zinc-300 font-bold text-xs rounded-xl" data-i18n="btn_cancel">
-          Ακύρωση
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- TOAST NOTIFICATION -->
-  <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-zinc-800 border border-zinc-700 text-emerald-400 px-4 py-2.5 rounded-xl text-xs font-bold shadow-2xl transition-all opacity-0 pointer-events-none z-50"></div>
-
-  <!-- APPLICATION LOGIC & SUPABASE -->
   <script>
-    /* ==========================================================
-       1. SUPABASE CLIENT (SAFE INIT)
-       ========================================================== */
-    const SUPABASE_URL = 'https://garphnw1uhubbv1hwkuw.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtcnBobndpdWh1YmJ2bGh3a3V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzMzczMDMsImV4cCI6MjEwNTkxMzMwM30.MGBT1-OJkCM7c5H2YxEUsCHjx8nXeUhfnKDfnazdvGI';
+    /* ========================================================
+       1. ΡΥΘΜΙΣΕΙΣ SUPABASE (ΠΕΡΑΣΜΕΝΑ ΤΑ ΔΙΚΑ ΣΟΥ ΣΤΟΙΧΕΙΑ)
+       ======================================================== */
+    const SUPABASE_URL = "https://gmrphnwiuhubbvlhwkuw.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtcnBobndpdWh1YmJ2bGh3a3V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzMzczMDMsImV4cCI6MjEwNTkxMzMwM30.MGBT1-OJkCM7c5H2YxEUsCHjx8nXeUhfnKDfnazdvGI";
+    
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let sbClient = null;
-    try {
-      if (window.supabase && typeof window.supabase.createClient === 'function') {
-        sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      }
-    } catch(err) {
-      console.warn('Supabase init warning:', err);
-    }
-
-    /* RESORT STRUCTURE */
-    const DEPARTMENTS = [
-      { id: 'style', el: '🧹 Style', en: '🧹 Style' },
-      { id: 'ww', el: '🛎️ Whatever/Whenever', en: '🛎️ Whatever/Whenever' },
-      { id: 'reception', el: '🏨 Welcome Desk', en: '🏨 Welcome Desk' },
-      { id: 'curators', el: '✨ Curators', en: '✨ Curators' },
-      { id: 'security', el: '🛡️ Security', en: '🛡️ Security' },
-      { id: 'other', el: '👥 Άλλο', en: '👥 Other' }
-    ];
-
-    const HOTEL_ZONES = [
-      { id: 'north', nameEl: '🏢 Βόρεια Πτέρυγα', nameEn: '🏢 North Wing', type: 'floors' },
-      { id: 'south', nameEl: '🏢 Νότια Πτέρυγα', nameEn: '🏢 South Wing', type: 'floors' },
-      { id: 'villas', nameEl: '🏡 Βίλες', nameEn: '🏡 Villas', type: 'villas' },
-      { id: 'suites400', nameEl: '🏛️ 400 Σουίτες', nameEn: '🏛️ 400 Suites', type: 'list' },
-      { id: 'suites600', nameEl: '🏛️ 600 Σουίτες Αγορά', nameEn: '🏛️ 600 Suites Agora', type: 'list' },
-      { id: 'rooms500', nameEl: '🏢 500 Αγορά Rooms', nameEn: '🏢 500 Agora Rooms', type: 'list' },
-      { id: 'diving', nameEl: '🤿 Καταδυτικό', nameEn: '🤿 Diving Rooms', type: 'list' },
-      { id: 'common', nameEl: '📍 Κοινόχρηστοι Χώροι', nameEn: '📍 Common Areas', type: 'common' }
-    ];
-
-    const ROOM_DATA = {
-      north: {
-        floor1: Array.from({length: 32}, (_, i) => 101 + i),
-        floor2: Array.from({length: 32}, (_, i) => 201 + i),
-        floor3: Array.from({length: 26}, (_, i) => 301 + i)
-      },
-      south: {
-        floor1: Array.from({length: 24}, (_, i) => 151 + i),
-        floor2: Array.from({length: 24}, (_, i) => 251 + i),
-        floor3: Array.from({length: 20}, (_, i) => 351 + i)
-      },
-      villas: {
-        north: [1, 3, 5, 7, 9, 11, 6, 8, 10, 12],
-        south: [21, 23, 25, 27, 29, 31, 33, 35, 37, 39, 22, 24, 26, 28, 30, 32]
-      },
-      suites400: [411, 412, 413, 414, 415, 416, 417, 418, 421, 422, 423, 424, 425, 426, 427, 428],
-      suites600: Array.from({length: 20}, (_, i) => 610 + i),
-      rooms500: [...Array.from({length: 38}, (_, i) => 501 + i), 540],
-      diving: [241, 242, 243, 244, 245, 246],
-      common: ['Welcome Desk / Reception', 'W Lounge', 'Platea', 'Parelia', 'Wet Deck', 'Away Spa', 'FIT Gym']
+    /* ========================================================
+       2. PIN ΧΡΗΣΤΩΝ & ΡΟΛΟΙ
+       ======================================================== */
+    const PIN_ROLES = {
+      "1001": { name: "Ηλεκτρολόγος", role: "electrician" },
+      "2001": { name: "Υδραυλικός", role: "plumber" },
+      "7000": { name: "A/V Specialist", role: "av" },
+      "8888": { name: "PC Γραφείου", role: "office" },
+      "9999": { name: "Admin Engineering", role: "admin" }
     };
+    let currentUser = null;
 
-    const SUB_AREAS = {
-      villas: [
-        { id: 'master_bed', el: '🛏️ Master Bedroom', en: '🛏️ Master Bedroom' },
-        { id: 'master_bath', el: '🚿 Master Bathroom', en: '🚿 Master Bathroom' },
-        { id: 'twin_bed', el: '🛏️ Twin Bedroom', en: '🛏️ Twin Bedroom' },
-        { id: 'twin_bath', el: '🚿 Twin Bathroom', en: '🚿 Twin Bathroom' },
-        { id: 'sofa_bed', el: '🛋️ Sofa Bed Room', en: '🛋️ Sofa Bed Room' },
-        { id: 'sofa_bath', el: '🚿 Sofa Bathroom', en: '🚿 Sofa Bathroom' },
-        { id: 'living', el: '🛋️ Σαλόνι', en: '🛋️ Living Room' },
-        { id: 'pool', el: '🏊‍♂️ Πισίνα / Αυλή', en: '🏊‍♂️ Pool / Patio' }
-      ],
-      suites: [
-        { id: 'master_bed', el: '🛏️ Master Bedroom', en: '🛏️ Master Bedroom' },
-        { id: 'master_bath', el: '🚿 Master Bathroom', en: '🚿 Master Bathroom' },
-        { id: 'twin_bed', el: '🛏️ Twin Bedroom', en: '🛏️ Twin Bedroom' },
-        { id: 'twin_bath', el: '🚿 Twin Bathroom', en: '🚿 Twin Bathroom' },
-        { id: 'living', el: '🛋️ Σαλόνι', en: '🛋️ Living Room' }
-      ],
-      regular: [
-        { id: 'bed', el: '🛏️ Υπνοδωμάτιο', en: '🛏️ Bedroom' },
-        { id: 'bath', el: '🚿 Μπάνιο', en: '🚿 Bathroom' },
-        { id: 'balcony', el: '🌅 Μπαλκόνι / Βεράντα', en: '🌅 Balcony / Terrace' }
-      ]
-    };
-
-    const PRESET_ISSUES = [
-      { id: 'leak', icon: '💧', el: 'Νερό στο πάτωμα / Διαρροή', en: 'Water leak / Flooding', trade: 'plumbing' },
-      { id: 'hotwater', icon: '🔥', el: 'Δεν έχει ζεστό νερό', en: 'No hot water', trade: 'plumbing' },
-      { id: 'drain', icon: '🚿', el: 'Βουλωμένο ντους / Σιφόνι', en: 'Clogged drain / shower', trade: 'plumbing' },
-      { id: 'ac', icon: '❄️', el: 'Ζέστη / Πρόβλημα A/C', en: 'AC problem / Not cooling', trade: 'ac' },
-      { id: 'lights', icon: '💡', el: 'Φώτα / Έπεσε το ρεύμα', en: 'Lights / Power trip', trade: 'electrical' },
-      { id: 'safe', icon: '🔐', el: 'Χρηματοκιβώτιο (Safe Box)', en: 'Safe Box issue', trade: 'electrical', security: true },
-      { id: 'lock', icon: '💳', el: 'Πόρτα / Κλειδαριά δεν ανοίγει', en: 'Door RFID lock issue', trade: 'carpentry', security: true },
-      { id: 'tv', icon: '📺', el: 'TV / Chromecast / Ήχος', en: 'TV / Chromecast / Audio', trade: 'av_dual' },
-      { id: 'window', icon: '🪟', el: 'Παράθυρο / Σίτα κόλλησε', en: 'Window / Screen stuck', trade: 'carpentry' },
-      { id: 'unknown', icon: '❓', el: 'Άλλο / Δεν γνωρίζω', en: 'Other / Not sure', trade: 'general', isCustomPrompt: true }
-    ];
-
-    const ROLES = {
-      '1001': { id: 'elec1', nameEl: '⚡ Ηλεκτρολόγος 1 (Shift 24/7)', nameEn: '⚡ Electrician 1 (Shift 24/7)', trade: 'electrical' },
-      '1002': { id: 'elec_team', nameEl: '⚡ Ηλεκτρολόγοι (Team)', nameEn: '⚡ Electrical Team', trade: 'electrical' },
-      '2001': { id: 'plumb1', nameEl: '💧 Υδραυλικός 1 (Shift)', nameEn: '💧 Plumber 1 (Shift)', trade: 'plumbing' },
-      '2002': { id: 'plumb_team', nameEl: '💧 Υδραυλικοί (Team)', nameEn: '💧 Plumbing Team', trade: 'plumbing' },
-      '3000': { id: 'ac', nameEl: '❄️ Κλιματισμός / A/C', nameEn: '❄️ HVAC / AC', trade: 'ac' },
-      '4000': { id: 'civil', nameEl: '🏗️ Civil Leader Team', nameEn: '🏗️ Civil Works Team', trade: 'civil' },
-      '5000': { id: 'pool', nameEl: '🏊‍♂️ Pool Leader Team', nameEn: '🏊‍♂️ Pool Team', trade: 'pool' },
-      '6000': { id: 'carpenter', nameEl: '🚪 Carpentry / Woodworks', nameEn: '🚪 Carpentry', trade: 'carpentry' },
-      '7000': { id: 'av', nameEl: '🎛️ A/V & Systems', nameEn: '🎛️ A/V & Systems', trade: 'av' },
-      '8888': { id: 'office', nameEl: '🖥️ PC Γραφείου (Master)', nameEn: '🖥️ Maintenance Office (Master)', isOffice: true },
-      '9999': { id: 'admin', nameEl: '👑 Management / Admin', nameEn: '👑 Management / Admin', isAdmin: true }
-    };
-
-    const I18N = {
+    /* ========================================================
+       3. ΓΛΩΣΣΕΣ & ΘΕΜΑ (LIGHT / DARK)
+       ======================================================== */
+    let currentLang = "el";
+    const i18n = {
       el: {
-        tab_report: 'Δήλωση Βλάβης',
-        tab_board: 'Ταμπλό / Τεχνικοί',
-        lbl_step0: 'Ποιος δηλώνει τη βλάβη; (Τμήμα)',
-        lbl_step1: '1. Επιλέξτε Πτέρυγα / Τοποθεσία',
-        lbl_step2: '2. Επιλέξτε Δωμάτιο',
-        lbl_subarea: 'Χώρος Δωματίου / Σουίτας',
-        lbl_step3: '3. Επιλέξτε Βλάβη',
-        sec_title: 'ΠΡΩΤΟΚΟΛΛΟ ΑΣΦΑΛΕΙΑΣ / SECURITY SOP',
-        sec_desc: 'Για άνοιγμα χρηματοκιβωτίου ή πόρτας απαιτείται υποχρεωτικά η φυσική παρουσία μέλους του Security Department.',
-        btn_take_photo: 'Λήψη Φωτογραφίας',
-        btn_submit: 'Αποστολή Βλάβης',
-        pin_box_title: 'Σύνδεση Τεχνικού / Γραφείου / Admin',
-        btn_login: 'Είσοδος',
-        pin_hint: '(Ηλεκτρολόγος 1: 1001, Υδραυλικός 1: 2001, AV: 7000, PC Γραφείου: 8888, Admin: 9999)',
-        logged_as: 'Συνδεδεμένος ως:',
-        test_sound: 'Δοκιμή Ήχου',
-        col_open: 'Ανοιχτές',
-        col_prog: 'Σε Εξέλιξη',
-        col_done: 'Ολοκληρωμένες (24ωρο)',
-        modal_claim_title: 'Ανάληψη Βλάβης (Γραφείο)',
-        modal_claim_sub: 'Επιλέξτε την ειδικότητά σας με 1 κλικ:',
-        modal_admin_close_title: 'Ολοκλήρωση από Admin',
-        modal_admin_close_sub: 'Σημειώστε τον λόγο ολοκλήρωσης:',
-        btn_confirm_done: 'Ολοκλήρωση',
-        btn_cancel: 'Ακύρωση',
-        toast_submitted: 'Η βλάβη καταχωρήθηκε επιτυχώς!',
-        toast_pick_room: 'Παρακαλώ επιλέξτε δωμάτιο!',
-        toast_pick_issue: 'Παρακαλώ επιλέξτε είδος βλάβης!'
+        tabNew: "Δήλωση Βλάβης", tabBoard: "Έλεγχος & Ταμπλό",
+        secLocation: "1. Επιλογή Χώρου:", room: "Δωμάτιο", villa: "Βίλα", public: "Κοινόχρηστο",
+        secRoomNum: "Αριθμός Δωματίου / Χώρου:", secCategory: "2. Ειδικότητα / Κατηγορία:",
+        secIssue: "3. Συχνή Βλάβη (Άμεσο κλικ):", secPhoto: "4. Φωτογραφία (Προαιρετικά):",
+        takePhoto: "Λήψη / Επιλογή Φωτογραφίας", sendIssue: "ΚΑΤΑΧΩΡΗΣΗ ΒΛΑΒΗΣ",
+        colOpen: "ΑΝΟΙΧΤΕΣ", colProgress: "ΣΕ ΕΞΕΛΙΞΗ", colDone: "ΟΛΟΚΛΗΡΩΜΕΝΕΣ",
+        noIssues: "Καμία βλάβη"
       },
       en: {
-        tab_report: 'Report Damage',
-        tab_board: 'Board / Technicians',
-        lbl_step0: 'Who is reporting? (Department)',
-        lbl_step1: '1. Select Wing / Location',
-        lbl_step2: '2. Select Room',
-        lbl_subarea: 'Room / Suite Area',
-        lbl_step3: '3. Select Issue',
-        sec_title: 'SECURITY PROTOCOL / SOP',
-        sec_desc: 'Opening a safe box or guestroom door strictly requires physical presence of a Security Officer.',
-        btn_take_photo: 'Take Photo',
-        btn_submit: 'Submit Damage',
-        pin_box_title: 'Technician / Office / Admin Login',
-        btn_login: 'Login',
-        pin_hint: '(Electrician 1: 1001, Plumber 1: 2001, AV: 7000, Office: 8888, Admin: 9999)',
-        logged_as: 'Logged in as:',
-        test_sound: 'Test Sound',
-        col_open: 'Open',
-        col_prog: 'In Progress',
-        col_done: 'Completed (24h)',
-        modal_claim_title: 'Assign Task (Office)',
-        modal_claim_sub: 'Click your trade below with 1 tap:',
-        modal_admin_close_title: 'Resolve as Admin',
-        modal_admin_close_sub: 'Enter resolution notes:',
-        btn_confirm_done: 'Resolve',
-        btn_cancel: 'Cancel',
-        toast_submitted: 'Issue reported successfully!',
-        toast_pick_room: 'Please select a room!',
-        toast_pick_issue: 'Please select an issue type!'
+        tabNew: "Report Issue", tabBoard: "Dashboard",
+        secLocation: "1. Select Location:", room: "Room", villa: "Villa", public: "Public Area",
+        secRoomNum: "Room / Area Number:", secCategory: "2. Category / Skill:",
+        secIssue: "3. Common Issue (Quick Click):", secPhoto: "4. Photo (Optional):",
+        takePhoto: "Take / Upload Photo", sendIssue: "SUBMIT TICKET",
+        colOpen: "OPEN", colProgress: "IN PROGRESS", colDone: "COMPLETED",
+        noIssues: "No tickets"
       }
     };
 
-    /* STATE */
-    let currentLang = localStorage.getItem('w_lang') || 'el';
-    let currentRolePin = localStorage.getItem('w_pin') || null;
-    let selectedDept = '🧹 Style';
-    let selectedZone = null;
-    let selectedRoom = null;
-    let selectedSubArea = null;
-    let selectedPreset = null;
-    let capturedPhotoBase64 = null;
-    let activeClaimTicketId = null;
-    let activeAdminResolveTicketId = null;
-    let tickets = JSON.parse(localStorage.getItem('w_tickets') || '[]');
-
-    // FIRST EXECUTION: RENDER DOM IMMEDIATELY
-    document.addEventListener('DOMContentLoaded', () => {
-      applyLanguage(currentLang);
-      renderDeptGrid();
-      renderZoneGrid();
-      renderPresetIssues();
-      renderOfficeRolesGrid();
-      checkSavedLogin();
-      renderBoard();
-      
-      // THEN ATTEMPT NETWORK / SUPABASE
-      initSupabase();
-      setInterval(renderBoard, 60000);
-    });
+    function toggleTheme() {
+      const isLight = document.body.classList.toggle("light-theme");
+      const btn = document.getElementById("themeBtn");
+      btn.innerHTML = isLight ? "🌙 Νύχτα" : "☀️ Ημέρα";
+    }
 
     function toggleLanguage() {
-      currentLang = currentLang === 'el' ? 'en' : 'el';
-      localStorage.setItem('w_lang', currentLang);
-      applyLanguage(currentLang);
-      renderDeptGrid();
-      renderZoneGrid();
-      renderPresetIssues();
-      renderOfficeRolesGrid();
-      renderBoard();
-    }
-
-    function applyLanguage(lang) {
-      document.getElementById('langToggleBtn').textContent = lang === 'el' ? '🇬🇧 EN' : '🇬🇷 ΕΛ';
-      document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (I18N[lang][key]) el.textContent = I18N[lang][key];
-      });
-      document.getElementById('customNoteInput').placeholder = lang === 'el' 
-        ? 'Επιπλέον παρατήρηση αν χρειάζεται (προαιρετικό)...' 
-        : 'Additional notes if needed (optional)...';
-    }
-
-    function renderDeptGrid() {
-      const container = document.getElementById('deptGrid');
-      if (!container) return;
-      container.innerHTML = DEPARTMENTS.map(d => {
-        const title = currentLang === 'el' ? d.el : d.en;
-        const isSel = selectedDept === title;
-        return `
-          <button type="button" onclick="selectDept('${title}')" class="p-2 rounded-xl border text-xs font-bold transition truncate text-center ${
-            isSel ? 'border-emerald-500 bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500' : 'border-zinc-800 bg-zinc-950 text-zinc-300 hover:border-zinc-700'
-          }">
-            ${title}
-          </button>
-        `;
-      }).join('');
-    }
-
-    function selectDept(deptName) {
-      selectedDept = deptName;
-      renderDeptGrid();
-    }
-
-    function renderZoneGrid() {
-      const container = document.getElementById('zoneGrid');
-      if (!container) return;
-      container.innerHTML = HOTEL_ZONES.map(z => {
-        const isSel = selectedZone && selectedZone.id === z.id;
-        const name = currentLang === 'el' ? z.nameEl : z.nameEn;
-        return `
-          <button type="button" onclick="selectZone('${z.id}')" class="p-3 text-left rounded-xl border text-xs font-bold transition flex flex-col justify-between h-16 ${
-            isSel ? 'border-emerald-500 bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700 text-zinc-300'
-          }">
-            <span class="truncate">${name}</span>
-          </button>
-        `;
-      }).join('');
-    }
-
-    function selectZone(zoneId) {
-      selectedZone = HOTEL_ZONES.find(z => z.id === zoneId);
-      selectedRoom = null;
-      selectedSubArea = null;
-      renderZoneGrid();
-      
-      const card = document.getElementById('roomPickerCard');
-      card.classList.remove('hidden');
-      document.getElementById('selectedZoneBadge').textContent = currentLang === 'el' ? selectedZone.nameEl : selectedZone.nameEn;
-      
-      const floorRow = document.getElementById('floorRow');
-      const roomGrid = document.getElementById('roomGrid');
-      document.getElementById('subAreaBox').classList.add('hidden');
-      document.getElementById('specialVillaAvBox').classList.add('hidden');
-
-      if (selectedZone.type === 'floors') {
-        floorRow.classList.remove('hidden');
-        floorRow.innerHTML = `
-          <button type="button" onclick="renderFloorRooms('${zoneId}', 'floor1')" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-bold">1ος Όροφος</button>
-          <button type="button" onclick="renderFloorRooms('${zoneId}', 'floor2')" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-bold">2ος Όροφος</button>
-          <button type="button" onclick="renderFloorRooms('${zoneId}', 'floor3')" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-bold">3ος Όροφος</button>
-        `;
-        renderFloorRooms(zoneId, 'floor1');
-      } else if (selectedZone.type === 'villas') {
-        floorRow.classList.remove('hidden');
-        floorRow.innerHTML = `
-          <button type="button" onclick="renderVillaSide('north')" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-bold">Βόρειες Βίλες</button>
-          <button type="button" onclick="renderVillaSide('south')" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-bold">Νότιες Βίλες</button>
-        `;
-        renderVillaSide('north');
-      } else if (selectedZone.type === 'common') {
-        floorRow.classList.add('hidden');
-        roomGrid.innerHTML = ROOM_DATA.common.map(c => `
-          <button type="button" onclick="selectFinalRoom('${c}', 'common')" class="col-span-2 p-2.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 rounded-xl text-xs font-bold text-zinc-200 text-left truncate">
-            ${c}
-          </button>
-        `).join('');
-      } else {
-        floorRow.classList.add('hidden');
-        const list = ROOM_DATA[zoneId] || [];
-        roomGrid.innerHTML = list.map(num => `
-          <button type="button" onclick="selectFinalRoom('${num}', '${zoneId}')" class="p-2.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 rounded-xl text-xs font-bold text-center text-zinc-200">
-            ${num}
-          </button>
-        `).join('');
-      }
-    }
-
-    function renderFloorRooms(zoneId, floorKey) {
-      const rooms = ROOM_DATA[zoneId][floorKey] || [];
-      const grid = document.getElementById('roomGrid');
-      grid.innerHTML = rooms.map(r => `
-        <button type="button" onclick="selectFinalRoom('${r}', 'regular')" class="p-2.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 rounded-xl text-xs font-bold text-center text-zinc-200">
-          ${r}
-        </button>
-      `).join('');
-    }
-
-    function renderVillaSide(side) {
-      const villas = ROOM_DATA.villas[side] || [];
-      const grid = document.getElementById('roomGrid');
-      grid.innerHTML = villas.map(v => `
-        <button type="button" onclick="selectFinalRoom('Villa ${v}', 'villa', ${v})" class="col-span-2 p-2.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 rounded-xl text-xs font-bold text-center text-zinc-200">
-          Villa ${v}
-        </button>
-      `).join('');
-    }
-
-    function selectFinalRoom(roomName, category, villaNumber = null) {
-      selectedRoom = roomName;
-      updateLocationBadge();
-
-      document.querySelectorAll('#roomGrid button').forEach(b => {
-        b.classList.remove('bg-emerald-500', 'text-black', 'border-emerald-500', 'font-black');
-        if (b.textContent.trim() === roomName.toString().trim() || b.textContent.trim() === `Villa ${villaNumber}`) {
-          b.classList.add('bg-emerald-500', 'text-black', 'border-emerald-500', 'font-black');
-        }
-      });
-
-      const subBox = document.getElementById('subAreaBox');
-      const subGrid = document.getElementById('subAreaGrid');
-      const villaAvBox = document.getElementById('specialVillaAvBox');
-      villaAvBox.classList.add('hidden');
-
-      if (category === 'villa') {
-        subBox.classList.remove('hidden');
-        subGrid.innerHTML = SUB_AREAS.villas.map(s => `
-          <button type="button" onclick="selectSubArea('${currentLang === 'el' ? s.el : s.en}')" class="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg text-xs font-bold text-zinc-200">
-            ${currentLang === 'el' ? s.el : s.en}
-          </button>
-        `).join('');
-
-        if (villaNumber === 3 || villaNumber === 5) {
-          villaAvBox.classList.remove('hidden');
-        }
-      } else if (category === 'suites400' || category === 'suites600') {
-        subBox.classList.remove('hidden');
-        subGrid.innerHTML = SUB_AREAS.suites.map(s => `
-          <button type="button" onclick="selectSubArea('${currentLang === 'el' ? s.el : s.en}')" class="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg text-xs font-bold text-zinc-200">
-            ${currentLang === 'el' ? s.el : s.en}
-          </button>
-        `).join('');
-      } else if (category === 'regular') {
-        subBox.classList.remove('hidden');
-        subGrid.innerHTML = SUB_AREAS.regular.map(s => `
-          <button type="button" onclick="selectSubArea('${currentLang === 'el' ? s.el : s.en}')" class="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg text-xs font-bold text-zinc-200">
-            ${currentLang === 'el' ? s.el : s.en}
-          </button>
-        `).join('');
-      } else {
-        subBox.classList.add('hidden');
-      }
-    }
-
-    function selectSubArea(subName) {
-      selectedSubArea = subName;
-      updateLocationBadge();
-      document.querySelectorAll('#subAreaGrid button').forEach(b => {
-        b.classList.remove('bg-emerald-500', 'text-black', 'border-emerald-500');
-        if (b.textContent.trim() === subName.trim()) {
-          b.classList.add('bg-emerald-500', 'text-black', 'border-emerald-500');
-        }
+      currentLang = currentLang === "el" ? "en" : "el";
+      document.getElementById("langBtn").innerHTML = currentLang === "el" ? "🇬🇧 EN" : "🇬🇷 GR";
+      document.querySelectorAll("[data-t]").forEach(el => {
+        const key = el.getAttribute("data-t");
+        if (i18n[currentLang][key]) el.textContent = i18n[currentLang][key];
       });
     }
 
-    function updateLocationBadge() {
-      const locText = formatDisplayLocation(selectedRoom, selectedSubArea);
-      document.getElementById('selectedLocationBadge').textContent = locText ? `📍 ${locText}` : '';
+    /* ========================================================
+       4. ΔΕΔΟΜΕΝΑ ΧΩΡΩΝ & ΒΛΑΒΩΝ (ZERO-TYPING)
+       ======================================================== */
+    const locations = {
+      room: ["101","102","103","104","105","106","201","202","203","204","205","206","301","302","303"],
+      villa: ["Villa 1", "Villa 2", "Villa 3", "Villa 4", "Villa 5"],
+      public: ["Lobby", "Pool Bar", "Main Restaurant", "Spa", "Gym", "Beach Bar"]
+    };
+
+    const issuePresets = {
+      "Υδραυλικά": ["Δεν έχει ζεστό νερό", "Τρέχει η βρύση", "Βουλωμένη αποχέτευση", "Διαρροή στο καζανάκι", "Χαμηλή πίεση"],
+      "Ηλεκτρολογικά": ["Δεν ανάβει το φως", "Χαλασμένη πρίζα", "Έπεσε η ασφάλεια", "Πρόβλημα master switch", "Κουδούνι"],
+      "A/C": ["Δεν ψύχει", "Τρέχει νερό μέσα", "Κάνει έντονο θόρυβο", "Δεν ανταποκρίνεται το χειριστήριο"],
+      "A/V": ["Χωρίς σήμα TV", "Πρόβλημα στο Soundbar/Ηχείο", "Χαλασμένο HDMI / AppleTV", "Δεν ανοίγει η TV"],
+      "Ξυλουργικά": ["Μαγκώνει η πόρτα", "Χαλασμένη κλειδαριά / Κάρτα", "Πρόβλημα στη ντουλάπα", "Σπασμένη καρέκλα"]
+    };
+
+    let selectedLocType = "room";
+    let selectedLocation = "101";
+    let selectedCategory = "Υδραυλικά";
+    let selectedIssue = "";
+    let photoBase64 = null;
+
+    function setLocType(type, elem) {
+      selectedLocType = type;
+      document.querySelectorAll("#locTypeGroup .select-pill").forEach(p => p.classList.remove("active"));
+      elem.classList.add("active");
+      renderLocationButtons();
     }
 
-    function formatDisplayLocation(room, subArea) {
-      if (!room) return '';
-      let roomStr = /^\d+$/.test(room.toString().trim()) ? `Δωμ. ${room}` : room;
-      return subArea ? `${roomStr} ➔ ${subArea}` : roomStr;
-    }
-
-    function renderPresetIssues() {
-      const container = document.getElementById('presetIssuesGrid');
-      if (!container) return;
-      container.innerHTML = PRESET_ISSUES.map(p => {
-        const text = currentLang === 'el' ? p.el : p.en;
-        const isSel = selectedPreset && selectedPreset.id === p.id;
-        return `
-          <button type="button" onclick="handlePresetClick('${p.id}', '${text}', '${p.trade}', ${!!p.security}, ${!!p.isCustomPrompt})" class="p-3 border rounded-xl text-left text-xs font-bold transition flex items-center gap-2 h-16 ${
-            isSel ? 'border-emerald-500 bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500' : 'border-zinc-800 bg-zinc-950 text-zinc-300 hover:border-zinc-700'
-          }">
-            <span class="text-xl">${p.icon}</span>
-            <span class="leading-tight">${text}</span>
-          </button>
-        `;
-      }).join('');
-    }
-
-    function handlePresetClick(presetId, title, trade, requiresSecurity, isCustomPrompt) {
-      if (isCustomPrompt) {
-        document.getElementById('customIssueTextInput').value = '';
-        document.getElementById('customIssueModal').classList.remove('hidden');
-        return;
-      }
-      selectPreset(presetId, title, trade, requiresSecurity);
-    }
-
-    function confirmCustomIssue() {
-      const text = document.getElementById('customIssueTextInput').value.trim();
-      const issueTitle = text ? `❓ ${text}` : '❓ Άλλο / Δεν γνωρίζω';
-      selectPreset('unknown', issueTitle, 'general', false);
-      closeCustomIssueModal();
-    }
-
-    function closeCustomIssueModal() {
-      document.getElementById('customIssueModal').classList.add('hidden');
-    }
-
-    function selectPreset(presetId, title, trade, requiresSecurity = false) {
-      selectedPreset = { id: presetId, title, trade, requiresSecurity };
-      renderPresetIssues();
-      const banner = document.getElementById('securityBanner');
-      if (requiresSecurity) banner.classList.remove('hidden');
-      else banner.classList.add('hidden');
-    }
-
-    function handlePhotoCapture(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        const img = new Image();
-        img.onload = function() {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          const maxDim = 800;
-          if (width > height && width > maxDim) {
-            height = Math.round((height * maxDim) / width);
-            width = maxDim;
-          } else if (height > maxDim) {
-            width = Math.round((width * maxDim) / height);
-            height = maxDim;
-          }
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-          capturedPhotoBase64 = canvas.toDataURL('image/jpeg', 0.7);
-          document.getElementById('photoThumb').src = capturedPhotoBase64;
-          document.getElementById('photoPreviewContainer').classList.remove('hidden');
-          document.getElementById('photoStatusLabel').textContent = currentLang === 'el' ? 'Φωτογραφία Έτοιμη ✅' : 'Photo Attached ✅';
+    function renderLocationButtons() {
+      const cont = document.getElementById("locationButtons");
+      cont.innerHTML = "";
+      const list = locations[selectedLocType] || [];
+      selectedLocation = list[0] || "";
+      list.forEach((loc, idx) => {
+        const d = document.createElement("div");
+        d.className = "select-pill" + (idx === 0 ? " active" : "");
+        d.textContent = loc;
+        d.onclick = () => {
+          document.querySelectorAll("#locationButtons .select-pill").forEach(p => p.classList.remove("active"));
+          d.classList.add("active");
+          selectedLocation = loc;
         };
-        img.src = event.target.result;
-      };
-      reader.readAsDataURL(file);
+        cont.appendChild(d);
+      });
     }
 
-    function removePhoto() {
-      capturedPhotoBase64 = null;
-      document.getElementById('cameraInput').value = '';
-      document.getElementById('photoPreviewContainer').classList.add('hidden');
-      document.getElementById('photoStatusLabel').textContent = currentLang === 'el' ? 'Λήψη Φωτογραφίας' : 'Take Photo';
+    function setCategory(cat, elem) {
+      selectedCategory = cat;
+      elem.parentElement.querySelectorAll(".select-pill").forEach(p => p.classList.remove("active"));
+      elem.classList.add("active");
+      renderPresets();
     }
 
-    /* SUBMISSION TO SUPABASE */
+    function renderPresets() {
+      const cont = document.getElementById("presetIssues");
+      cont.innerHTML = "";
+      const list = issuePresets[selectedCategory] || [];
+      selectedIssue = list[0] || "";
+      list.forEach((iss, idx) => {
+        const d = document.createElement("div");
+        d.className = "issue-card" + (idx === 0 ? " active" : "");
+        d.textContent = iss;
+        d.onclick = () => {
+          document.querySelectorAll("#presetIssues .issue-card").forEach(c => c.classList.remove("active"));
+          d.classList.add("active");
+          selectedIssue = iss;
+        };
+        cont.appendChild(d);
+      });
+    }
+
+    function previewPhoto(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          photoBase64 = e.target.result;
+          const img = document.getElementById("photoPreviewImg");
+          img.src = photoBase64;
+          img.style.display = "block";
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    /* ========================================================
+       5. ΑΠΟΣΤΟΛΗ ΒΛΑΒΗΣ ΣΤΟ SUPABASE
+       ======================================================== */
     async function submitTicket() {
-      if (!selectedRoom) {
-        showToast(I18N[currentLang].toast_pick_room);
+      if (!selectedLocation || !selectedIssue) {
+        alert("Παρακαλώ επιλέξτε χώρο και βλάβη!");
         return;
       }
-      if (!selectedPreset) {
-        showToast(I18N[currentLang].toast_pick_issue);
-        return;
-      }
-
-      const now = new Date();
-      const customNote = document.getElementById('customNoteInput').value.trim();
 
       const newTicket = {
-        id: 'T-' + Date.now().toString().slice(-6),
-        dept: selectedDept,
-        zone_name: selectedZone ? (currentLang === 'el' ? selectedZone.nameEl : selectedZone.nameEn) : '',
-        location_display: formatDisplayLocation(selectedRoom, selectedSubArea),
-        issue_title: selectedPreset.title,
-        custom_note: customNote,
-        photo: capturedPhotoBase64,
-        security_sop: selectedPreset.requiresSecurity,
-        status: 'open',
-        created_at: now.toISOString(),
-        claimed_at: null,
-        claimed_by: null,
-        resolved_at: null,
-        resolved_by: null,
-        resolved_note: null
+        location_type: selectedLocType,
+        location_name: selectedLocation,
+        category: selectedCategory,
+        issue: selectedIssue,
+        photo_url: photoBase64,
+        status: "pending",
+        priority: "Normal"
       };
 
-      // Always save locally immediately
-      tickets.unshift(mapRowToTicket(newTicket));
-      localStorage.setItem('w_tickets', JSON.stringify(tickets));
-      renderBoard();
-      playChime();
-
-      // Async push to Supabase
-      if (sbClient) {
-        try {
-          await sbClient.from('tickets').insert([newTicket]);
-        } catch(err) {
-          console.error('Supabase insert error:', err);
-        }
-      }
-
-      showToast(I18N[currentLang].toast_submitted);
-
-      // Reset Form
-      selectedRoom = null;
-      selectedSubArea = null;
-      selectedPreset = null;
-      removePhoto();
-      document.getElementById('customNoteInput').value = '';
-      document.getElementById('securityBanner').classList.add('hidden');
-      document.getElementById('roomPickerCard').classList.add('hidden');
-      updateLocationBadge();
-      renderZoneGrid();
-      renderPresetIssues();
-    }
-
-    /* AUDIO & SYSTEM NOTIFICATIONS */
-    function playChime() {
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(987.77, ctx.currentTime);
-        osc.frequency.setValueAtTime(1318.51, ctx.currentTime + 0.12);
-        gain.gain.setValueAtTime(0.95, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.55);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.55);
-      } catch (err) {}
-    }
-
-    function requestNotificationPermission() {
-      if ('Notification' in window) {
-        Notification.requestPermission().then(p => {
-          if (p === 'granted') showToast('Ειδοποιήσεις Ενεργές! 🔔');
-        });
-      }
-    }
-
-    function triggerSystemNotification(t) {
-      if ('Notification' in window && Notification.permission === 'granted') {
-        const secTag = t.securitySop ? ' [🛡️ SECURITY]' : '';
-        new Notification(`🚨 [W] ${t.locationDisplay}${secTag}`, {
-          body: `${t.issueTitle} (${t.dept})\n${t.customNote ? '"' + t.customNote + '"' : ''}`
-        });
-      }
-    }
-
-    /* PIN LOGIN */
-    function loginWithPin() {
-      const pin = document.getElementById('pinInput').value.trim();
-      if (!ROLES[pin]) {
-        alert('Μη έγκυρο PIN');
-        return;
-      }
-      currentRolePin = pin;
-      localStorage.setItem('w_pin', pin);
-      document.getElementById('pinInput').value = '';
-      checkSavedLogin();
-      renderBoard();
-    }
-
-    function logoutRole() {
-      currentRolePin = null;
-      localStorage.removeItem('w_pin');
-      checkSavedLogin();
-      renderBoard();
-    }
-
-    function checkSavedLogin() {
-      const pinBox = document.getElementById('pinLoginCard');
-      const banner = document.getElementById('activeRoleBanner');
-      const roleTag = document.getElementById('roleTag');
-      const logoutBtn = document.getElementById('logoutBtn');
-
-      if (currentRolePin && ROLES[currentRolePin]) {
-        const role = ROLES[currentRolePin];
-        pinBox.classList.add('hidden');
-        banner.classList.remove('hidden');
-        roleTag.classList.remove('hidden');
-        logoutBtn.classList.remove('hidden');
-        const roleName = currentLang === 'el' ? role.nameEl : role.nameEn;
-        document.getElementById('activeRoleName').textContent = roleName;
-        roleTag.textContent = roleName.split(' ')[0];
+      const { data, error } = await db.from("tickets").insert([newTicket]);
+      if (error) {
+        alert("Σφάλμα καταχώρησης: " + error.message);
       } else {
-        pinBox.classList.remove('hidden');
-        banner.classList.add('hidden');
-        roleTag.classList.add('hidden');
-        logoutBtn.classList.add('hidden');
+        alert("✅ Η βλάβη καταχωρήθηκε επιτυχώς!");
+        photoBase64 = null;
+        document.getElementById("photoPreviewImg").style.display = "none";
+        document.getElementById("photoInput").value = "";
+        switchView("board");
       }
     }
 
-    function renderOfficeRolesGrid() {
-      const grid = document.getElementById('officeRolesPickerGrid');
-      if (!grid) return;
-      grid.innerHTML = Object.entries(ROLES)
-        .filter(([p, r]) => !r.isOffice && !r.isAdmin)
-        .map(([p, r]) => `
-          <button type="button" onclick="confirmOfficeClaim('${currentLang === 'el' ? r.nameEl : r.nameEn}')" class="p-2.5 text-left border border-zinc-800 hover:border-emerald-500 bg-zinc-950 rounded-xl text-xs font-bold text-zinc-200 transition">
-            ${currentLang === 'el' ? r.nameEl : r.nameEn}
-          </button>
-        `).join('');
-    }
-
-    /* BOARD & ACTIONS */
-    function renderBoard() {
-      const listOpen = document.getElementById('listOpen');
-      const listProg = document.getElementById('listProg');
-      const listDone = document.getElementById('listDone');
-      if (!listOpen || !listProg || !listDone) return;
-
-      const now = new Date();
-      const cutoff24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-      const openTickets = tickets.filter(t => t.status === 'open');
-      const progTickets = tickets.filter(t => t.status === 'in_progress');
-      const doneTickets = tickets.filter(t => t.status === 'resolved' && new Date(t.resolvedAt) >= cutoff24h);
-
-      document.getElementById('countOpen').textContent = openTickets.length;
-      document.getElementById('countProg').textContent = progTickets.length;
-      document.getElementById('countDone').textContent = doneTickets.length;
-
-      listOpen.innerHTML = openTickets.length ? openTickets.map(renderTicketCard).join('') : emptyPlaceholder();
-      listProg.innerHTML = progTickets.length ? progTickets.map(renderTicketCard).join('') : emptyPlaceholder();
-      listDone.innerHTML = doneTickets.length ? doneTickets.map(renderTicketCard).join('') : emptyPlaceholder();
-    }
-
-    function renderTicketCard(t) {
-      const isAdmin = currentRolePin === '9999';
-      const createdStr = formatTime(t.createdAt);
-      const claimedStr = t.claimedAt ? formatTime(t.claimedAt) : '';
-      const resolvedStr = t.resolvedAt ? formatTime(t.resolvedAt) : '';
-      const durationStr = t.resolvedAt ? calculateDuration(t.createdAt, t.resolvedAt) : '';
-
-      return `
-        <div class="bg-zinc-950 rounded-xl p-3 border ${t.securitySop ? 'border-red-500/50 ring-1 ring-red-500/30' : 'border-zinc-800'} shadow-sm space-y-2">
-          <div class="flex items-start justify-between gap-1">
-            <div>
-              <span class="text-xs font-black text-emerald-400 font-mono tracking-tight">${t.locationDisplay}</span>
-              <div class="flex items-center gap-1.5 mt-0.5">
-                <span class="text-[10px] text-zinc-400 font-semibold">${t.zoneName}</span>
-                <span class="text-[9px] bg-zinc-800 border border-zinc-700 px-1.5 py-0.2 rounded text-zinc-300 font-bold">${t.dept || 'Style'}</span>
-              </div>
-            </div>
-            <span class="text-[10px] font-mono text-zinc-500 font-bold">${createdStr}</span>
-          </div>
-
-          <div class="text-xs font-bold text-zinc-200">
-            ${t.issueTitle}
-          </div>
-
-          ${t.securitySop ? `
-            <div class="text-[10px] bg-red-950/70 border border-red-500/40 text-red-300 px-2 py-0.5 rounded font-black tracking-wide inline-flex items-center gap-1">
-              <span>🛡️</span> <span>SECURITY SOP REQUIRED</span>
-            </div>
-          ` : ''}
-
-          ${t.customNote ? `<div class="text-[11px] text-zinc-400 bg-zinc-900/60 p-1.5 rounded-lg border border-zinc-800/80 italic">"${t.customNote}"</div>` : ''}
-
-          ${t.photo ? `
-            <div class="pt-1">
-              <img src="${t.photo}" class="w-16 h-16 rounded-lg object-cover border border-zinc-800 cursor-pointer" onclick="window.open('${t.photo}', '_blank')">
-            </div>
-          ` : ''}
-
-          <div class="text-[10px] text-zinc-500 pt-1 border-t border-zinc-900 flex flex-col gap-0.5">
-            ${t.status === 'in_progress' ? `<div>✋ <b>${t.claimedBy}</b> (${claimedStr})</div>` : ''}
-            ${t.status === 'resolved' ? `
-              <div>✅ <b>${t.resolvedBy}</b> (${resolvedStr})</div>${durationStr ? `<div class="text-emerald-400 font-semibold">⏱️ Διάρκεια: ${durationStr}</div>` : ''}
-              ${t.resolvedNote ? `<div class="text-zinc-500 italic">"${t.resolvedNote}"</div>` : ''}
-            ` : ''}
-          </div>
-
-          <div class="flex items-center gap-1.5 pt-1">
-            ${t.status === 'open' ? `
-              <button onclick="handleClaimClick('${t.id}')" class="flex-1 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs rounded-lg transition">
-                ✋ Το ανέλαβα
-              </button>
-            ` : ''}
-
-            ${t.status === 'in_progress' ? `
-              <button onclick="handleResolveClick('${t.id}')" class="flex-1 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-emerald-400 border border-emerald-500/40 font-bold text-xs rounded-lg transition">
-                ✅ Ολοκλήρωση
-              </button>
-            ` : ''}
-
-            ${isAdmin ? `
-              <button onclick="openAdminResolveModal('${t.id}')" class="px-2 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold text-[10px] rounded-lg">
-                Admin Close
-              </button>
-              <button onclick="deleteTicketPermanent('${t.id}')" class="px-2 py-1.5 bg-red-950/60 hover:bg-red-900 text-red-400 border border-red-800/40 font-bold text-[10px] rounded-lg">
-                🗑️
-              </button>
-            ` : ''}
-          </div>
-        </div>
-      `;
-    }
-
-    function emptyPlaceholder() {
-      return `<div class="py-8 text-center text-xs text-zinc-600 italic">Καμία βλάβη</div>`;
-    }
-
-    function handleClaimClick(ticketId) {
-      const ticket = tickets.find(t => t.id === ticketId);
-      if (!ticket) return;
-
-      if (ticket.securitySop) {
-        if (!confirm('⚠️ ΠΡΟΣΟΧΗ:\nΓια άνοιγμα safe box ή πόρτας απαιτείται υποχρεωτικά η φυσική παρουσία μέλους του Security.\n\nΣυνεχίζετε;')) return;
+    /* ========================================================
+       6. ΣΥΝΔΕΣΗ ΜΕ PIN & ΤΑΜΠΛΟ
+       ======================================================== */
+    function handlePinLogin() {
+      const pin = document.getElementById("pinInput").value.trim();
+      if (PIN_ROLES[pin]) {
+        currentUser = PIN_ROLES[pin];
+        document.getElementById("pinFormArea").classList.add("hidden");
+        document.getElementById("userLoggedInBar").classList.remove("hidden");
+        document.getElementById("loggedUserText").textContent = `👤 ${currentUser.name}`;
+        loadTickets();
+      } else {
+        alert("Λανθασμένο PIN!");
       }
+    }
 
-      if (currentRolePin === '8888') {
-        activeClaimTicketId = ticketId;
-        document.getElementById('officeClaimModal').classList.remove('hidden');
+    function logout() {
+      currentUser = null;
+      document.getElementById("pinInput").value = "";
+      document.getElementById("pinFormArea").classList.remove("hidden");
+      document.getElementById("userLoggedInBar").classList.add("hidden");
+      loadTickets();
+    }
+
+    /* ========================================================
+       7. ΦΟΡΤΩΣΗ & REALTIME ΣΥΓΧΡΟΝΙΣΜΟΣ
+       ======================================================== */
+    async function loadTickets() {
+      const { data: tickets, error } = await db
+        .from("tickets")
+        .select("*")
+        .order("id", { ascending: false });
+
+      if (error) {
+        console.error("Σφάλμα φόρτωσης:", error);
         return;
       }
 
-      if (currentRolePin && ROLES[currentRolePin]) {
-        const role = ROLES[currentRolePin];
-        claimTicket(ticketId, currentLang === 'el' ? role.nameEl : role.nameEn);
+      const openDiv = document.getElementById("listOpen");
+      const progDiv = document.getElementById("listProgress");
+      const doneDiv = document.getElementById("listDone");
+
+      let cOpen = 0, cProg = 0, cDone = 0;
+      let htmlOpen = "", htmlProg = "", htmlDone = "";
+
+      tickets.forEach(t => {
+        if (currentUser && currentUser.role !== "admin" && currentUser.role !== "office") {
+          if (currentUser.role === "electrician" && t.category !== "Ηλεκτρολογικά") return;
+          if (currentUser.role === "plumber" && t.category !== "Υδραυλικά") return;
+          if (currentUser.role === "av" && t.category !== "A/V") return;
+        }
+
+        const cardHtml = `
+          <div class="ticket ${t.status}">
+            <div class="ticket-head">
+              <span>📍 ${t.location_name}</span>
+              <span class="ticket-cat">${t.category}</span>
+            </div>
+            <div class="ticket-issue">${t.issue}</div>
+            ${t.photo_url ? `<img src="${t.photo_url}" style="width:100%; border-radius:6px; margin:5px 0; max-height:120px; object-fit:cover;" />` : ''}
+            <div class="ticket-actions">
+              ${t.status === 'pending' ? `<button class="action-btn" style="background:var(--status-progress);" onclick="updateStatus(${t.id}, 'in_progress')">Έναρξη</button>` : ''}
+              ${t.status === 'in_progress' ? `<button class="action-btn" style="background:var(--status-done);" onclick="updateStatus(${t.id}, 'completed')">Ολοκλήρωση</button>` : ''}
+              ${t.status === 'completed' ? `<span style="font-size:0.75rem; color:var(--text-muted);">✅ Ολοκληρώθηκε</span>` : ''}
+            </div>
+          </div>
+        `;
+
+        if (t.status === 'pending') { cOpen++; htmlOpen += cardHtml; }
+        else if (t.status === 'in_progress') { cProg++; htmlProg += cardHtml; }
+        else if (t.status === 'completed') { cDone++; htmlDone += cardHtml; }
+      });
+
+      openDiv.innerHTML = htmlOpen || `<p class="empty-text">${i18n[currentLang].noIssues}</p>`;
+      progDiv.innerHTML = htmlProg || `<p class="empty-text">${i18n[currentLang].noIssues}</p>`;
+      doneDiv.innerHTML = htmlDone || `<p class="empty-text">${i18n[currentLang].noIssues}</p>`;
+
+      document.getElementById("countOpen").textContent = cOpen;
+      document.getElementById("countProgress").textContent = cProg;
+      document.getElementById("countDone").textContent = cDone;
+    }
+
+    async function updateStatus(id, newStatus) {
+      const { error } = await db.from("tickets").update({ status: newStatus }).eq("id", id);
+      if (error) alert("Σφάλμα ενημέρωσης: " + error.message);
+      else loadTickets();
+    }
+
+    // Ακροατής Realtime
+    db.channel('realtime:tickets')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, () => {
+        loadTickets();
+      })
+      .subscribe();
+
+    /* ========================================================
+       8. INITIALIZATION
+       ======================================================== */
+    function switchView(view) {
+      if (view === 'new') {
+        document.getElementById("viewNew").classList.remove("hidden");
+        document.getElementById("viewBoard").classList.add("hidden");
+        document.getElementById("tabNewBtn").classList.add("active");
+        document.getElementById("tabBoardBtn").classList.remove("active");
       } else {
-        const pin = prompt('Εισάγετε το PIN σας για ανάληψη:');
-        if (pin && ROLES[pin]) {
-          claimTicket(ticketId, currentLang === 'el' ? ROLES[pin].nameEl : ROLES[pin].nameEn);
-        } else if (pin) alert('Μη έγκυρο PIN');
+        document.getElementById("viewNew").classList.add("hidden");
+        document.getElementById("viewBoard").classList.remove("hidden");
+        document.getElementById("tabNewBtn").classList.remove("active");
+        document.getElementById("tabBoardBtn").classList.add("active");
+        loadTickets();
       }
     }
 
-    function confirmOfficeClaim(roleName) {
-      if (activeClaimTicketId) {
-        claimTicket(activeClaimTicketId, roleName);
-        closeOfficeClaimModal();
-      }
-    }
-
-    function closeOfficeClaimModal() {
-      activeClaimTicketId = null;
-      document.getElementById('officeClaimModal').classList.add('hidden');
-    }
-
-    async function claimTicket(ticketId, claimedByName) {
-      const claimedAt = new Date().toISOString();
-      const ticket = tickets.find(t => t.id === ticketId);
-      if (ticket) {
-        ticket.status = 'in_progress';
-        ticket.claimedAt = claimedAt;
-        ticket.claimedBy = claimedByName;
-        localStorage.setItem('w_tickets', JSON.stringify(tickets));
-        renderBoard();
-      }
-
-      if (sbClient) {
-        try {
-          await sbClient.from('tickets').update({
-            status: 'in_progress',
-            claimed_at: claimedAt,
-            claimed_by: claimedByName
-          }).eq('id', ticketId);
-        } catch (err) {
-          console.error('Claim error:', err);
-        }
-      }
-      showToast(`Ανάληψη: ${claimedByName}`);
-    }
-
-    async function handleResolveClick(ticketId) {
-      const ticket = tickets.find(t => t.id === ticketId);
-      if (!ticket) return;
-      const resolverName = currentRolePin && ROLES[currentRolePin] 
-        ? (currentLang === 'el' ? ROLES[currentRolePin].nameEl : ROLES[currentRolePin].nameEn)
-        : (ticket.claimedBy || 'Τεχνικός');
-
-      const resolvedAt = new Date().toISOString();
-      ticket.status = 'resolved';
-      ticket.resolvedAt = resolvedAt;
-      ticket.resolvedBy = resolverName;
-      localStorage.setItem('w_tickets', JSON.stringify(tickets));
-      renderBoard();
-
-      if (sbClient) {
-        try {
-          await sbClient.from('tickets').update({
-            status: 'resolved',
-            resolved_at: resolvedAt,
-            resolved_by: resolverName
-          }).eq('id', ticketId);
-        } catch (err) {
-          console.error('Resolve error:', err);
-        }
-      }
-      showToast('Η βλάβη ολοκληρώθηκε! ✅');
-    }
-
-    function openAdminResolveModal(ticketId) {
-      activeAdminResolveTicketId = ticketId;
-      document.getElementById('adminResolveNote').value = '';
-      document.getElementById('adminResolveModal').classList.remove('hidden');
-    }
-
-    function closeAdminResolveModal() {
-      activeAdminResolveTicketId = null;
-      document.getElementById('adminResolveModal').classList.add('hidden');
-    }
-
-    async function confirmAdminResolve() {
-      const note = document.getElementById('adminResolveNote').value.trim();
-      if (!note) {
-        alert('Συμπληρώστε αιτιολογία');
-        return;
-      }
-      const resolvedAt = new Date().toISOString();
-      const ticket = tickets.find(t => t.id === activeAdminResolveTicketId);
-      if (ticket) {
-        ticket.status = 'resolved';
-        ticket.resolvedAt = resolvedAt;
-        ticket.resolvedBy = 'Admin (9999)';
-        ticket.resolvedNote = note;
-        localStorage.setItem('w_tickets', JSON.stringify(tickets));
-        renderBoard();
-      }
-
-      if (sbClient) {
-        try {
-          await sbClient.from('tickets').update({
-            status: 'resolved',
-            resolved_at: resolvedAt,
-            resolved_by: 'Admin (9999)',
-            resolved_note: note
-          }).eq('id', activeAdminResolveTicketId);
-        } catch (err) {
-          console.error('Admin resolve error:', err);
-        }
-      }
-      closeAdminResolveModal();
-      showToast('Ολοκληρώθηκε από Admin');
-    }
-
-    async function deleteTicketPermanent(ticketId) {
-      if (confirm('Οριστική διαγραφή καταχώρησης;')) {
-        tickets = tickets.filter(t => t.id !== ticketId);
-        localStorage.setItem('w_tickets', JSON.stringify(tickets));
-        renderBoard();
-
-        if (sbClient) {
-          try {
-            await sbClient.from('tickets').delete().eq('id', ticketId);
-          } catch (err) {
-            console.error('Delete error:', err);
-          }
-        }
-        showToast('Η εγγραφή διαγράφηκε');
-      }
-    }
-
-    /* REALTIME SYNC (MOBILE <-> PC) */
-    async function initSupabase() {
-      if (!sbClient) return;
-      try {
-        const { data, error } = await sbClient.from('tickets').select('*').order('created_at', { ascending: false });
-        if (data && !error && data.length) {
-          tickets = data.map(mapRowToTicket);
-          localStorage.setItem('w_tickets', JSON.stringify(tickets));
-          renderBoard();
-        }
-
-        sbClient.channel('public:tickets')
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, payload => {
-            if (payload.eventType === 'INSERT') {
-              const newT = mapRowToTicket(payload.new);
-              tickets.unshift(newT);
-              playChime();
-              triggerSystemNotification(newT);
-            } else if (payload.eventType === 'UPDATE') {
-              const updatedT = mapRowToTicket(payload.new);
-              const idx = tickets.findIndex(t => t.id === updatedT.id);
-              if (idx !== -1) tickets[idx] = updatedT;
-            } else if (payload.eventType === 'DELETE') {
-              tickets = tickets.filter(t => t.id !== payload.old.id);
-            }
-            localStorage.setItem('w_tickets', JSON.stringify(tickets));
-            renderBoard();
-          })
-          .subscribe();
-      } catch (err) {
-        console.warn('Supabase sync warning:', err);
-      }
-    }
-
-    function mapRowToTicket(row) {
-      return {
-        id: row.id,
-        dept: row.dept,
-        locationDisplay: row.location_display,
-        zoneName: row.zone_name,
-        issueTitle: row.issue_title,
-        customNote: row.custom_note,
-        photo: row.photo,
-        securitySop: row.security_sop,
-        status: row.status,
-        createdAt: row.created_at,
-        claimedAt: row.claimed_at,
-        claimedBy: row.claimed_by,
-        resolvedAt: row.resolved_at,
-        resolvedBy: row.resolved_by,
-        resolvedNote: row.resolved_note
-      };
-    }
-
-    function formatTime(isoString) {
-      if (!isoString) return '';
-      const d = new Date(isoString);
-      return `${d.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' })} (${d.toLocaleDateString('el-GR', { day: '2-digit', month: '2-digit' })})`;
-    }
-
-    function calculateDuration(startIso, endIso) {
-      if (!startIso || !endIso) return '';
-      const diffMinutes = Math.round((new Date(endIso) - new Date(startIso)) / 60000);
-      if (diffMinutes < 60) return `${diffMinutes} λεπτά`;
-      return `${Math.floor(diffMinutes / 60)}ω ${diffMinutes % 60}λ`;
-    }
-
-    function switchTab(tab) {
-      const repSec = document.getElementById('reportSection');
-      const brdSec = document.getElementById('boardSection');
-      const tabRep = document.getElementById('tabReport');
-      const tabBrd = document.getElementById('tabBoard');
-
-      if (tab === 'report') {
-        repSec.classList.remove('hidden');
-        brdSec.classList.add('hidden');
-        tabRep.classList.add('border-emerald-400', 'text-emerald-400');
-        tabRep.classList.remove('border-transparent', 'text-zinc-400');
-        tabBrd.classList.remove('border-emerald-400', 'text-emerald-400');
-        tabBrd.classList.add('border-transparent', 'text-zinc-400');
-      } else {
-        repSec.classList.add('hidden');
-        brdSec.classList.remove('hidden');
-        tabBrd.classList.add('border-emerald-400', 'text-emerald-400');
-        tabBrd.classList.remove('border-transparent', 'text-zinc-400');
-        tabRep.classList.remove('border-emerald-400', 'text-emerald-400');
-        tabRep.classList.add('border-transparent', 'text-zinc-400');
-        renderBoard();
-      }
-    }
-
-    function showToast(msg) {
-      const toast = document.getElementById('toast');
-      toast.textContent = msg;
-      toast.classList.remove('opacity-0', 'pointer-events-none');
-      setTimeout(() => toast.classList.add('opacity-0', 'pointer-events-none'), 2500);
-    }
+    // Εκκίνηση
+    renderLocationButtons();
+    renderPresets();
+    loadTickets();
   </script>
 </body>
 </html>
