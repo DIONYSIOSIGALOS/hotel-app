@@ -1,1119 +1,1844 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="el">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>W Maintenance Enterprise</title>
-  
-  <!-- Supabase JS Client v2 -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
-  <style>
-    /* CSS Variables: Dark Mode (Default) */
-    :root {
-      --bg-main: #0b1120;
-      --bg-card: #1e293b;
-      --bg-card-hover: #243248;
-      --bg-input: #334155;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --border-color: #334155;
-      --accent-green: #22c55e;
-      --accent-blue: #38bdf8;
-      --accent-navy: #1e3a8a;
-      --status-open: #ef4444;
-      --status-progress: #f59e0b;
-      --status-done: #10b981;
-      --warning-sop: #dc2626;
-      --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-    }
-
-    /* CSS Variables: Light Mode (Daylight / White & Navy) */
-    body.light-theme {
-      --bg-main: #f8fafc;
-      --bg-card: #ffffff;
-      --bg-card-hover: #f1f5f9;
-      --bg-input: #f1f5f9;
-      --text-main: #0f172a;
-      --text-muted: #475569;
-      --border-color: #cbd5e1;
-      --accent-green: #16a34a;
-      --accent-blue: #0284c7;
-      --accent-navy: #0f172a;
-      --status-open: #dc2626;
-      --status-progress: #d97706;
-      --status-done: #059669;
-      --warning-sop: #b91c1c;
-      --card-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; padding-bottom: 50px; transition: background-color 0.25s, color 0.25s; }
-
-    /* Top Sticky Header */
-    header {
-      background-color: var(--bg-card);
-      border-bottom: 1px solid var(--border-color);
-      padding: 12px 18px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: var(--card-shadow);
-    }
-    .brand { font-size: 1.25rem; font-weight: 800; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
-    .brand span.w { color: var(--accent-green); font-size: 1.6rem; font-weight: 900; }
-    
-    .header-actions { display: flex; gap: 8px; align-items: center; }
-    .icon-btn {
-      background: var(--bg-input);
-      color: var(--text-main);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 7px 12px;
-      font-size: 0.85rem;
-      cursor: pointer;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      transition: all 0.2s;
-    }
-    .icon-btn:active { transform: scale(0.97); }
-
-    /* Container */
-    .container { max-width: 1050px; margin: 15px auto; padding: 0 15px; }
-
-    /* Navigation Tabs */
-    .nav-tabs { display: flex; gap: 10px; margin-bottom: 18px; }
-    .tab-btn {
-      flex: 1;
-      padding: 12px;
-      background: var(--bg-card);
-      color: var(--text-muted);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      font-weight: 700;
-      font-size: 0.95rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.2s;
-    }
-    .tab-btn.active {
-      background: var(--accent-green);
-      color: #ffffff;
-      border-color: var(--accent-green);
-      box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
-    }
-
-    /* Shift Banner Bar */
-    .shift-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      padding: 8px 16px;
-      margin-bottom: 16px;
-      font-size: 0.82rem;
-      font-weight: 700;
-    }
-    .shift-tag {
-      padding: 3px 8px;
-      border-radius: 6px;
-      background: var(--accent-blue);
-      color: #fff;
-    }
-
-    /* Cards */
-    .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 14px;
-      padding: 18px;
-      margin-bottom: 18px;
-      box-shadow: var(--card-shadow);
-    }
-
-    /* Section Labels */
-    .section-label {
-      font-size: 0.85rem;
-      font-weight: 800;
-      margin-bottom: 10px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    /* Grid Button Groups */
-    .grid-btn-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-bottom: 15px; }
-    .rooms-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
-      gap: 6px;
-      margin-bottom: 15px;
-      max-height: 230px;
-      overflow-y: auto;
-      padding: 6px;
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      background: var(--bg-main);
-    }
-
-    .select-pill {
-      background: var(--bg-input);
-      color: var(--text-main);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 10px 8px;
-      font-size: 0.85rem;
-      font-weight: 700;
-      text-align: center;
-      cursor: pointer;
-      user-select: none;
-      transition: all 0.15s;
-    }
-    .select-pill:active { transform: scale(0.96); }
-    .select-pill.active {
-      background: var(--accent-blue);
-      color: #ffffff;
-      border-color: var(--accent-blue);
-    }
-    .select-pill.sub-active {
-      background: var(--accent-green);
-      color: #ffffff;
-      border-color: var(--accent-green);
-    }
-
-    /* Issues Grid */
-    .issues-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-bottom: 16px; }
-    .issue-card {
-      background: var(--bg-input);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 12px 10px;
-      text-align: center;
-      font-size: 0.85rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .issue-card:active { transform: scale(0.96); }
-    .issue-card.active {
-      background: var(--accent-green);
-      color: #ffffff;
-      border-color: var(--accent-green);
-    }
-
-    /* Security SOP Banner */
-    .sop-alert {
-      background: rgba(220, 38, 38, 0.12);
-      border: 2px solid var(--warning-sop);
-      color: var(--warning-sop);
-      border-radius: 10px;
-      padding: 12px 16px;
-      font-size: 0.88rem;
-      font-weight: 800;
-      margin-bottom: 16px;
-      display: none;
-      line-height: 1.4;
-    }
-
-    /* PIN Box */
-    .pin-box {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 14px;
-      padding: 18px 20px;
-      margin-bottom: 20px;
-      box-shadow: var(--card-shadow);
-    }
-    .pin-title {
-      font-size: 0.85rem;
-      font-weight: 800;
-      color: var(--text-muted);
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-bottom: 12px;
-    }
-    .pin-form { display: flex; gap: 10px; }
-    .pin-input {
-      flex: 1;
-      padding: 12px 14px;
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-      background: var(--bg-input);
-      color: var(--text-main);
-      font-size: 1.05rem;
-      font-weight: 700;
-      outline: none;
-    }
-    .btn-green {
-      background: var(--accent-green);
-      color: #ffffff;
-      border: none;
-      border-radius: 8px;
-      padding: 12px 24px;
-      font-weight: 800;
-      font-size: 0.95rem;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-green:active { transform: scale(0.97); }
-
-    /* Photo Upload & Preview */
-    .photo-preview {
-      width: 100%;
-      max-height: 200px;
-      object-fit: cover;
-      border-radius: 8px;
-      margin-top: 10px;
-      display: none;
-      border: 1px solid var(--border-color);
-      cursor: pointer;
-    }
-
-    /* Dashboard Columns */
-    .board { display: grid; grid-template-columns: 1fr; gap: 15px; }
-    @media(min-width: 820px) { .board { grid-template-columns: 1fr 1fr 1fr; } }
-    .column-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 10px;
-      margin-bottom: 12px;
-      border-bottom: 2px solid var(--border-color);
-      font-weight: 800;
-      font-size: 0.95rem;
-    }
-    .badge { border-radius: 20px; padding: 3px 10px; font-size: 0.8rem; color: #ffffff; font-weight: 800; }
-    .badge-open { background: var(--status-open); }
-    .badge-progress { background: var(--status-progress); }
-    .badge-done { background: var(--status-done); }
-
-    /* Ticket Item Cards */
-    .ticket {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      padding: 14px;
-      margin-bottom: 12px;
-      border-left: 5px solid var(--accent-blue);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-      transition: all 0.2s;
-    }
-    .ticket.open { border-left-color: var(--status-open); }
-    .ticket.in_progress { border-left-color: var(--status-progress); }
-    .ticket.completed { border-left-color: var(--status-done); opacity: 0.85; }
-
-    .ticket-head { display: flex; justify-content: space-between; font-weight: 800; font-size: 1rem; align-items: center; }
-    .ticket-cat {
-      background: rgba(56, 189, 248, 0.15);
-      color: var(--accent-blue);
-      padding: 3px 8px;
-      border-radius: 6px;
-      font-size: 0.78rem;
-      font-weight: 800;
-    }
-    .ticket-meta { font-size: 0.76rem; color: var(--text-muted); margin-top: 4px; display: flex; justify-content: space-between; }
-    .ticket-sop-tag {
-      display: inline-block;
-      background: var(--status-open);
-      color: #fff;
-      font-size: 0.7rem;
-      font-weight: 800;
-      padding: 2px 6px;
-      border-radius: 4px;
-      margin-top: 4px;
-    }
-    .ticket-issue { margin: 8px 0; font-size: 0.92rem; font-weight: 600; line-height: 1.35; }
-    .ticket-actions { display: flex; gap: 8px; margin-top: 10px; }
-    .action-btn {
-      flex: 1;
-      padding: 8px;
-      font-size: 0.8rem;
-      border-radius: 6px;
-      font-weight: 800;
-      border: none;
-      cursor: pointer;
-      color: #fff;
-      transition: all 0.15s;
-    }
-    .action-btn:active { transform: scale(0.97); }
-
-    /* Modal for Photo Zoom */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.85);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      padding: 20px;
-    }
-    .modal-img { max-width: 100%; max-height: 90vh; border-radius: 8px; }
-
-    .hidden { display: none !important; }
-    .empty-text { text-align: center; color: var(--text-muted); padding: 35px 10px; font-size: 0.9rem; font-weight: 600; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>W Maintenance Enterprise</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#0b0d0f;
+  --card:#15191f;
+  --card2:#1b2027;
+  --text:#f5f7fa;
+  --muted:#9aa5b4;
+  --gold:#dfb965;
+  --blue:#0877d1;
+  --green:#35b56a;
+  --red:#d95757;
+  --border:#303741;
+  --shadow:0 12px 35px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{
+  margin:0;
+  padding:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+}
+body{min-height:100vh}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+.app{
+  width:100%;
+  max-width:1100px;
+  margin:0 auto;
+  padding:18px;
+}
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:26px;
+  padding:22px;
+  box-shadow:var(--shadow);
+}
+h1,h2,h3{
+  margin:0 0 12px;
+}
+h1{
+  font-size:clamp(28px,6vw,48px);
+  letter-spacing:2px;
+  text-align:center;
+}
+.subtitle{
+  color:var(--muted);
+  text-align:center;
+  font-size:18px;
+  font-weight:700;
+}
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:18px;
+}
+.brand{
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:1px;
+}
+.top-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.btn{
+  border:1px solid var(--border);
+  background:var(--card2);
+  color:var(--text);
+  border-radius:15px;
+  padding:13px 17px;
+  font-weight:800;
+}
+.btn.primary{
+  background:var(--gold);
+  color:#111;
+  border-color:var(--gold);
+}
+.btn.blue{
+  background:var(--blue);
+  border-color:var(--blue);
+}
+.btn.green{
+  background:var(--green);
+  border-color:var(--green);
+}
+.btn.red{
+  background:var(--red);
+  border-color:var(--red);
+}
+.btn:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+.grid{
+  display:grid;
+  gap:14px;
+}
+.grid2{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+}
+.grid3{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+@media(max-width:700px){
+  .grid2,.grid3{grid-template-columns:1fr}
+  .app{padding:12px}
+  .card{padding:17px}
+}
+label{
+  display:block;
+  font-weight:800;
+  margin-bottom:7px;
+}
+input,textarea,select{
+  width:100%;
+  background:#11151a;
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:14px;
+  outline:none;
+}
+input:focus,textarea:focus,select:focus{
+  border-color:var(--blue);
+}
+textarea{
+  min-height:120px;
+  resize:vertical;
+}
+.section-title{
+  font-size:19px;
+  font-weight:900;
+  margin:20px 0 10px;
+}
+.chips{
+  display:flex;
+  flex-wrap:wrap;
+  gap:9px;
+}
+.chip{
+  border:1px solid var(--border);
+  background:var(--card2);
+  color:var(--text);
+  border-radius:13px;
+  padding:12px 14px;
+  font-weight:800;
+}
+.chip.active{
+  border-color:var(--blue);
+  background:#083b68;
+}
+.category{
+  min-height:82px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  font-weight:900;
+}
+.ticket{
+  border:1px solid var(--border);
+  border-radius:20px;
+  background:#11151a;
+  padding:16px;
+}
+.ticket + .ticket{margin-top:12px}
+.ticket-head{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:flex-start;
+}
+.badge{
+  display:inline-flex;
+  align-items:center;
+  border-radius:999px;
+  padding:6px 10px;
+  font-size:12px;
+  font-weight:900;
+  background:#2a3038;
+}
+.badge.pending{background:#4b3d18}
+.badge.progress{background:#123d61}
+.badge.done{background:#174a2b}
+.meta{
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.5;
+}
+.actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+.photo-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  margin-top:10px;
+}
+.photo-grid img{
+  width:100%;
+  aspect-ratio:1;
+  object-fit:cover;
+  border-radius:12px;
+  border:1px solid var(--border);
+}
+.sop{
+  border:1px solid #805b1b;
+  background:#302610;
+  color:#ffe5a4;
+  border-radius:15px;
+  padding:14px;
+  font-weight:800;
+  line-height:1.45;
+}
+.login-wrap{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+.login{
+  width:min(760px,100%);
+}
+.pin{
+  text-align:center;
+  font-size:32px;
+  letter-spacing:16px;
+  font-weight:900;
+}
+.remember{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:17px;
+  margin:15px 0;
+}
+.remember input{
+  width:25px;
+  height:25px;
+}
+.pin-button{
+  width:100%;
+  min-height:68px;
+  font-size:20px;
+  font-weight:900;
+}
+.notice{
+  margin-top:12px;
+  color:var(--muted);
+  text-align:center;
+}
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+.stat{
+  background:var(--card2);
+  border:1px solid var(--border);
+  border-radius:17px;
+  padding:15px;
+  text-align:center;
+}
+.stat strong{
+  display:block;
+  font-size:28px;
+}
+@media(max-width:700px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+}
+.tabs{
+  display:flex;
+  gap:8px;
+  overflow:auto;
+  margin-bottom:15px;
+}
+.tab{
+  white-space:nowrap;
+}
+.empty{
+  text-align:center;
+  color:var(--muted);
+  padding:35px 10px;
+}
+hr{
+  border:0;
+  border-top:1px solid var(--border);
+  margin:20px 0;
+}
+small{color:var(--muted)}
+</style>
 </head>
+
 <body>
 
-  <!-- Top Sticky Header -->
-  <header>
-    <div class="brand">
-      <span class="w">W</span> MAINTENANCE
-    </div>
-    <div class="header-actions">
-      <!-- Sound Alert Toggle -->
-      <button class="icon-btn" id="soundBtn" onclick="toggleSound()">🔊 Ήχος</button>
-      <!-- Daylight / Night Theme Switch -->
-      <button class="icon-btn" id="themeBtn" onclick="toggleTheme()">☀️ Ημέρα</button>
-      <!-- Language Switch -->
-      <button class="icon-btn" id="langBtn" onclick="toggleLanguage()">🇬🇧 EN</button>
-    </div>
-  </header>
+<div id="loginScreen" class="login-wrap">
+  <div class="card login">
+    <h1>W MAINTENANCE</h1>
+    <div class="subtitle">Enterprise • Secure PIN Access</div>
 
-  <div class="container">
-    
-    <!-- Shift & Time Status Bar -->
-    <div class="shift-bar">
-      <div>🕒 <span id="clockDisplay">--:--</span></div>
-      <div>ΒΑΡΔΙΑ: <span class="shift-tag" id="currentShiftText">Πρωινή</span></div>
+    <div style="margin-top:28px">
+      <input
+        id="pinInput"
+        class="pin"
+        type="password"
+        inputmode="numeric"
+        maxlength="4"
+        autocomplete="off"
+        placeholder="••••"
+      >
     </div>
 
-    <!-- Navigation Tabs -->
-    <div class="nav-tabs">
-      <button class="tab-btn active" id="tabNewBtn" onclick="switchView('new')">📝 <span data-t="tabNew">Δήλωση Βλάβης</span></button>
-      <button class="tab-btn" id="tabBoardBtn" onclick="switchView('board')">📋 <span data-t="tabBoard">Έλεγχος & Ταμπλό</span></button>
+    <label class="remember">
+      <input id="rememberMe" type="checkbox">
+      <span>Remember me</span>
+    </label>
+
+    <button class="btn primary pin-button" onclick="login()">
+      Σύνδεση
+    </button>
+
+    <div id="loginMsg" class="notice"></div>
+  </div>
+</div>
+
+<div id="appScreen" class="hidden">
+  <div class="app">
+
+    <div class="topbar">
+      <div>
+        <div class="brand">W MAINTENANCE</div>
+        <small id="userInfo"></small>
+      </div>
+
+      <div class="top-actions">
+        <button class="btn" onclick="toggleTheme()">☾ / ☀</button>
+        <button class="btn" onclick="toggleLanguage()">GR / EN</button>
+        <button class="btn red" onclick="logout()">Έξοδος</button>
+      </div>
     </div>
 
-    <!-- VIEW 1: ΔΗΛΩΣΗ ΒΛΑΒΗΣ -->
-    <div id="viewNew">
+    <div class="tabs">
+      <button id="tabReport" class="btn tab primary" onclick="showTab('report')">
+        Νέο Ticket
+      </button>
+      <button id="tabDashboard" class="btn tab" onclick="showTab('dashboard')">
+        Dashboard
+      </button>
+      <button id="tabAnalytics" class="btn tab hidden" onclick="showTab('analytics')">
+        Analytics
+      </button>
+    </div>
+
+    <section id="reportTab">
+
       <div class="card">
-        
-        <!-- 1. ΠΟΙΟΣ ΔΗΛΩΝΕΙ -->
-        <div class="section-label" data-t="secReporter">1. Ποιος δηλώνει τη βλάβη:</div>
-        <div class="grid-btn-group" id="reporterGroup">
-          <div class="select-pill active" onclick="setReporter('Style (Housekeeping)', this)">Style</div>
-          <div class="select-pill" onclick="setReporter('Whatever/Whenever', this)">W / W</div>
-          <div class="select-pill" onclick="setReporter('Reception', this)">Reception</div>
-          <div class="select-pill" onclick="setReporter('Curators', this)">Curators</div>
-          <div class="select-pill" onclick="setReporter('Security', this)">Security</div>
-          <div class="select-pill" onclick="setReporter('Engineering', this)">Engineering</div>
-          <div class="select-pill" onclick="setReporter('F&B', this)">F&B</div>
+        <h2>Νέο Maintenance Ticket</h2>
+        <div class="meta">
+          Ο αναφέρων καταγράφεται αυτόματα από το PIN σύνδεσης.
         </div>
 
-        <!-- 2. ΠΕΡΙΟΧΗ / ΕΝΟΤΗΤΑ -->
-        <div class="section-label" data-t="secWing">2. Περιοχή / Ενότητα:</div>
-        <div class="grid-btn-group" id="areaGroup">
-          <div class="select-pill active" onclick="setArea('north', this)">Βόρεια Πτέρυγα</div>
-          <div class="select-pill" onclick="setArea('south', this)">Νότια Πτέρυγα</div>
-          <div class="select-pill" onclick="setArea('agora_suites', this)">Σουίτες Αγοράς</div>
-          <div class="select-pill" onclick="setArea('agora_rooms', this)">Agora / Diving</div>
-          <div class="select-pill" onclick="setArea('villas_north', this)">Βόρειες Βίλες</div>
-          <div class="select-pill" onclick="setArea('villas_south', this)">Νότιες Βίλες</div>
-          <div class="select-pill" onclick="setArea('public', this)">Κοινόχρηστοι Χώροι</div>
-        </div>
+        <div class="section-title">1. Περιοχή</div>
 
-        <!-- ΥΠΟΚΑΤΗΓΟΡΙΑ / ΟΡΟΦΟΣ -->
-        <div class="section-label" id="subAreaLabel">Επιλογή Ορόφου / Τομέα:</div>
-        <div class="grid-btn-group" id="subAreaGroup">
-          <!-- Φορτώνει αυτόματα με JS -->
-        </div>
+        <div id="areaButtons" class="chips"></div>
 
-        <!-- ΑΡΙΘΜΟΣ ΔΩΜΑΤΙΟΥ / ΣΟΥΙΤΑΣ -->
-        <div class="section-label" id="roomSelectLabel">Αριθμός Δωματίου / Χώρου:</div>
-        <div class="rooms-grid" id="roomsList">
-          <!-- Φορτώνει τα δωμάτια με JS -->
-        </div>
+        <div class="grid grid2" style="margin-top:12px">
+          <div>
+            <label>Other Area / Space</label>
+            <input
+              id="otherArea"
+              placeholder="Περιγράψτε την περιοχή αν δεν υπάρχει στη λίστα"
+            >
+          </div>
 
-        <!-- ΥΠΟΧΩΡΟΣ (ΓΙΑ ΒΙΛΕΣ / ΣΟΥΙΤΕΣ) -->
-        <div id="subLocationBlock" class="hidden">
-          <div class="section-label">Επιμέρους Χώρος / Σημείο:</div>
-          <div class="grid-btn-group" id="subLocationGroup">
-            <div class="select-pill active" onclick="setSubLocation('Γενικά', this)">Γενικά</div>
-            <div class="select-pill" onclick="setSubLocation('Master Bedroom', this)">Master Bedroom</div>
-            <div class="select-pill" onclick="setSubLocation('Twin Bedroom', this)">Twin Bedroom</div>
-            <div class="select-pill" onclick="setSubLocation('Living Room', this)">Living Room</div>
-            <div class="select-pill" onclick="setSubLocation('Μπάνιο', this)">Μπάνιο</div>
-            <div class="select-pill" onclick="setSubLocation('Πισίνα / Εξωτερικός', this)">Πισίνα / Έξω</div>
+          <div>
+            <label>Specific Point</label>
+            <input
+              id="specificPoint"
+              placeholder="π.χ. μπάνιο, ντουλάπα, πίνακας..."
+            >
           </div>
         </div>
 
-        <!-- 3. ΕΙΔΙΚΟΤΗΤΑ / ΚΑΤΗΓΟΡΙΑ -->
-        <div class="section-label" data-t="secCategory">3. Ειδικότητα / Κατηγορία:</div>
-        <div class="grid-btn-group">
-          <div class="select-pill active" onclick="setCategory('Υδραυλικά', this)">Υδραυλικά</div>
-          <div class="select-pill" onclick="setCategory('Ηλεκτρολογικά', this)">Ηλεκτρολογικά</div>
-          <div class="select-pill" onclick="setCategory('A/C', this)">A/C</div>
-          <div class="select-pill" onclick="setCategory('A/V', this)">A/V</div>
-          <div class="select-pill" onclick="setCategory('Ξυλουργικά', this)">Πόρτες / Έπιπλα</div>
-          <div class="select-pill" onclick="setCategory('Χρηματοκιβώτιο / Lock', this)">Safe / Κλειδαριά</div>
+        <div class="section-title">2. Κατηγορία</div>
+
+        <div id="categoryButtons" class="grid grid3"></div>
+
+        <div id="issueSection" class="hidden">
+          <div class="section-title">3. Συχνό πρόβλημα (προαιρετικό)</div>
+          <div id="issueButtons" class="chips"></div>
         </div>
 
-        <!-- SECURITY SOP ALERT BANNER -->
-        <div id="sopBanner" class="sop-alert">
-          ⚠️ <strong>ΥΠΟΧΡΕΩΤΙΚΟ ΠΡΩΤΟΚΟΛΛΟ SECURITY SOP:</strong><br>
-          Η επέμβαση σε χρηματοκιβώτιο ή ξεκλείδωμα πόρτας απαγορεύεται χωρίς τη φυσική παρουσία μέλους της Ασφάλειας (Security).
+        <div class="section-title">Περιγραφή / Notes</div>
+
+        <textarea
+          id="description"
+          placeholder="Περιγράψτε το πρόβλημα. Μπορείτε να γράψετε ελεύθερα ή να χρησιμοποιήσετε τα preset buttons."
+        ></textarea>
+
+        <div id="sopBox" class="sop hidden" style="margin-top:12px">
+          ⚠️ ΥΠΟΧΡΕΩΤΙΚΟ ΠΡΩΤΟΚΟΛΛΟ SECURITY SOP:
+          Η επέμβαση σε χρηματοκιβώτιο ή ξεκλείδωμα πόρτας απαγορεύεται
+          χωρίς τη φυσική παρουσία μέλους της Ασφάλειας (Security).
         </div>
 
-        <!-- 4. ΠΡΟΚΑΘΟΡΙΣΜΕΝΕΣ ΒΛΑΒΕΣ (ZERO TYPING) -->
-        <div class="section-label" data-t="secIssue">4. Συχνή Βλάβη (Άμεσο κλικ):</div>
-        <div class="issues-grid" id="presetIssues">
-          <!-- Γεμίζει ανάλογα με την κατηγορία -->
+        <div id="securityConfirm" class="hidden" style="margin-top:12px">
+          <label class="remember">
+            <input id="securityPresent" type="checkbox">
+            <span>Επιβεβαιώνω ότι υπάρχει φυσική παρουσία Security.</span>
+          </label>
         </div>
 
-        <!-- 5. ΦΩΤΟΓΡΑΦΙΑ ΜΕ ΑΥΤΟΜΑΤΗ ΣΥΜΠΙΕΣΗ -->
-        <div class="section-label" data-t="secPhoto">5. Φωτογραφία (Προαιρετικά - Συμπιέζεται αυτόματα):</div>
-        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoUpload(this)" />
-        <button class="icon-btn" style="width:100%; justify-content:center; padding:12px; margin-bottom:8px;" onclick="document.getElementById('photoInput').click()">
-          📷 <span data-t="takePhoto">Λήψη / Επιλογή Φωτογραφίας</span>
-        </button>
-        <img id="photoPreviewImg" class="photo-preview" alt="Preview" onclick="openPhotoModal(this.src)" />
+        <div class="section-title">Φωτογραφίες (έως 4)</div>
 
-        <!-- ΚΟΥΜΠΙ ΑΠΟΣΤΟΛΗΣ -->
-        <button class="btn-green" style="width:100%; font-size:1.15rem; padding:16px; margin-top:12px;" onclick="submitTicket()">
-          🚀 <span data-t="sendIssue">ΚΑΤΑΧΩΡΗΣΗ ΒΛΑΒΗΣ</span>
-        </button>
+        <input
+          id="photoInput"
+          type="file"
+          accept="image/*"
+          multiple
+          capture="environment"
+          onchange="handlePhotos(event)"
+        >
 
-      </div>
-    </div>
+        <div id="preview" class="photo-grid"></div>
 
-    <!-- VIEW 2: ΤΑΜΠΛΟ ΕΛΕΓΧΟΥ / ENGINEERING DASHBOARD -->
-    <div id="viewBoard" class="hidden">
-      
-      <!-- PIN BOX -->
-      <div class="pin-box">
-        <div class="pin-title" id="pinBoxTitle">ΣΥΝΔΕΣΗ ENGINEERING</div>
-        <div class="pin-form" id="pinFormArea">
-          <input type="password" id="pinInput" class="pin-input" placeholder="Εισάγετε PIN..." inputmode="numeric" />
-          <button class="btn-green" onclick="handlePinLogin()">Είσοδος</button>
+        <div class="actions">
+          <button class="btn primary" onclick="submitTicket()">
+            Δημιουργία Ticket
+          </button>
+          <button class="btn" onclick="clearForm()">
+            Καθαρισμός
+          </button>
         </div>
-        <div id="userLoggedInBar" class="hidden" style="display:flex; justify-content:space-between; align-items:center;">
-          <span id="loggedUserText" style="font-weight:800; color:var(--accent-green); font-size:1rem;"></span>
-          <button class="icon-btn" onclick="logout()">Αποσύνδεση</button>
-        </div>
+
+        <div id="submitMsg" class="notice"></div>
       </div>
 
-      <!-- 3 Στήλες: ΑΝΟΙΧΤΕΣ | ΣΕ ΕΞΕΛΙΞΗ | ΟΛΟΚΛΗΡΩΜΕΝΕΣ -->
-      <div class="board">
-        <!-- Ανοιχτές -->
-        <div class="card">
-          <div class="column-header">
-            <span style="color:var(--status-open)">🔴 <span data-t="colOpen">ΑΝΟΙΧΤΕΣ</span></span>
-            <span class="badge badge-open" id="countOpen">0</span>
+    </section>
+
+    <section id="dashboardTab" class="hidden">
+
+      <div class="card">
+        <div class="ticket-head">
+          <div>
+            <h2>Maintenance Dashboard</h2>
+            <div class="meta">
+              Ενεργά tickets και εργασίες σε πραγματικό χρόνο.
+            </div>
           </div>
-          <div id="listOpen"><p class="empty-text" data-t="noIssues">Καμία βλάβη</p></div>
+
+          <button class="btn" onclick="loadTickets()">
+            ↻ Refresh
+          </button>
         </div>
 
-        <!-- Σε Εξέλιξη -->
-        <div class="card">
-          <div class="column-header">
-            <span style="color:var(--status-progress)">🟠 <span data-t="colProgress">ΣΕ ΕΞΕΛΙΞΗ</span></span>
-            <span class="badge badge-progress" id="countProgress">0</span>
+        <div class="stats" style="margin-top:15px">
+          <div class="stat">
+            <strong id="statPending">0</strong>
+            <span>Pending</span>
           </div>
-          <div id="listProgress"><p class="empty-text" data-t="noIssues">Καμία βλάβη</p></div>
+          <div class="stat">
+            <strong id="statProgress">0</strong>
+            <span>In Progress</span>
+          </div>
+          <div class="stat">
+            <strong id="statDone">0</strong>
+            <span>Completed</span>
+          </div>
+          <div class="stat">
+            <strong id="statTotal">0</strong>
+            <span>Visible</span>
+          </div>
         </div>
 
-        <!-- Ολοκληρωμένες (Τελευταίες 24h) -->
-        <div class="card">
-          <div class="column-header">
-            <span style="color:var(--status-done)">🟢 <span data-t="colDone">ΟΛΟΚΛΗΡΩΜΕΝΕΣ (24H)</span></span>
-            <span class="badge badge-done" id="countDone">0</span>
-          </div>
-          <div id="listDone"><p class="empty-text" data-t="noIssues">Καμία βλάβη</p></div>
+        <div class="section-title">Φίλτρα</div>
+
+        <div class="chips">
+          <button class="chip active" onclick="setFilter('all',this)">Όλα</button>
+          <button class="chip" onclick="setFilter('pending',this)">Pending</button>
+          <button class="chip" onclick="setFilter('in_progress',this)">In Progress</button>
+          <button class="chip" onclick="setFilter('completed',this)">Completed</button>
         </div>
+
+        <div id="ticketList" style="margin-top:15px"></div>
       </div>
 
-    </div>
+    </section>
+
+    <section id="analyticsTab" class="hidden">
+
+      <div class="card">
+        <h2>Manager / Admin Analytics</h2>
+        <div class="meta">
+          Συνοπτικά στοιχεία tickets και εργασιών.
+        </div>
+
+        <div id="analyticsContent" style="margin-top:15px"></div>
+      </div>
+
+    </section>
 
   </div>
+</div>
 
-  <!-- Modal Zoom -->
-  <div id="photoModal" class="modal-overlay hidden" onclick="closePhotoModal()">
-    <img id="modalImg" class="modal-img" src="" alt="Enlarged ticket view" />
-  </div>
+<script>
+const SUPABASE_URL='https://gmrphnwiuhubbvlhwkuw.supabase.co';
+const SUPABASE_ANON_KEY='sb_publishable_kwWI5dK0s6MdN0kTd6sxFA__3Iq0GwU';
 
-  <script>
-    /* ========================================================
-       1. SUPABASE CLIENT
-       ======================================================== */
-    const SUPABASE_URL = "https://gmrphnwiuhubbvlhwkuw.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtcnBobndpdWh1YmJ2bGh3a3V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzMzczMDMsImV4cCI6MjEwNTkxMzMwM30.MGBT1-OJkCM7c5H2YxEUsCHjx8nXeUhfnKDfnazdvGI";
-    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
 
-    /* ========================================================
-       2. PIN & ΡΟΛΟΙ
-       ======================================================== */
-    const PIN_ROLES = {
-      "1001": { name: "Ηλεκτρολόγος Βάρδιας", role: "electrician" },
-      "2001": { name: "Υδραυλικός Βάρδιας", role: "plumber" },
-      "7000": { name: "A/V Systems Specialist", role: "av" },
-      "8888": { name: "PC Γραφείου / Helpdesk", role: "office" },
-      "9999": { name: "Admin Engineering", role: "admin" }
-    };
-    let currentUser = null;
-    let soundEnabled = true;
+let currentUser=null;
+let selectedArea='';
+let selectedCategory='';
+let selectedIssue='';
+let selectedPhotos=[];
+let tickets=[];
+let currentFilter='all';
+let lang='el';
+let realtimeChannel=null;
+let theme='dark';
 
-    /* ========================================================
-       3. ΗΧΗΤΙΚΕΣ ΕΙΔΟΠΟΙΗΣΕΙΣ
-       ======================================================== */
-    function playAlarm() {
-      if (!soundEnabled) return;
+const PIN_ROLES = {
+  '0001':{name:'ΜΟΣΧΟΣ ΚΩΣΤΑΣ',title:'Chief Engineer',role:'admin',department:'Technical'},
+  '0002':{name:'ΖΗΣΙΜΟΠΟΥΛΟΣ ΔΗΜΗΤΡΗΣ',title:'Ass. Manager',role:'admin',department:'Technical'},
+  '0003':{name:'ΧΑΤΖΗΓΑΛΗΝΗ ΣΤΕΛΛΑ',title:'Admin',role:'admin',department:'Technical'},
+  '0004':{name:'ΔΟΥΜΠΑΚΗΣ ΗΛΙΑΣ',title:'A/V Team Leader',role:'av',department:'A/V'},
+  '0005':{name:'ΠΑΝΑΓΙΩΤΟΠΟΥΛΟΣ ΠΕΤΡΟΣ',title:'ΗΛΕ 1',role:'electrician',department:'Electrical'},
+  '0006':{name:'ΓΑΛΑΝΟΠΟΥΛΟΣ ΘΕΟΔΩΡΟΣ',title:'ΗΛΕ 2',role:'electrician',department:'Electrical'},
+  '0007':{name:'ΗΛΙΟΠΟΥΛΟΣ ΔΙΟΝΥΣΗΣ',title:'ΗΛΕ 3',role:'electrician',department:'Electrical'},
+  '0008':{name:'CULLHAJ AGIM KIM',title:'ΗΛΕ 4',role:'electrician',department:'Electrical'},
+  '0009':{name:'ΧΑΡΜΠΑΛΗΣ ΑΘΑΝΑΣΙΟΣ',title:'ΗΛΕ 5',role:'electrician',department:'Electrical'},
+  '0010':{name:'ΑΝΑΣΤΑΣΟΠΟΥΛΟΣ ΓΕΩΡΓΙΟΣ',title:'ΗΛΕ 6',role:'electrician',department:'Electrical'},
+  '0011':{name:'ΑΝΔΡΕΟΥ ΓΙΩΡΓΟΣ',title:'ΥΔΡ 1',role:'plumber',department:'Plumbing'},
+  '0012':{name:'ΑΡΚΑΛΗΣ ΓΕΩΡΓΙΟΣ',title:'ΥΔΡ 2',role:'plumber',department:'Plumbing'},
+  '0013':{name:'ΖΕΡΒΑΣ ΚΩΣΤΑΣ',title:'ΥΔΡ 3',role:'plumber',department:'Plumbing'},
+  '0014':{name:'ΛΟΥΦΑΣ ΒΑΣΙΛΗΣ',title:'AC Engineer',role:'ac',department:'A/C'},
+  '0015':{name:'ΤΥΛΛΗΡΙΔΗΣ ΝΕΣΤΩΡ',title:'Junior AC Tech',role:'ac',department:'A/C'},
+  '0016':{name:'ΚΑΛΟΓΕΡΟΠΟΥΛΟΣ ΧΡΗΣΤΟΣ',title:'Carpenter',role:'carpenter',department:'Carpentry'},
+  '0017':{name:'ΤΣΩΝΗΣ ΙΩΑΝΝΗΣ',title:'Pool Leader 1',role:'pool',department:'Pools'},
+  '0018':{name:'ΠΑΠΑΠΕΤΡΟΥ ΚΩΝ/ΝΟΣ',title:'Senior Pool C. 2',role:'pool',department:'Pools'},
+  '0019':{name:'ΑΡΜΠΕΝ ΖΕΚΟΙ',title:'Pool C. 3',role:'pool',department:'Pools'},
+  '0020':{name:'ΤΣΟΠΕΛΑΣ ΑΝΑΣΤΑΣΙΟΣ',title:'Pool C. 4',role:'pool',department:'Pools'},
+  '0021':{name:'ΜΑΣΤΡΟΓΙΑΝΝΟΠΟΥΛΟΣ Π.',title:'Pool C. 5',role:'pool',department:'Pools'},
+  '0022':{name:'ΤΣΕΡΤΟΣ ΔΙΟΝΥΣΙΟΣ',title:'Pool C. 6',role:'pool',department:'Pools'},
+  '0023':{name:'ΚΑΡΔΑΡΑΣ ΔΙΟΝΥΣΙΟΣ',title:'Pool C. 7',role:'pool',department:'Pools'},
+  '0024':{name:'ΣΚΟΚΟΣ ΔΙΟΝΥΣΗΣ',title:'Civil Leader 1',role:'civil',department:'Civil'},
+  '0025':{name:'BLEDAR HOXHAJ',title:'ΕΡΓ 2',role:'civil',department:'Civil'},
+  '0026':{name:'MECANI ADI',title:'ΕΡΓ 3',role:'civil',department:'Civil'},
+  '0027':{name:'LAMBROS HOXHAJ',title:'ΕΡΓ 4',role:'civil',department:'Civil'},
+  '0028':{name:'ΚΑΝΑΚΗΣ ΙΩΑΝΝΗΣ',title:'Worker/Civil',role:'civil',department:'Civil'},
 
-      if (navigator.vibrate) {
-        navigator.vibrate([200, 100, 200, 100, 400]);
-      }
+  '2003':{name:'Super Admin',title:'AV Technician',role:'superadmin',department:'A/V'},
 
-      try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
+  '9001':{name:'Σπύρος Κασσιάρης',title:'Head of Engineering',role:'admin',department:'Engineering'},
+  '9002':{name:'Γιώργος Παναγέας',title:'Head of Engineering',role:'admin',department:'Engineering'}
+};
 
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.35);
+const DEPARTMENT_PINS = {
+  '3001':{name:'Style',title:'Housekeeping',role:'department',department:'Style'},
+  '3002':{name:'Curators / W&W',title:'W&W',role:'department',department:'Curators'},
+  '3003':{name:'Front Office / Reception',title:'Reception',role:'department',department:'Front Office'},
+  '3004':{name:'F&B / Kitchens',title:'F&B',role:'department',department:'F&B'},
+  '3005':{name:'Spa & Wellness',title:'Spa',role:'department',department:'Spa'},
+  '3006':{name:'Security',title:'Security',role:'department',department:'Security'},
+  '3007':{name:'Housing',title:'KDP',role:'department',department:'Housing'}
+};
 
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+const ALL_PINS = {...PIN_ROLES,...DEPARTMENT_PINS};
 
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
+const categories = [
+  {id:'plumbing',label:'🔧 Plumbing',roles:['plumber','admin','superadmin'],issues:[
+    'No hot water',
+    'Leaking tap',
+    'Clogged drain',
+    'Toilet cistern leak',
+    'Low water pressure',
+    'Shower / cabin issue',
+    'Drain smell',
+    'Jacuzzi / pool issue'
+  ]},
+  {id:'electrical',label:'⚡ Electrical',roles:['electrician','admin','superadmin'],issues:[
+    'Light not working',
+    'Bad socket / USB',
+    'Breaker tripped',
+    'Master switch',
+    'Doorbell / DND indicator',
+    'Mirror light',
+    'Terrace exterior light',
+    'Balcony door magnetic contact'
+  ]},
+  {id:'ac',label:'❄️ A/C',roles:['ac','admin','superadmin'],issues:[
+    'Not cooling / not on',
+    'Water inside',
+    'Loud noise',
+    'Thermostat unresponsive',
+    'Smell',
+    'Locked A/C indicator'
+  ]},
+  {id:'av',label:'📺 A/V',roles:['av','admin','superadmin'],issues:[
+    'No TV signal',
+    'Soundbar / Bluetooth offline',
+    'Bad HDMI / AppleTV',
+    'TV won’t power',
+    'Remote no battery',
+    'Subwoofer'
+  ]},
+  {id:'carpentry',label:'🪚 Carpentry',roles:['carpenter','admin','superadmin'],issues:[
+    'Door sticks',
+    'Broken lock / card',
+    'Wardrobe / drawer',
+    'Broken chair / furniture',
+    'Balcony door won’t lock',
+    'Loose hinge'
+  ]},
+  {id:'safe',label:'🔐 Safe / Lock',roles:['admin','superadmin','security'],issues:[
+    'Locked safe',
+    'Broken safe keypad',
+    'Room lock won’t open',
+    'Safe battery replacement'
+  ]},
+  {id:'civil',label:'🏗️ Civil',roles:['civil','admin','superadmin'],issues:[
+    'Wall / plaster',
+    'Floor / tile',
+    'Ceiling',
+    'Painting',
+    'Waterproofing',
+    'General civil issue'
+  ]},
+  {id:'pools',label:'🏊 Pools',roles:['pool','admin','superadmin'],issues:[
+    'Pool equipment',
+    'Water level',
+    'Pool lighting',
+    'Pump issue',
+    'Filter issue',
+    'General pool issue'
+  ]}
+];
 
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.4);
-      } catch (e) {
-        console.log("Audio alert failed:", e);
-      }
+<script>
+const locations = {
+  'North Wing':{
+    '1st Floor':makeRange(101,132),
+    '2nd Floor':makeRange(201,232),
+    '3rd Floor':makeRange(301,326)
+  },
+
+  'South Wing':{
+    '1st Floor':makeRange(151,174),
+    '2nd Floor':makeRange(251,274),
+    '3rd Floor':makeRange(351,370)
+  },
+
+  'Agora Suites':{
+    'Rooms 411–428':makeRange(411,428),
+    'Rooms 610–629':makeRange(610,629)
+  },
+
+  'Agora / Diving':{
+    'Agora 501–540':makeRange(501,540),
+    'Diving 241–246':makeRange(241,246)
+  },
+
+  'North Villas':[
+    'Villa 1','Villa 3','Villa 5','Villa 6','Villa 7',
+    'Villa 8','Villa 9','Villa 10','Villa 11','Villa 12'
+  ],
+
+  'South Villas':[
+    'Villa 21','Villa 22','Villa 23','Villa 24','Villa 25',
+    'Villa 26','Villa 27','Villa 28','Villa 29','Villa 30',
+    'Villa 31','Villa 32','Villa 33','Villa 35','Villa 37','Villa 39'
+  ],
+
+  'Communal':[
+    'Welcome Desk',
+    'W Lounge',
+    'Platea',
+    'Parelia',
+    'Wet Deck',
+    'Away Spa',
+    'FIT Gym',
+    'Engineering Workshop',
+    'Staff Canteen'
+  ],
+
+  'Housing 700':[
+    ...makeRange(701,740),
+    'Kitchen 700',
+    'Laundry 700',
+    'TV Room 700'
+  ],
+
+  'Housing 800':[
+    ...makeRange(801,840),
+    'Kitchen 800',
+    'Laundry 800',
+    'TV Room 800'
+  ],
+
+  'Housing 1000':[
+    ...makeRange(1001,1040),
+    'Kitchen 1000',
+    'Laundry 1000',
+    'TV Room 1000'
+  ],
+
+  'Housing 1100':[
+    ...makeRange(1101,1160),
+    'Kitchen 1100',
+    'Laundry 1100',
+    'TV Room 1100'
+  ],
+
+  'Housing Common':[
+    'Staff Gym',
+    'Breco / Canteen',
+    'Tennis Courts'
+  ],
+
+  'Parking / External':[
+    'Ramp / Logistics',
+    'Parking G2',
+    'Parking G5',
+    'Parking G4',
+    'Pergola Parking',
+    'North Parking',
+    'South Parking'
+  ],
+
+  'Engineering Only':[
+    'Energy Building',
+    'Energy Building Basement / RO Plant',
+    'Pump / Sewage Station G4',
+    'Pump Station G5',
+    'North Parking Pump Station',
+    'Pump Station 230 North Wing',
+    'EDEK Pump Station (Toilets)'
+  ]
+};
+
+function makeRange(start,end){
+  const arr=[];
+  for(let i=start;i<=end;i++) arr.push(String(i));
+  return arr;
+}
+
+function escapeHtml(value){
+  return String(value ?? '')
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#039;");
+}
+
+function login(){
+  const pin=document.getElementById('pinInput').value.trim();
+  const user=ALL_PINS[pin];
+
+  if(!user){
+    document.getElementById('loginMsg').textContent='Λάθος PIN.';
+    document.getElementById('pinInput').value='';
+    return;
+  }
+
+  currentUser={
+    ...user,
+    pin
+  };
+
+  const remember=document.getElementById('rememberMe').checked;
+
+  if(remember){
+    localStorage.setItem('wm_current_user',JSON.stringify(currentUser));
+  }else{
+    sessionStorage.setItem('wm_current_user',JSON.stringify(currentUser));
+  }
+
+  openApp();
+}
+
+function restoreSession(){
+  const saved=
+    localStorage.getItem('wm_current_user') ||
+    sessionStorage.getItem('wm_current_user');
+
+  if(!saved) return;
+
+  try{
+    currentUser=JSON.parse(saved);
+    if(currentUser && currentUser.pin && ALL_PINS[currentUser.pin]){
+      openApp();
     }
+  }catch(e){}
+}
 
-    function toggleSound() {
-      soundEnabled = !soundEnabled;
-      document.getElementById("soundBtn").innerHTML = soundEnabled ? "🔊 Ήχος" : "🔇 Σίγαση";
-    }
+function logout(){
+  currentUser=null;
+  localStorage.removeItem('wm_current_user');
+  sessionStorage.removeItem('wm_current_user');
 
-    /* ========================================================
-       4. ΒΑΡΔΙΕΣ
-       ======================================================== */
-    function updateClockAndShift() {
-      const now = new Date();
-      const hours = now.getHours();
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      document.getElementById("clockDisplay").textContent = `${String(hours).padStart(2, '0')}:${minutes}`;
+  if(realtimeChannel){
+    supabaseClient.removeChannel(realtimeChannel);
+    realtimeChannel=null;
+  }
 
-      const shiftEl = document.getElementById("currentShiftText");
-      if (hours >= 7 && hours < 15) {
-        shiftEl.textContent = "Πρωινή (07:00 - 15:00)";
-      } else if (hours >= 15 && hours < 23) {
-        shiftEl.textContent = "Απογευματινή (15:00 - 23:00)";
-      } else {
-        shiftEl.textContent = "Νυχτερινή / Ασφαλείας (23:00 - 07:00)";
-      }
-    }
-    setInterval(updateClockAndShift, 10000);
-    updateClockAndShift();
+  document.getElementById('appScreen').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('pinInput').value='';
+}
 
-    /* ========================================================
-       5. ΓΛΩΣΣΑ & THEME
-       ======================================================== */
-    let currentLang = "el";
-    const i18n = {
-      el: {
-        tabNew: "Δήλωση Βλάβης", tabBoard: "Έλεγχος & Ταμπλό",
-        secReporter: "1. Ποιος δηλώνει τη βλάβη:", secWing: "2. Περιοχή / Ενότητα:",
-        secCategory: "3. Ειδικότητα / Κατηγορία:", secIssue: "4. Συχνή Βλάβη (Άμεσο κλικ):",
-        secPhoto: "5. Φωτογραφία (Προαιρετικά - Συμπιέζεται αυτόματα):",
-        takePhoto: "Λήψη / Επιλογή Φωτογραφίας", sendIssue: "ΚΑΤΑΧΩΡΗΣΗ ΒΛΑΒΗΣ",
-        colOpen: "ΑΝΟΙΧΤΕΣ", colProgress: "ΣΕ ΕΞΕΛΙΞΗ", colDone: "ΟΛΟΚΛΗΡΩΜΕΝΕΣ (24H)",
-        noIssues: "Καμία βλάβη"
-      },
-      en: {
-        tabNew: "Report Issue", tabBoard: "Dashboard",
-        secReporter: "1. Reported by:", secWing: "2. Area / Wing:",
-        secCategory: "3. Category / Skill:", secIssue: "4. Common Issue (Quick Click):",
-        secPhoto: "5. Photo (Optional - Auto-compressed):",
-        takePhoto: "Take / Upload Photo", sendIssue: "SUBMIT TICKET",
-        colOpen: "OPEN", colProgress: "IN PROGRESS", colDone: "COMPLETED (24H)",
-        noIssues: "No tickets"
-      }
-    };
+function openApp(){
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('appScreen').classList.remove('hidden');
 
-    function toggleTheme() {
-      const isLight = document.body.classList.toggle("light-theme");
-      document.getElementById("themeBtn").innerHTML = isLight ? "🌙 Νύχτα" : "☀️ Ημέρα";
-    }
+  document.getElementById('userInfo').textContent =
+    `${currentUser.name} • ${currentUser.title} • ${currentUser.department}`;
 
-    function toggleLanguage() {
-      currentLang = currentLang === "el" ? "en" : "el";
-      document.getElementById("langBtn").innerHTML = currentLang === "el" ? "🇬🇧 EN" : "🇬🇷 GR";
-      document.querySelectorAll("[data-t]").forEach(el => {
-        const k = el.getAttribute("data-t");
-        if (i18n[currentLang][k]) el.textContent = i18n[currentLang][k];
-      });
-    }
+  buildAreaButtons();
+  buildCategoryButtons();
+  applyDepartmentAccess();
+  loadTickets();
+  setupRealtime();
+  updateAnalyticsVisibility();
+}
 
-    /* ========================================================
-       6. ΔΟΜΗ ΧΩΡΩΝ & ΒΛΑΒΩΝ (ΧΩΡΙΣ EMOJI)
-       ======================================================== */
-    function makeRange(start, end) {
-      const arr = [];
-      for (let i = start; i <= end; i++) arr.push(String(i));
-      return arr;
-    }
+function buildAreaButtons(){
+  const container=document.getElementById('areaButtons');
+  container.innerHTML='';
 
-    const hotelStructure = {
-      north: {
-        label: "Βόρεια Πτέρυγα",
-        subs: {
-          "1ος Όροφος (101-132)": makeRange(101, 132),
-          "2ος Όροφος (201-232)": makeRange(201, 232),
-          "3ος Όροφος (301-326)": makeRange(301, 326)
+  Object.keys(locations).forEach(area=>{
+    const btn=document.createElement('button');
+    btn.className='chip';
+    btn.textContent=area;
+    btn.onclick=()=>selectArea(area,btn);
+    container.appendChild(btn);
+  });
+}
+
+function selectArea(area,btn){
+  selectedArea=area;
+
+  document.querySelectorAll('#areaButtons .chip')
+    .forEach(x=>x.classList.remove('active'));
+
+  btn.classList.add('active');
+}
+
+function buildCategoryButtons(){
+  const container=document.getElementById('categoryButtons');
+  container.innerHTML='';
+
+  categories.forEach(cat=>{
+    const btn=document.createElement('button');
+    btn.className='btn category';
+    btn.dataset.category=cat.id;
+    btn.textContent=cat.label;
+    btn.onclick=()=>selectCat(cat.id);
+
+    container.appendChild(btn);
+  });
+}
+
+function applyDepartmentAccess(){
+  const role=currentUser.role;
+
+  document.querySelectorAll('#categoryButtons .category')
+    .forEach(btn=>{
+      const cat=categories.find(x=>x.id===btn.dataset.category);
+      if(!cat) return;
+
+      const allowed=
+        role==='admin' ||
+        role==='superadmin' ||
+        cat.roles.includes(role);
+
+      btn.style.display=allowed?'flex':'none';
+    });
+}
+
+function selectCat(c){
+  selectedCategory=c;
+  selectedIssue='';
+
+  renderCats();
+
+  const cat=categories.find(x=>x.id===c);
+
+  const section=document.getElementById('issueSection');
+  const buttons=document.getElementById('issueButtons');
+
+  buttons.innerHTML='';
+
+  if(cat && cat.issues.length){
+    section.classList.remove('hidden');
+
+    cat.issues.forEach(issue=>{
+      const btn=document.createElement('button');
+      btn.className='chip';
+      btn.textContent=issue;
+      btn.onclick=()=>{
+        selectedIssue=issue;
+
+        document.querySelectorAll('#issueButtons .chip')
+          .forEach(x=>x.classList.remove('active'));
+
+        btn.classList.add('active');
+
+        const desc=document.getElementById('description');
+
+        if(!desc.value.trim()){
+          desc.value=issue;
         }
-      },
-      south: {
-        label: "Νότια Πτέρυγα",
-        subs: {
-          "1ος Όροφος (151-174)": makeRange(151, 174),
-          "2ος Όροφος (251-274)": makeRange(251, 274),
-          "3ος Όροφος (351-370)": makeRange(351, 370)
-        }
-      },
-      agora_suites: {
-        label: "Σουίτες Αγοράς",
-        subs: {
-          "400 Suites (411-428)": makeRange(411, 428),
-          "600 Suites (610-629)": makeRange(610, 629)
-        }
-      },
-      agora_rooms: {
-        label: "Agora / Diving",
-        subs: {
-          "500 Rooms (501-540)": makeRange(501, 540),
-          "Diving Rooms (241-246)": makeRange(241, 246)
-        }
-      },
-      villas_north: {
-        label: "Βόρειες Βίλες",
-        subs: {
-          "Όλες οι Βόρειες": ["Villa 1", "Villa 3", "Villa 5", "Villa 6", "Villa 7", "Villa 8", "Villa 9", "Villa 10", "Villa 11", "Villa 12"]
-        }
-      },
-      villas_south: {
-        label: "Νότιες Βίλες",
-        subs: {
-          "Όλες οι Νότιες": ["Villa 21", "Villa 22", "Villa 23", "Villa 24", "Villa 25", "Villa 26", "Villa 27", "Villa 28", "Villa 29", "Villa 30", "Villa 31", "Villa 32", "Villa 33", "Villa 35", "Villa 37", "Villa 39"]
-        }
-      },
-      public: {
-        label: "Κοινόχρηστοι Χώροι",
-        subs: {
-          "Κεντρικά & Outlet": ["Welcome Desk", "W Lounge", "Platea", "Parelia", "Wet Deck", "Away Spa", "FIT Gym", "Engineering Workshop", "Staff Canteen"]
-        }
-      }
-    };
-
-    const issuePresets = {
-      "Υδραυλικά": [
-        "Δεν έχει ζεστό νερό", "Τρέχει η βρύση", "Βουλωμένη αποχέτευση",
-        "Διαρροή στο καζανάκι", "Χαμηλή πίεση νερού", "Πρόβλημα ντουζιέρας / καμπίνας",
-        "Μυρωδιά αποχέτευσης", "Πρόβλημα Jacuzzi / Πισίνας"
-      ],
-      "Ηλεκτρολογικά": [
-        "Δεν ανάβει το φως", "Χαλασμένη πρίζα / USB", "Έπεσε η ασφάλεια",
-        "Πρόβλημα master switch", "Κουδούνι / Ένδειξη DND", "Φωτισμός καθρέφτη",
-        "Εξωτερικός φωτισμός βεράντας", "Μαγνητική επαφή μπαλκονόπορτας"
-      ],
-      "A/C": [
-        "Δεν ψύχει / Δεν ανάβει", "Τρέχει νερό μέσα", "Κάνει έντονο θόρυβο",
-        "Δεν ανταποκρίνεται ο θερμοστάτης", "Μυρωδιά από το κλιματιστικό", "Κλειδωμένη ένδειξη A/C"
-      ],
-      "A/V": [
-        "Χωρίς σήμα TV", "Soundbar / Bluetooth offline", "Χαλασμένο HDMI / AppleTV",
-        "Δεν ανάβει η τηλεόραση", "Τηλεχειριστήριο χωρίς μπαταρία", "Χαλασμένο Subwoofer"
-      ],
-      "Ξυλουργικά": [
-        "Μαγκώνει η πόρτα", "Χαλασμένη κλειδαριά / Κάρτα", "Πρόβλημα ντουλάπας / συρτάρι",
-        "Σπασμένη καρέκλα / Έπιπλο", "Πόρτα μπαλκονιού δεν κλειδώνει", "Μεντεσές χαλασμένος"
-      ],
-      "Χρηματοκιβώτιο / Lock": [
-        "Κλειδωμένο χρηματοκιβώτιο (SOP Required)", "Χαλασμένο πληκτρολόγιο safe",
-        "Κλειδαριά δωματίου δεν ανοίγει (SOP)", "Αλλαγή μπαταριών Safe Box"
-      ]
-    };
-
-    let selectedReporter = "Style (Housekeeping)";
-    let selectedArea = "north";
-    let selectedSubKey = "";
-    let selectedRoom = "101";
-    let selectedSubLocation = "Γενικά";
-    let selectedCategory = "Υδραυλικά";
-    let selectedIssue = "";
-    let compressedPhotoBase64 = null;
-
-    function setReporter(rep, elem) {
-      selectedReporter = rep;
-      elem.parentElement.querySelectorAll(".select-pill").forEach(p => p.classList.remove("active"));
-      elem.classList.add("active");
-    }
-
-    function setArea(areaKey, elem) {
-      selectedArea = areaKey;
-      elem.parentElement.querySelectorAll(".select-pill").forEach(p => p.classList.remove("active"));
-      elem.classList.add("active");
-      renderSubAreas();
-    }
-
-    function renderSubAreas() {
-      const subCont = document.getElementById("subAreaGroup");
-      subCont.innerHTML = "";
-      const areaObj = hotelStructure[selectedArea];
-      const subKeys = Object.keys(areaObj.subs);
-
-      selectedSubKey = subKeys[0];
-      subKeys.forEach((subKey, idx) => {
-        const d = document.createElement("div");
-        d.className = "select-pill" + (idx === 0 ? " sub-active" : "");
-        d.textContent = subKey;
-        d.onclick = () => {
-          subCont.querySelectorAll(".select-pill").forEach(p => p.classList.remove("sub-active"));
-          d.classList.add("sub-active");
-          selectedSubKey = subKey;
-          renderRooms();
-        };
-        subCont.appendChild(d);
-      });
-
-      const subLocBlock = document.getElementById("subLocationBlock");
-      if (selectedArea.includes("villas") || selectedArea === "agora_suites") {
-        subLocBlock.classList.remove("hidden");
-      } else {
-        subLocBlock.classList.add("hidden");
-        selectedSubLocation = "Γενικά";
-      }
-
-      renderRooms();
-    }
-
-    function renderRooms() {
-      const roomCont = document.getElementById("roomsList");
-      roomCont.innerHTML = "";
-      const rooms = hotelStructure[selectedArea].subs[selectedSubKey] || [];
-      selectedRoom = rooms[0] || "";
-
-      rooms.forEach((r, idx) => {
-        const d = document.createElement("div");
-        d.className = "select-pill" + (idx === 0 ? " active" : "");
-        d.textContent = r;
-        d.onclick = () => {
-          roomCont.querySelectorAll(".select-pill").forEach(p => p.classList.remove("active"));
-          d.classList.add("active");
-          selectedRoom = r;
-        };
-        roomCont.appendChild(d);
-      });
-    }
-
-    function setSubLocation(subLoc, elem) {
-      selectedSubLocation = subLoc;
-      elem.parentElement.querySelectorAll(".select-pill").forEach(p => p.classList.remove("active"));
-      elem.classList.add("active");
-    }
-
-    function setCategory(cat, elem) {
-      selectedCategory = cat;
-      elem.parentElement.querySelectorAll(".select-pill").forEach(p => p.classList.remove("active"));
-      elem.classList.add("active");
-
-      const sopBanner = document.getElementById("sopBanner");
-      if (cat.includes("Χρηματοκιβώτιο") || cat.includes("Safe")) {
-        sopBanner.style.display = "block";
-      } else {
-        sopBanner.style.display = "none";
-      }
-
-      renderPresets();
-    }
-
-    function renderPresets() {
-      const cont = document.getElementById("presetIssues");
-      cont.innerHTML = "";
-      const list = issuePresets[selectedCategory] || [];
-      selectedIssue = list[0] || "";
-      list.forEach((iss, idx) => {
-        const d = document.createElement("div");
-        d.className = "issue-card" + (idx === 0 ? " active" : "");
-        d.textContent = iss;
-        d.onclick = () => {
-          cont.querySelectorAll(".issue-card").forEach(c => c.classList.remove("active"));
-          d.classList.add("active");
-          selectedIssue = iss;
-        };
-        cont.appendChild(d);
-      });
-    }
-
-    /* ========================================================
-       7. ΑΥΤΟΜΑΤΗ ΣΥΜΠΙΕΣΗ ΦΩΤΟΓΡΑΦΙΑΣ
-       ======================================================== */
-    function handlePhotoUpload(input) {
-      if (input.files && input.files[0]) {
-        const file = input.files[0];
-        const reader = new FileReader();
-
-        reader.onload = function(e) {
-          const img = new Image();
-          img.onload = function() {
-            const canvas = document.createElement("canvas");
-            let width = img.width;
-            let height = img.height;
-            const maxDim = 1000;
-
-            if (width > height && width > maxDim) {
-              height = Math.round((height * maxDim) / width);
-              width = maxDim;
-            } else if (height > maxDim) {
-              width = Math.round((width * maxDim) / height);
-              height = maxDim;
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(img, 0, 0, width, height);
-
-            compressedPhotoBase64 = canvas.toDataURL("image/jpeg", 0.75);
-            const preview = document.getElementById("photoPreviewImg");
-            preview.src = compressedPhotoBase64;
-            preview.style.display = "block";
-          };
-          img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-
-    function openPhotoModal(src) {
-      document.getElementById("modalImg").src = src;
-      document.getElementById("photoModal").classList.remove("hidden");
-    }
-    function closePhotoModal() {
-      document.getElementById("photoModal").classList.add("hidden");
-    }
-
-    /* ========================================================
-       8. ΚΑΤΑΧΩΡΗΣΗ ΒΛΑΒΗΣ
-       ======================================================== */
-    async function submitTicket() {
-      if (!selectedRoom || !selectedIssue) {
-        alert("Παρακαλώ επιλέξτε χώρο και βλάβη!");
-        return;
-      }
-
-      let fullLocation = selectedRoom;
-      if (selectedSubLocation && selectedSubLocation !== "Γενικά") {
-        fullLocation += ` (${selectedSubLocation})`;
-      }
-
-      const isSop = selectedCategory.includes("Χρηματοκιβώτιο") || selectedCategory.includes("Safe");
-
-      const newTicket = {
-        location_type: selectedArea,
-        location_name: fullLocation,
-        category: selectedCategory,
-        issue: selectedIssue,
-        photo_url: compressedPhotoBase64,
-        status: "pending",
-        priority: isSop ? "Urgent (SOP)" : "Normal",
-        reported_by: selectedReporter
       };
 
-      const { data, error } = await db.from("tickets").insert([newTicket]);
-      if (error) {
-        alert("Σφάλμα καταχώρησης: " + error.message);
-      } else {
-        alert("✅ Η βλάβη καταχωρήθηκε επιτυχώς!");
-        compressedPhotoBase64 = null;
-        document.getElementById("photoPreviewImg").style.display = "none";
-        document.getElementById("photoInput").value = "";
-        switchView("board");
-      }
-    }
+      buttons.appendChild(btn);
+    });
+  }else{
+    section.classList.add('hidden');
+  }
 
-    /* ========================================================
-       9. ΣΥΝΔΕΣΗ ENGINEERING & PIN
-       ======================================================== */
-    function handlePinLogin() {
-      const pin = document.getElementById("pinInput").value.trim();
-      if (PIN_ROLES[pin]) {
-        currentUser = PIN_ROLES[pin];
-        document.getElementById("pinFormArea").classList.add("hidden");
-        document.getElementById("userLoggedInBar").classList.remove("hidden");
-        document.getElementById("loggedUserText").textContent = `👤 ${currentUser.name}`;
-        loadTickets();
-      } else {
-        alert("Λανθασμένο PIN!");
-      }
-    }
+  updateSOP();
+}
 
-    function logout() {
-      currentUser = null;
-      document.getElementById("pinInput").value = "";
-      document.getElementById("pinFormArea").classList.remove("hidden");
-      document.getElementById("userLoggedInBar").classList.add("hidden");
-      loadTickets();
-    }
+function renderCats(){
+  document.querySelectorAll('#categoryButtons .category')
+    .forEach(btn=>{
+      btn.classList.toggle(
+        'blue',
+        btn.dataset.category===selectedCategory
+      );
+    });
+}
 
-    /* ========================================================
-       10. ΦΟΡΤΩΣΗ, REALTIME & ΕΝΗΜΕΡΩΣΗ ΚΑΤΑΣΤΑΣΗΣ (ΔΙΟΡΘΩΜΕΝΟ)
-       ======================================================== */
-    function formatTimeAgo(dateString) {
-      if (!dateString) return "";
-      const diff = Math.floor((new Date() - new Date(dateString)) / 1000);
-      if (diff < 60) return "μόλις τώρα";
-      const min = Math.floor(diff / 60);
-      if (min < 60) return `πριν ${min}λ`;
-      const hr = Math.floor(min / 60);
-      return `πριν ${hr}ω`;
-    }
+function updateSOP(){
+  const sop=document.getElementById('sopBox');
+  const confirm=document.getElementById('securityConfirm');
 
-    async function loadTickets() {
-      const { data: tickets, error } = await db
-        .from("tickets")
-        .select("*")
-        .order("id", { ascending: false });
+  if(selectedCategory==='safe'){
+    sop.classList.remove('hidden');
+    confirm.classList.remove('hidden');
+  }else{
+    sop.classList.add('hidden');
+    confirm.classList.add('hidden');
+    document.getElementById('securityPresent').checked=false;
+  }
+}
 
-      if (error) {
-        console.error("Σφάλμα φόρτωσης:", error);
-        return;
-      }
+function clearForm(){
+  selectedArea='';
+  selectedCategory='';
+  selectedIssue='';
+  selectedPhotos=[];
 
-      const openDiv = document.getElementById("listOpen");
-      const progDiv = document.getElementById("listProgress");
-      const doneDiv = document.getElementById("listDone");
+  document.getElementById('otherArea').value='';
+  document.getElementById('specificPoint').value='';
+  document.getElementById('description').value='';
+  document.getElementById('photoInput').value='';
+  document.getElementById('preview').innerHTML='';
 
-      let cOpen = 0, cProg = 0, cDone = 0;
-      let htmlOpen = "", htmlProg = "", htmlDone = "";
+  document.querySelectorAll('#areaButtons .chip')
+    .forEach(x=>x.classList.remove('active'));
 
-      const now = new Date().getTime();
-      const oneDayAgo = now - (24 * 60 * 60 * 1000);
+  document.querySelectorAll('#issueButtons .chip')
+    .forEach(x=>x.classList.remove('active'));
 
-      tickets.forEach(t => {
-        if (t.status === 'completed' && t.created_at) {
-          const ticketTime = new Date(t.created_at).getTime();
-          if (ticketTime < oneDayAgo) return;
+  document.getElementById('issueSection').classList.add('hidden');
+
+  renderCats();
+  updateSOP();
+}
+
+<script>
+function handlePhotos(event){
+  const files=[...event.target.files];
+
+  if(files.length>4){
+    alert('Μπορείτε να ανεβάσετε έως 4 φωτογραφίες.');
+  }
+
+  selectedPhotos=[];
+
+  files.slice(0,4).forEach(file=>{
+    compressImage(file,1000,.75).then(data=>{
+      selectedPhotos.push(data);
+      renderPhotos();
+    });
+  });
+}
+
+function compressImage(file,maxSize=1000,quality=.75){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+
+    reader.onload=e=>{
+      const img=new Image();
+
+      img.onload=()=>{
+        let width=img.width;
+        let height=img.height;
+
+        if(width>maxSize || height>maxSize){
+          const ratio=Math.min(
+            maxSize/width,
+            maxSize/height
+          );
+
+          width=Math.round(width*ratio);
+          height=Math.round(height*ratio);
         }
 
-        if (currentUser && currentUser.role !== "admin" && currentUser.role !== "office") {
-          if (currentUser.role === "electrician" && t.category !== "Ηλεκτρολογικά") return;
-          if (currentUser.role === "plumber" && t.category !== "Υδραυλικά") return;
-          if (currentUser.role === "av" && t.category !== "A/V") return;
-        }
+        const canvas=document.createElement('canvas');
+        canvas.width=width;
+        canvas.height=height;
 
-        const repText = t.reported_by ? `Από: ${t.reported_by}` : '';
-        const timeAgo = formatTimeAgo(t.created_at);
-        const isSop = (t.priority && t.priority.includes("SOP")) || (t.category && t.category.includes("Χρηματοκιβώτιο"));
+        const ctx=canvas.getContext('2d');
+        ctx.drawImage(img,0,0,width,height);
 
-        // Προσοχή: Εισαγωγικά γύρω από το '${t.id}' ώστε να μην παγώνει σε UUIDs
-        const cardHtml = `
-          <div class="ticket ${t.status}">
-            <div class="ticket-head">
-              <span>${t.location_name}</span>
-              <span class="ticket-cat">${t.category}</span>
-            </div>
-            ${isSop ? `<div class="ticket-sop-tag">⚠️ SECURITY SOP REQUIRED</div>` : ''}
-            <div class="ticket-meta">
-              <span>${repText}</span>
-              <span>${timeAgo}</span>
-            </div>
-            <div class="ticket-issue">${t.issue}</div>
-            ${t.assigned_role ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">👤 Τεχνικός: <strong>${t.assigned_role}</strong></div>` : ''}
-            ${t.photo_url ? `<img src="${t.photo_url}" onclick="openPhotoModal('${t.photo_url}')" style="width:100%; border-radius:6px; margin:6px 0; max-height:120px; object-fit:cover; cursor:pointer;" />` : ''}
-            <div class="ticket-actions">
-              ${t.status === 'pending' ? `<button class="action-btn" style="background:var(--status-progress);" onclick="updateStatus('${t.id}', 'in_progress')">Ανάληψη</button>` : ''}
-              ${t.status === 'in_progress' ? `<button class="action-btn" style="background:var(--status-done);" onclick="updateStatus('${t.id}', 'completed')">Ολοκλήρωση</button>` : ''}
-              ${t.status === 'completed' ? `<span style="font-size:0.78rem; font-weight:700; color:var(--status-done);">✅ Ολοκληρώθηκε</span>` : ''}
-            </div>
+        resolve(
+          canvas.toDataURL('image/jpeg',quality)
+        );
+      };
+
+      img.onerror=reject;
+      img.src=e.target.result;
+    };
+
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderPhotos(){
+  const preview=document.getElementById('preview');
+  preview.innerHTML='';
+
+  selectedPhotos.forEach((photo,index)=>{
+    const wrapper=document.createElement('div');
+    wrapper.style.position='relative';
+
+    const img=document.createElement('img');
+    img.src=photo;
+    img.onclick=()=>{
+      window.open(photo,'_blank');
+    };
+
+    const remove=document.createElement('button');
+    remove.className='btn red';
+    remove.textContent='×';
+    remove.style.position='absolute';
+    remove.style.top='4px';
+    remove.style.right='4px';
+    remove.style.padding='4px 9px';
+
+    remove.onclick=e=>{
+      e.stopPropagation();
+      selectedPhotos.splice(index,1);
+      renderPhotos();
+    };
+
+    wrapper.appendChild(img);
+    wrapper.appendChild(remove);
+    preview.appendChild(wrapper);
+  });
+}
+
+function getVisibleLocation(area){
+  const role=currentUser?.role;
+  const department=currentUser?.department;
+
+  // 501–540 are common-access locations.
+  // Housing-only access applies to KDP/staff residence areas.
+
+  if(
+    area.startsWith('Housing ') ||
+    area==='Housing Common'
+  ){
+    return department==='Housing' ||
+      role==='admin' ||
+      role==='superadmin';
+  }
+
+  if(area==='Engineering Only'){
+    return department==='Engineering' ||
+      role==='admin' ||
+      role==='superadmin' ||
+      currentUser?.department==='Technical';
+  }
+
+  return true;
+}
+
+function locationAllowedForUser(area){
+  if(!area) return true;
+
+  const role=currentUser?.role;
+  const department=currentUser?.department;
+
+  if(role==='admin' || role==='superadmin') return true;
+
+  if(
+    area.startsWith('Housing ') ||
+    area==='Housing Common'
+  ){
+    return department==='Housing';
+  }
+
+  if(area==='Engineering Only'){
+    return department==='Engineering' ||
+      department==='Technical';
+  }
+
+  return true;
+}
+
+function getLocationDisplay(area,other,specific){
+  let location='';
+
+  if(area) location+=area;
+
+  if(other){
+    location+=(location?' • ':'')+other;
+  }
+
+  if(specific){
+    location+=(location?' • ':'')+specific;
+  }
+
+  return location || 'Not specified';
+}
+
+async function submitTicket(){
+  const area=selectedArea;
+  const otherArea=document.getElementById('otherArea').value.trim();
+  const specificPoint=document.getElementById('specificPoint').value.trim();
+  const description=document.getElementById('description').value.trim();
+
+  if(!area && !otherArea){
+    alert('Επιλέξτε περιοχή ή συμπληρώστε Other Area / Space.');
+    return;
+  }
+
+  if(!selectedCategory){
+    alert('Επιλέξτε κατηγορία.');
+    return;
+  }
+
+  if(!description && !selectedIssue){
+    alert('Συμπληρώστε περιγραφή ή επιλέξτε preset issue.');
+    return;
+  }
+
+  if(!locationAllowedForUser(area)){
+    alert('Δεν έχετε δικαίωμα πρόσβασης στη συγκεκριμένη περιοχή.');
+    return;
+  }
+
+  if(selectedCategory==='safe'){
+    if(!document.getElementById('securityPresent').checked){
+      alert('Για Safe / Lock απαιτείται φυσική παρουσία Security.');
+      return;
+    }
+  }
+
+  const location=getLocationDisplay(
+    area,
+    otherArea,
+    specificPoint
+  );
+
+  const finalDescription=
+    description ||
+    selectedIssue ||
+    '';
+
+  const payload={
+    reporter_name:currentUser.name,
+    reporter_role:currentUser.role,
+    reporter_department:currentUser.department,
+    category:selectedCategory,
+    issue:selectedIssue || null,
+    location,
+    description:finalDescription,
+    status:'pending',
+    assigned_role:null,
+    photos:JSON.stringify(selectedPhotos),
+    photo_url:selectedPhotos.length
+      ? JSON.stringify(selectedPhotos)
+      : null,
+    winter:false
+  };
+
+  const msg=document.getElementById('submitMsg');
+  msg.textContent='Αποστολή...';
+
+  const {data,error}=await supabaseClient
+    .from('tickets')
+    .insert(payload)
+    .select()
+    .single();
+
+  if(error){
+    console.error(error);
+    msg.textContent='Σφάλμα: '+error.message;
+    return;
+  }
+
+  msg.textContent='Το ticket δημιουργήθηκε επιτυχώς.';
+  clearForm();
+  loadTickets();
+}
+
+function categoryLabel(id){
+  const cat=categories.find(x=>x.id===id);
+  return cat ? cat.label : id || '';
+}
+
+function statusLabel(status){
+  if(status==='pending') return 'Pending';
+  if(status==='in_progress') return 'In Progress';
+  if(status==='completed') return 'Completed';
+  return status || '';
+}
+
+function statusClass(status){
+  if(status==='pending') return 'pending';
+  if(status==='in_progress') return 'progress';
+  if(status==='completed') return 'done';
+  return '';
+}
+
+function formatDate(value){
+  if(!value) return '';
+
+  try{
+    return new Date(value).toLocaleString(
+      lang==='el'?'el-GR':'en-US',
+      {
+        dateStyle:'short',
+        timeStyle:'short'
+      }
+    );
+  }catch(e){
+    return value;
+  }
+}
+
+function canSeeTicket(ticket){
+  if(!currentUser) return false;
+
+  if(
+    currentUser.role==='admin' ||
+    currentUser.role==='superadmin'
+  ){
+    return true;
+  }
+
+  // Engineering / technical staff can see all active technical tickets.
+  if(
+    currentUser.department==='Engineering' ||
+    currentUser.department==='Technical'
+  ){
+    return true;
+  }
+
+  // Department users can see tickets that belong to their permitted
+  // locations or tickets created for their own department.
+  if(ticket.reporter_department===currentUser.department){
+    return true;
+  }
+
+  const location=String(ticket.location||'');
+
+  if(
+    currentUser.department==='Housing' &&
+    (
+      location.includes('Housing 700') ||
+      location.includes('Housing 800') ||
+      location.includes('Housing 1000') ||
+      location.includes('Housing 1100') ||
+      location.includes('Housing Common') ||
+      location.includes('Agora 50')
+    )
+  ){
+    return true;
+  }
+
+  return true;
+}
+
+async function loadTickets(){
+  const list=document.getElementById('ticketList');
+
+  list.innerHTML='<div class="empty">Loading...</div>';
+
+  const {data,error}=await supabaseClient
+    .from('tickets')
+    .select('*')
+    .order('created_at',{ascending:false});
+
+  if(error){
+    console.error(error);
+    list.innerHTML=
+      `<div class="empty">Σφάλμα φόρτωσης: ${escapeHtml(error.message)}</div>`;
+    return;
+  }
+
+  tickets=(data||[]).filter(canSeeTicket);
+
+  renderStats();
+  renderTickets();
+  renderAnalytics();
+}
+
+function renderStats(){
+  const active=tickets.filter(t=>{
+    if(t.status==='completed'){
+      if(!t.updated_at) return false;
+
+      const age=
+        Date.now()-new Date(t.updated_at).getTime();
+
+      return age < 48*60*60*1000;
+    }
+
+    return true;
+  });
+
+  const pending=active.filter(t=>t.status==='pending').length;
+  const progress=active.filter(t=>t.status==='in_progress').length;
+  const done=active.filter(t=>t.status==='completed').length;
+
+  document.getElementById('statPending').textContent=pending;
+  document.getElementById('statProgress').textContent=progress;
+  document.getElementById('statDone').textContent=done;
+  document.getElementById('statTotal').textContent=active.length;
+}
+
+function setFilter(filter,button){
+  currentFilter=filter;
+
+  document.querySelectorAll('.chips .chip')
+    .forEach(x=>{
+      if(
+        x.textContent==='Όλα' ||
+        x.textContent==='Pending' ||
+        x.textContent==='In Progress' ||
+        x.textContent==='Completed'
+      ){
+        x.classList.remove('active');
+      }
+    });
+
+  button.classList.add('active');
+  renderTickets();
+}
+
+function ticketVisible(ticket){
+  if(ticket.status==='completed'){
+    if(!ticket.updated_at) return false;
+
+    const age=
+      Date.now()-new Date(ticket.updated_at).getTime();
+
+    if(age>=48*60*60*1000){
+      return false;
+    }
+  }
+
+  if(currentFilter==='all') return true;
+
+  return ticket.status===currentFilter;
+}
+
+function renderTickets(){
+  const list=document.getElementById('ticketList');
+
+  const visible=tickets.filter(ticketVisible);
+
+  if(!visible.length){
+    list.innerHTML='<div class="empty">Δεν υπάρχουν tickets.</div>';
+    return;
+  }
+
+  list.innerHTML='';
+
+  visible.forEach(ticket=>{
+    const div=document.createElement('div');
+    div.className='ticket';
+
+    let photos=[];
+
+    try{
+      photos=
+        ticket.photos
+          ? JSON.parse(ticket.photos)
+          : (
+            ticket.photo_url
+              ? JSON.parse(ticket.photo_url)
+              : []
+          );
+    }catch(e){
+      photos=[];
+    }
+
+    const canManage=
+      currentUser.role==='admin' ||
+      currentUser.role==='superadmin' ||
+      currentUser.department==='Engineering' ||
+      currentUser.department==='Technical';
+
+    const isCompleted=ticket.status==='completed';
+
+    div.innerHTML=`
+      <div class="ticket-head">
+        <div>
+          <strong>${escapeHtml(ticket.description || ticket.issue || 'Maintenance')}</strong>
+          <div class="meta">
+            ${escapeHtml(ticket.location || '—')}
           </div>
-        `;
+        </div>
 
-        if (t.status === 'pending') { cOpen++; htmlOpen += cardHtml; }
-        else if (t.status === 'in_progress') { cProg++; htmlProg += cardHtml; }
-        else if (t.status === 'completed') { cDone++; htmlDone += cardHtml; }
-      });
+        <span class="badge ${statusClass(ticket.status)}">
+          ${escapeHtml(statusLabel(ticket.status))}
+        </span>
+      </div>
 
-      openDiv.innerHTML = htmlOpen || `<p class="empty-text">${i18n[currentLang].noIssues}</p>`;
-      progDiv.innerHTML = htmlProg || `<p class="empty-text">${i18n[currentLang].noIssues}</p>`;
-      doneDiv.innerHTML = htmlDone || `<p class="empty-text">${i18n[currentLang].noIssues}</p>`;
+      <div class="meta" style="margin-top:10px">
+        <div><b>Category:</b> ${escapeHtml(categoryLabel(ticket.category))}</div>
+        <div><b>Reporter:</b> ${escapeHtml(ticket.reporter_name || '—')}</div>
+        <div><b>Department:</b> ${escapeHtml(ticket.reporter_department || '—')}</div>
+        <div><b>Assigned:</b> ${escapeHtml(ticket.assigned_role || '—')}</div>
+        <div><b>Created:</b> ${escapeHtml(formatDate(ticket.created_at))}</div>
+      </div>
 
-      document.getElementById("countOpen").textContent = cOpen;
-      document.getElementById("countProgress").textContent = cProg;
-      document.getElementById("countDone").textContent = cDone;
-    }
-
-    async function updateStatus(id, newStatus) {
-      // Έλεγχος σύνδεσης με PIN
-      if (!currentUser) {
-        alert("Παρακαλώ εισάγετε πρώτα το PIN σας στο πλαίσιο «ΣΥΝΔΕΣΗ ENGINEERING» παραπάνω!");
-        return;
+      ${
+        photos.length
+        ? `<div class="photo-grid">
+            ${photos.map(p=>`<img src="${p}" onclick="window.open(this.src,'_blank')">`).join('')}
+          </div>`
+        : ''
       }
 
-      try {
-        const updates = { status: newStatus };
-        if (newStatus === 'in_progress') {
-          updates.assigned_role = currentUser.name;
-        }
+      ${
+        ticket.winter
+        ? `<div style="margin-top:10px">
+            <span class="badge">❄️ Winter</span>
+          </div>`
+        : ''
+      }
 
-        const { error } = await db.from("tickets").update(updates).eq("id", id);
-        if (error) {
-          alert("Σφάλμα ενημέρωσης: " + error.message);
-        } else {
+      <div class="actions">
+        ${
+          !isCompleted && canManage
+          ? `
+            ${
+              ticket.status==='pending'
+              ? `<button class="btn blue" onclick="startTicket('${ticket.id}')">
+                  Take Ticket
+                </button>`
+              : ''
+            }
+
+            ${
+              ticket.status==='in_progress'
+              ? `<button class="btn green" onclick="completeTicket('${ticket.id}')">
+                  Complete
+                </button>`
+              : ''
+            }
+
+            <button class="btn" onclick="assignCollaborator('${ticket.id}')">
+              + Collaborator
+            </button>
+
+            <button class="btn" onclick="toggleWinter('${ticket.id}',${!ticket.winter})">
+              ${ticket.winter?'Remove Winter':'❄️ Winter'}
+            </button>
+          `
+          : ''
+        }
+      </div>
+    `;
+
+    list.appendChild(div);
+  });
+}
+
+async function startTicket(id){
+  const ticket=tickets.find(x=>String(x.id)===String(id));
+  if(!ticket) return;
+
+  const {error}=await supabaseClient
+    .from('tickets')
+    .update({
+      status:'in_progress',
+      assigned_role:currentUser.name
+    })
+    .eq('id',id);
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  await loadTickets();
+}
+
+async function completeTicket(id){
+  const {error}=await supabaseClient
+    .from('tickets')
+    .update({
+      status:'completed',
+      updated_at:new Date().toISOString()
+    })
+    .eq('id',id);
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  await loadTickets();
+}
+
+async function assignCollaborator(id){
+  const name=prompt('Όνομα συνεργάτη / τεχνικού:');
+
+  if(!name || !name.trim()) return;
+
+  const ticket=tickets.find(x=>String(x.id)===String(id));
+  if(!ticket) return;
+
+  const existing=ticket.assigned_role || '';
+
+  const assigned=
+    existing
+      ? `${existing}, ${name.trim()}`
+      : name.trim();
+
+  const {error}=await supabaseClient
+    .from('tickets')
+    .update({
+      assigned_role:assigned
+    })
+    .eq('id',id);
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  await loadTickets();
+}
+
+async function toggleWinter(id,value){
+  const {error}=await supabaseClient
+    .from('tickets')
+    .update({
+      winter:value
+    })
+    .eq('id',id);
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  await loadTickets();
+}
+
+<script>
+function updateAnalyticsVisibility(){
+  const allowed=
+    currentUser &&
+    (
+      currentUser.role==='admin' ||
+      currentUser.role==='superadmin' ||
+      currentUser.department==='Engineering' ||
+      currentUser.department==='Technical'
+    );
+
+  document.getElementById('tabAnalytics')
+    .classList.toggle('hidden',!allowed);
+}
+
+function renderAnalytics(){
+  const box=document.getElementById('analyticsContent');
+
+  if(
+    !currentUser ||
+    !(
+      currentUser.role==='admin' ||
+      currentUser.role==='superadmin' ||
+      currentUser.department==='Engineering' ||
+      currentUser.department==='Technical'
+    )
+  ){
+    box.innerHTML='<div class="empty">Δεν υπάρχει πρόσβαση.</div>';
+    return;
+  }
+
+  const active=tickets.filter(t=>{
+    if(t.status!=='completed') return true;
+
+    if(!t.updated_at) return false;
+
+    return (
+      Date.now()-new Date(t.updated_at).getTime()
+    ) < 48*60*60*1000;
+  });
+
+  const byCategory={};
+  const byDepartment={};
+  const byStatus={};
+
+  active.forEach(t=>{
+    const c=t.category||'Unknown';
+    const d=t.reporter_department||'Unknown';
+    const s=t.status||'Unknown';
+
+    byCategory[c]=(byCategory[c]||0)+1;
+    byDepartment[d]=(byDepartment[d]||0)+1;
+    byStatus[s]=(byStatus[s]||0)+1;
+  });
+
+  const makeRows=obj=>{
+    return Object.entries(obj)
+      .sort((a,b)=>b[1]-a[1])
+      .map(([key,val])=>`
+        <div class="ticket">
+          <div class="ticket-head">
+            <strong>${escapeHtml(key)}</strong>
+            <span class="badge">${val}</span>
+          </div>
+        </div>
+      `)
+      .join('');
+  };
+
+  box.innerHTML=`
+    <div class="stats">
+      <div class="stat">
+        <strong>${active.length}</strong>
+        <span>Active / Visible</span>
+      </div>
+
+      <div class="stat">
+        <strong>${active.filter(x=>x.status==='pending').length}</strong>
+        <span>Pending</span>
+      </div>
+
+      <div class="stat">
+        <strong>${active.filter(x=>x.status==='in_progress').length}</strong>
+        <span>In Progress</span>
+      </div>
+
+      <div class="stat">
+        <strong>${active.filter(x=>x.status==='completed').length}</strong>
+        <span>Completed</span>
+      </div>
+    </div>
+
+    <div class="section-title">By Category</div>
+    ${makeRows(
+      Object.fromEntries(
+        Object.entries(byCategory)
+          .map(([k,v])=>[categoryLabel(k),v])
+      )
+    )}
+
+    <div class="section-title">By Department</div>
+    ${makeRows(byDepartment)}
+
+    <div class="section-title">By Status</div>
+    ${makeRows(byStatus)}
+  `;
+}
+
+function showTab(tab){
+  document.getElementById('reportTab')
+    .classList.toggle('hidden',tab!=='report');
+
+  document.getElementById('dashboardTab')
+    .classList.toggle('hidden',tab!=='dashboard');
+
+  document.getElementById('analyticsTab')
+    .classList.toggle('hidden',tab!=='analytics');
+
+  document.getElementById('tabReport')
+    .classList.toggle('primary',tab==='report');
+
+  document.getElementById('tabDashboard')
+    .classList.toggle('primary',tab==='dashboard');
+
+  document.getElementById('tabAnalytics')
+    .classList.toggle('primary',tab==='analytics');
+
+  if(tab==='dashboard'){
+    loadTickets();
+  }
+
+  if(tab==='analytics'){
+    renderAnalytics();
+  }
+}
+
+function toggleTheme(){
+  theme=theme==='dark'?'light':'dark';
+
+  if(theme==='light'){
+    document.documentElement.style.setProperty('--bg','#eef1f4');
+    document.documentElement.style.setProperty('--card','#ffffff');
+    document.documentElement.style.setProperty('--card2','#f2f4f7');
+    document.documentElement.style.setProperty('--text','#11151a');
+    document.documentElement.style.setProperty('--muted','#66717f');
+    document.documentElement.style.setProperty('--border','#d6dbe1');
+  }else{
+    document.documentElement.style.setProperty('--bg','#0b0d0f');
+    document.documentElement.style.setProperty('--card','#15191f');
+    document.documentElement.style.setProperty('--card2','#1b2027');
+    document.documentElement.style.setProperty('--text','#f5f7fa');
+    document.documentElement.style.setProperty('--muted','#9aa5b4');
+    document.documentElement.style.setProperty('--border','#303741');
+  }
+
+  localStorage.setItem('wm_theme',theme);
+}
+
+function toggleLanguage(){
+  lang=lang==='el'?'en':'el';
+
+  if(lang==='en'){
+    document.getElementById('tabReport').textContent='New Ticket';
+    document.getElementById('tabDashboard').textContent='Dashboard';
+    document.getElementById('tabAnalytics').textContent='Analytics';
+  }else{
+    document.getElementById('tabReport').textContent='Νέο Ticket';
+    document.getElementById('tabDashboard').textContent='Dashboard';
+    document.getElementById('tabAnalytics').textContent='Analytics';
+  }
+}
+
+function playNotification(){
+  try{
+    const AudioContext=
+      window.AudioContext ||
+      window.webkitAudioContext;
+
+    if(!AudioContext) return;
+
+    const ctx=new AudioContext();
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
+
+    osc.frequency.value=880;
+    gain.gain.value=.08;
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+
+    setTimeout(()=>{
+      osc.stop();
+      ctx.close();
+    },180);
+  }catch(e){}
+}
+
+function setupRealtime(){
+  if(realtimeChannel){
+    supabaseClient.removeChannel(realtimeChannel);
+    realtimeChannel=null;
+  }
+
+  realtimeChannel=
+    supabaseClient
+      .channel('maintenance-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event:'*',
+          schema:'public',
+          table:'tickets'
+        },
+        payload=>{
+          playNotification();
           loadTickets();
         }
-      } catch (err) {
-        alert("Σφάλμα: " + err.message);
-      }
-    }
-
-    // Live Realtime listener
-    db.channel('realtime:tickets')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tickets' }, () => {
-        playAlarm();
-        loadTickets();
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tickets' }, () => {
-        loadTickets();
-      })
+      )
       .subscribe();
+}
 
-    /* ========================================================
-       11. INITIALIZATION
-       ======================================================== */
-    function switchView(view) {
-      if (view === 'new') {
-        document.getElementById("viewNew").classList.remove("hidden");
-        document.getElementById("viewBoard").classList.add("hidden");
-        document.getElementById("tabNewBtn").classList.add("active");
-        document.getElementById("tabBoardBtn").classList.remove("active");
-      } else {
-        document.getElementById("viewNew").classList.add("hidden");
-        document.getElementById("viewBoard").classList.remove("hidden");
-        document.getElementById("tabNewBtn").classList.remove("active");
-        document.getElementById("tabBoardBtn").classList.add("active");
-        loadTickets();
-      }
+function restoreTheme(){
+  const saved=localStorage.getItem('wm_theme');
+
+  if(saved){
+    theme=saved;
+  }
+
+  if(theme==='light'){
+    document.documentElement.style.setProperty('--bg','#eef1f4');
+    document.documentElement.style.setProperty('--card','#ffffff');
+    document.documentElement.style.setProperty('--card2','#f2f4f7');
+    document.documentElement.style.setProperty('--text','#11151a');
+    document.documentElement.style.setProperty('--muted','#66717f');
+    document.documentElement.style.setProperty('--border','#d6dbe1');
+  }
+}
+
+document.getElementById('pinInput')
+  .addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      login();
     }
+  });
 
-    renderSubAreas();
-    renderPresets();
-    loadTickets();
-  </script>
+restoreTheme();
+restoreSession();
+</script>
+
 </body>
 </html>
