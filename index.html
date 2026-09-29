@@ -155,10 +155,10 @@
     .grid-btn-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-bottom: 15px; }
     .rooms-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
       gap: 6px;
       margin-bottom: 15px;
-      max-height: 230px;
+      max-height: 250px;
       overflow-y: auto;
       padding: 6px;
       border: 1px solid var(--border-color);
@@ -267,16 +267,38 @@
     }
     .btn-green:active { transform: scale(0.97); }
 
-    /* Photo Upload & Preview */
-    .photo-preview {
+    /* Multiple Photos Styling */
+    .photo-thumb-wrap {
+      position: relative;
+      display: inline-block;
+      width: 72px;
+      height: 72px;
+    }
+    .photo-thumb {
       width: 100%;
-      max-height: 200px;
+      height: 100%;
       object-fit: cover;
       border-radius: 8px;
-      margin-top: 10px;
-      display: none;
       border: 1px solid var(--border-color);
       cursor: pointer;
+    }
+    .photo-del-btn {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: var(--status-open);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      font-size: 13px;
+      font-weight: 900;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
     }
 
     /* Dashboard Columns */
@@ -310,6 +332,7 @@
     }
     .ticket.open { border-left-color: var(--status-open); }
     .ticket.in_progress { border-left-color: var(--status-progress); }
+    .ticket.winter_pending { border-left-color: #6366f1; }
     .ticket.completed { border-left-color: var(--status-done); opacity: 0.85; }
 
     .ticket-head { display: flex; justify-content: space-between; font-weight: 800; font-size: 1rem; align-items: center; }
@@ -333,9 +356,10 @@
       margin-top: 4px;
     }
     .ticket-issue { margin: 8px 0; font-size: 0.92rem; font-weight: 600; line-height: 1.35; }
-    .ticket-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .ticket-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
     .action-btn {
       flex: 1;
+      min-width: 80px;
       padding: 8px;
       font-size: 0.8rem;
       border-radius: 6px;
@@ -351,7 +375,7 @@
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(0, 0, 0, 0.88);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -407,8 +431,10 @@
           <div class="select-pill" onclick="setReporter('Reception', this)">Reception</div>
           <div class="select-pill" onclick="setReporter('Curators', this)">Curators</div>
           <div class="select-pill" onclick="setReporter('Security', this)">Security</div>
+          <div class="select-pill" onclick="setReporter('Housing', this)">Housing</div>
           <div class="select-pill" onclick="setReporter('Engineering', this)">Engineering</div>
           <div class="select-pill" onclick="setReporter('F&B', this)">F&B</div>
+          <div class="select-pill" onclick="setReporter('Spa', this)">Spa</div>
         </div>
 
         <!-- 2. ΠΕΡΙΟΧΗ / ΕΝΟΤΗΤΑ -->
@@ -421,19 +447,26 @@
           <div class="select-pill" onclick="setArea('villas_north', this)">Βόρειες Βίλες</div>
           <div class="select-pill" onclick="setArea('villas_south', this)">Νότιες Βίλες</div>
           <div class="select-pill" onclick="setArea('public', this)">Κοινόχρηστοι Χώροι</div>
+          <div class="select-pill" onclick="setArea('housing', this)">Housing (ΚΔΠ)</div>
+          <div class="select-pill" onclick="setArea('parking', this)">Πάρκινγκ & Ράμπα</div>
+          <div class="select-pill" onclick="setArea('infrastructure', this)">Υποδομές (Engineering)</div>
         </div>
 
-        <!-- ΥΠΟΚΑΤΗΓΟΡΙΑ / ΟΡΟΦΟΣ -->
+        <!-- ΥΠΟΚΑΤΗΓΟΡΙΑ / ΟΡΟΦΟΣ / ΚΤΙΡΙΟ -->
         <div class="section-label" id="subAreaLabel">Επιλογή Ορόφου / Τομέα:</div>
         <div class="grid-btn-group" id="subAreaGroup">
           <!-- Φορτώνει αυτόματα με JS -->
         </div>
 
-        <!-- ΑΡΙΘΜΟΣ ΔΩΜΑΤΙΟΥ / ΣΟΥΙΤΑΣ -->
+        <!-- ΑΡΙΘΜΟΣ ΔΩΜΑΤΙΟΥ / ΧΩΡΟΥ -->
         <div class="section-label" id="roomSelectLabel">Αριθμός Δωματίου / Χώρου:</div>
         <div class="rooms-grid" id="roomsList">
           <!-- Φορτώνει τα δωμάτια με JS -->
         </div>
+
+        <!-- ΕΛΕΥΘΕΡΟ ΠΕΔΙΟ ΣΗΜΕΙΩΣΗΣ ΤΟΠΟΘΕΣΙΑΣ -->
+        <div class="section-label">Εξειδίκευση / Σημείωση Σημείου (Προαιρετικό):</div>
+        <input type="text" id="customLocationNote" class="pin-input" style="width:100%; margin-bottom:15px;" placeholder="π.χ. Μπαλκόνι, νιπτήρας, εξωτερικός προβολέας..." />
 
         <!-- ΥΠΟΧΩΡΟΣ (ΓΙΑ ΒΙΛΕΣ / ΣΟΥΙΤΕΣ) -->
         <div id="subLocationBlock" class="hidden">
@@ -471,16 +504,16 @@
           <!-- Γεμίζει ανάλογα με την κατηγορία -->
         </div>
 
-        <!-- 5. ΦΩΤΟΓΡΑΦΙΑ ΜΕ ΑΥΤΟΜΑΤΗ ΣΥΜΠΙΕΣΗ -->
-        <div class="section-label" data-t="secPhoto">5. Φωτογραφία (Προαιρετικά - Συμπιέζεται αυτόματα):</div>
-        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoUpload(this)" />
-        <button class="icon-btn" style="width:100%; justify-content:center; padding:12px; margin-bottom:8px;" onclick="document.getElementById('photoInput').click()">
-          📷 <span data-t="takePhoto">Λήψη / Επιλογή Φωτογραφίας</span>
+        <!-- 5. ΦΩΤΟΓΡΑΦΙΕΣ ΜΕ ΑΥΤΟΜΑΤΗ ΣΥΜΠΙΕΣΗ (ΕΩΣ 4) -->
+        <div class="section-label" data-t="secPhoto">5. Φωτογραφίες (Προαιρετικά - Έως 4 φωτογραφίες):</div>
+        <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handleMultiplePhotoUpload(this)" />
+        <button type="button" class="icon-btn" style="width:100%; justify-content:center; padding:12px; margin-bottom:8px;" onclick="document.getElementById('photoInput').click()">
+          📷 <span data-t="takePhoto">Λήψη / Επιλογή Φωτογραφιών</span>
         </button>
-        <img id="photoPreviewImg" class="photo-preview" alt="Preview" onclick="openPhotoModal(this.src)" />
+        <div id="photosContainer" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; margin-bottom:12px;"></div>
 
         <!-- ΚΟΥΜΠΙ ΑΠΟΣΤΟΛΗΣ -->
-        <button class="btn-green" style="width:100%; font-size:1.15rem; padding:16px; margin-top:12px;" onclick="submitTicket()">
+        <button type="button" class="btn-green" style="width:100%; font-size:1.15rem; padding:16px; margin-top:12px;" onclick="submitTicket()">
           🚀 <span data-t="sendIssue">ΚΑΤΑΧΩΡΗΣΗ ΒΛΑΒΗΣ</span>
         </button>
 
@@ -492,7 +525,7 @@
       
       <!-- PIN BOX -->
       <div class="pin-box">
-        <div class="pin-title" id="pinBoxTitle">ΣΥΝΔΕΣΗ ENGINEERING</div>
+        <div class="pin-title" id="pinBoxTitle">ΣΥΝΔΕΣΗ ENGINEERING & ΠΡΟΣΩΠΙΚΟΥ</div>
         <div class="pin-form" id="pinFormArea">
           <input type="password" id="pinInput" class="pin-input" placeholder="Εισάγετε PIN..." inputmode="numeric" />
           <button class="btn-green" onclick="handlePinLogin()">Είσοδος</button>
@@ -523,10 +556,10 @@
           <div id="listProgress"><p class="empty-text" data-t="noIssues">Καμία βλάβη</p></div>
         </div>
 
-        <!-- Ολοκληρωμένες (Τελευταίες 24h) -->
+        <!-- Ολοκληρωμένες (Τελευταίες 48h) -->
         <div class="card">
           <div class="column-header">
-            <span style="color:var(--status-done)">🟢 <span data-t="colDone">ΟΛΟΚΛΗΡΩΜΕΝΕΣ (24H)</span></span>
+            <span style="color:var(--status-done)">🟢 <span data-t="colDone">ΟΛΟΚΛΗΡΩΜΕΝΕΣ (48H)</span></span>
             <span class="badge badge-done" id="countDone">0</span>
           </div>
           <div id="listDone"><p class="empty-text" data-t="noIssues">Καμία βλάβη</p></div>
@@ -554,12 +587,35 @@
        2. PIN & ΡΟΛΟΙ
        ======================================================== */
     const PIN_ROLES = {
+      // Management & Special Roles
+      "9001": { name: "Σπύρος Κασσιάρης (Head of Eng)", role: "admin" },
+      "9002": { name: "Γιώργος Παναγέας (Head of Eng)", role: "admin" },
+      "2003": { name: "AV & Systems Specialist", role: "admin" },
+      "9999": { name: "Admin Engineering", role: "admin" },
+      "8888": { name: "PC Γραφείου / Helpdesk", role: "office" },
+      
+      // Βάρδιες & Ειδικότητες
       "1001": { name: "Ηλεκτρολόγος Βάρδιας", role: "electrician" },
       "2001": { name: "Υδραυλικός Βάρδιας", role: "plumber" },
       "7000": { name: "A/V Systems Specialist", role: "av" },
-      "8888": { name: "PC Γραφείου / Helpdesk", role: "office" },
-      "9999": { name: "Admin Engineering", role: "admin" }
+
+      // Τεχνικοί
+      "0001": { name: "Ανδρέου (Υδραυλικός)", role: "plumber" },
+      "0002": { name: "Χαρμπαλής (Ηλεκτρολόγος)", role: "electrician" },
+      "0003": { name: "Τεχνικός (Ψυκτικός A/C)", role: "ac" },
+      "0004": { name: "Τεχνικός (Ξυλουργός)", role: "carpenter" },
+      "0005": { name: "Τεχνικός Γενικών Καθηκόντων", role: "tech" },
+
+      // Τμήματα
+      "3001": { name: "Style (Housekeeping)", role: "dept" },
+      "3002": { name: "Curators", role: "dept" },
+      "3003": { name: "Front Office / Reception", role: "dept" },
+      "3004": { name: "F&B", role: "dept" },
+      "3005": { name: "Away Spa", role: "dept" },
+      "3006": { name: "Security", role: "dept" },
+      "3007": { name: "Housing", role: "dept" }
     };
+
     let currentUser = null;
     let soundEnabled = true;
 
@@ -630,18 +686,18 @@
         tabNew: "Δήλωση Βλάβης", tabBoard: "Έλεγχος & Ταμπλό",
         secReporter: "1. Ποιος δηλώνει τη βλάβη:", secWing: "2. Περιοχή / Ενότητα:",
         secCategory: "3. Ειδικότητα / Κατηγορία:", secIssue: "4. Συχνή Βλάβη (Άμεσο κλικ):",
-        secPhoto: "5. Φωτογραφία (Προαιρετικά - Συμπιέζεται αυτόματα):",
-        takePhoto: "Λήψη / Επιλογή Φωτογραφίας", sendIssue: "ΚΑΤΑΧΩΡΗΣΗ ΒΛΑΒΗΣ",
-        colOpen: "ΑΝΟΙΧΤΕΣ", colProgress: "ΣΕ ΕΞΕΛΙΞΗ", colDone: "ΟΛΟΚΛΗΡΩΜΕΝΕΣ (24H)",
+        secPhoto: "5. Φωτογραφίες (Προαιρετικά - Έως 4 φωτογραφίες):",
+        takePhoto: "Λήψη / Επιλογή Φωτογραφιών", sendIssue: "ΚΑΤΑΧΩΡΗΣΗ ΒΛΑΒΗΣ",
+        colOpen: "ΑΝΟΙΧΤΕΣ", colProgress: "ΣΕ ΕΞΕΛΙΞΗ", colDone: "ΟΛΟΚΛΗΡΩΜΕΝΕΣ (48H)",
         noIssues: "Καμία βλάβη"
       },
       en: {
         tabNew: "Report Issue", tabBoard: "Dashboard",
         secReporter: "1. Reported by:", secWing: "2. Area / Wing:",
         secCategory: "3. Category / Skill:", secIssue: "4. Common Issue (Quick Click):",
-        secPhoto: "5. Photo (Optional - Auto-compressed):",
-        takePhoto: "Take / Upload Photo", sendIssue: "SUBMIT TICKET",
-        colOpen: "OPEN", colProgress: "IN PROGRESS", colDone: "COMPLETED (24H)",
+        secPhoto: "5. Photos (Optional - Up to 4 photos):",
+        takePhoto: "Take / Upload Photos", sendIssue: "SUBMIT TICKET",
+        colOpen: "OPEN", colProgress: "IN PROGRESS", colDone: "COMPLETED (48H)",
         noIssues: "No tickets"
       }
     };
@@ -661,7 +717,7 @@
     }
 
     /* ========================================================
-       6. ΔΟΜΗ ΧΩΡΩΝ & ΒΛΑΒΩΝ (ΧΩΡΙΣ EMOJI)
+       6. ΔΟΜΗ ΧΩΡΩΝ & ΒΛΑΒΩΝ
        ======================================================== */
     function makeRange(start, end) {
       const arr = [];
@@ -717,6 +773,44 @@
         subs: {
           "Κεντρικά & Outlet": ["Welcome Desk", "W Lounge", "Platea", "Parelia", "Wet Deck", "Away Spa", "FIT Gym", "Engineering Workshop", "Staff Canteen"]
         }
+      },
+      housing: {
+        label: "Housing (ΚΔΠ)",
+        subs: {
+          "Κτίριο 700": [...makeRange(701, 740), "Κουζίνα 700", "Laundry 700", "TV Room 700"],
+          "Κτίριο 800": [...makeRange(801, 840), "Κουζίνα 800", "Laundry 800", "TV Room 800"],
+          "Κτίριο 1000": [...makeRange(1001, 1040), "Κουζίνα 1000", "Laundry 1000", "TV Room 1000"],
+          "Κτίριο 1100": [...makeRange(1101, 1160), "Κουζίνα 1100", "Laundry 1100", "TV Room 1100"],
+          "Κοινόχρηστα ΚΔΠ": ["Γυμναστήριο Προσωπικού", "Breco (Κυλικείο)", "Γήπεδα Τένις", "Άλλος Χώρος (ΚΔΠ)"]
+        }
+      },
+      parking: {
+        label: "Πάρκινγκ & Ράμπα",
+        subs: {
+          "Όλοι οι Χώροι Πάρκινγκ": [
+            "Ράμπα (Τροφοδοσία / Logistics)",
+            "Πάρκινγκ Γ2 (ΚΔΠ & Τένις)",
+            "Πάρκινγκ Γ5 (Κόμβος)",
+            "Πάρκινγκ Γ4 (Είσοδος Αγοράς)",
+            "Πάρκινγκ Πέργκολες (Buggies)",
+            "Βόρειο Πάρκινγκ",
+            "Νότιο Πάρκινγκ"
+          ]
+        }
+      },
+      infrastructure: {
+        label: "Υποδομές (Engineering)",
+        subs: {
+          "Εγκαταστάσεις & Αντλιοστάσια": [
+            "Κτίριο Ενέργειας",
+            "Υπόγειο Κτιρίου Ενέργειας / Όσμωση",
+            "Αντλιοστάσιο / Λυματοστάσιο Γ4",
+            "Αντλιοστάσιο Γ5",
+            "Αντλιοστάσιο Βόρειου Πάρκινγκ",
+            "Αντλιοστάσιο 230 (Βόρεια)",
+            "Αντλιοστάσιο ΕΔΕΚ"
+          ]
+        }
       }
     };
 
@@ -756,7 +850,7 @@
     let selectedSubLocation = "Γενικά";
     let selectedCategory = "Υδραυλικά";
     let selectedIssue = "";
-    let compressedPhotoBase64 = null;
+    let compressedPhotos = [];
 
     function setReporter(rep, elem) {
       selectedReporter = rep;
@@ -861,13 +955,22 @@
     }
 
     /* ========================================================
-       7. ΑΥΤΟΜΑΤΗ ΣΥΜΠΙΕΣΗ ΦΩΤΟΓΡΑΦΙΑΣ
+       7. ΑΥΤΟΜΑΤΗ ΣΥΜΠΙΕΣΗ ΦΩΤΟΓΡΑΦΙΩΝ (ΕΩΣ 4)
        ======================================================== */
-    function handlePhotoUpload(input) {
-      if (input.files && input.files[0]) {
-        const file = input.files[0];
-        const reader = new FileReader();
+    function handleMultiplePhotoUpload(input) {
+      if (!input.files || input.files.length === 0) return;
+      const files = Array.from(input.files);
 
+      if (compressedPhotos.length + files.length > 4) {
+        alert("Μπορείτε να ανεβάσετε το πολύ μέχρι 4 φωτογραφίες συνολικά.");
+      }
+
+      const availableSlots = 4 - compressedPhotos.length;
+      const filesToProcess = files.slice(0, availableSlots);
+
+      let processedCount = 0;
+      filesToProcess.forEach(file => {
+        const reader = new FileReader();
         reader.onload = function(e) {
           const img = new Image();
           img.onload = function() {
@@ -889,15 +992,51 @@
             const ctx = canvas.getContext("2d");
             ctx.drawImage(img, 0, 0, width, height);
 
-            compressedPhotoBase64 = canvas.toDataURL("image/jpeg", 0.75);
-            const preview = document.getElementById("photoPreviewImg");
-            preview.src = compressedPhotoBase64;
-            preview.style.display = "block";
+            const base64 = canvas.toDataURL("image/jpeg", 0.75);
+            compressedPhotos.push(base64);
+            processedCount++;
+
+            if (processedCount === filesToProcess.length) {
+              renderPhotoThumbs();
+              input.value = "";
+            }
           };
           img.src = e.target.result;
         };
         reader.readAsDataURL(file);
-      }
+      });
+    }
+
+    function removePhoto(index) {
+      compressedPhotos.splice(index, 1);
+      renderPhotoThumbs();
+    }
+
+    function renderPhotoThumbs() {
+      const container = document.getElementById("photosContainer");
+      container.innerHTML = "";
+      compressedPhotos.forEach((src, idx) => {
+        const wrap = document.createElement("div");
+        wrap.className = "photo-thumb-wrap";
+
+        const img = document.createElement("img");
+        img.className = "photo-thumb";
+        img.src = src;
+        img.onclick = () => openPhotoModal(src);
+
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = "photo-del-btn";
+        del.innerHTML = "&times;";
+        del.onclick = (e) => {
+          e.stopPropagation();
+          removePhoto(idx);
+        };
+
+        wrap.appendChild(img);
+        wrap.appendChild(del);
+        container.appendChild(wrap);
+      });
     }
 
     function openPhotoModal(src) {
@@ -918,6 +1057,10 @@
       }
 
       let fullLocation = selectedRoom;
+      const customNote = document.getElementById("customLocationNote").value.trim();
+      if (customNote) {
+        fullLocation += ` - ${customNote}`;
+      }
       if (selectedSubLocation && selectedSubLocation !== "Γενικά") {
         fullLocation += ` (${selectedSubLocation})`;
       }
@@ -929,7 +1072,8 @@
         location_name: fullLocation,
         category: selectedCategory,
         issue: selectedIssue,
-        photo_url: compressedPhotoBase64,
+        photo_url: compressedPhotos[0] || null, // Backwards compatibility
+        photos: compressedPhotos,               // Πίνακας έως 4 φωτογραφιών
         status: "pending",
         priority: isSop ? "Urgent (SOP)" : "Normal",
         reported_by: selectedReporter
@@ -940,9 +1084,9 @@
         alert("Σφάλμα καταχώρησης: " + error.message);
       } else {
         alert("✅ Η βλάβη καταχωρήθηκε επιτυχώς!");
-        compressedPhotoBase64 = null;
-        document.getElementById("photoPreviewImg").style.display = "none";
-        document.getElementById("photoInput").value = "";
+        compressedPhotos = [];
+        renderPhotoThumbs();
+        document.getElementById("customLocationNote").value = "";
         switchView("board");
       }
     }
@@ -952,8 +1096,18 @@
        ======================================================== */
     function handlePinLogin() {
       const pin = document.getElementById("pinInput").value.trim();
+      
       if (PIN_ROLES[pin]) {
         currentUser = PIN_ROLES[pin];
+      } else if (/^\d{4}$/.test(pin)) {
+        // Υποστήριξη ατομικών PINs τεχνικών (0001 - 0028)
+        const num = parseInt(pin, 10);
+        if (num >= 1 && num <= 28) {
+          currentUser = { name: `Τεχνικός #${pin}`, role: "tech" };
+        }
+      }
+
+      if (currentUser) {
         document.getElementById("pinFormArea").classList.add("hidden");
         document.getElementById("userLoggedInBar").classList.remove("hidden");
         document.getElementById("loggedUserText").textContent = `👤 ${currentUser.name}`;
@@ -972,7 +1126,7 @@
     }
 
     /* ========================================================
-       10. ΦΟΡΤΩΣΗ, REALTIME & ΕΝΗΜΕΡΩΣΗ ΚΑΤΑΣΤΑΣΗΣ (ΔΙΟΡΘΩΜΕΝΟ)
+       10. ΦΟΡΤΩΣΗ, REALTIME & ΕΝΗΜΕΡΩΣΗ ΚΑΤΑΣΤΑΣΗΣ
        ======================================================== */
     function formatTimeAgo(dateString) {
       if (!dateString) return "";
@@ -988,7 +1142,7 @@
       const { data: tickets, error } = await db
         .from("tickets")
         .select("*")
-        .order("id", { ascending: false });
+        .order("created_at", { ascending: false });
 
       if (error) {
         console.error("Σφάλμα φόρτωσης:", error);
@@ -1003,12 +1157,13 @@
       let htmlOpen = "", htmlProg = "", htmlDone = "";
 
       const now = new Date().getTime();
-      const oneDayAgo = now - (24 * 60 * 60 * 1000);
+      const twoDaysAgo = now - (48 * 60 * 60 * 1000); // Κανόνας 48 ωρών
 
       tickets.forEach(t => {
-        if (t.status === 'completed' && t.created_at) {
-          const ticketTime = new Date(t.created_at).getTime();
-          if (ticketTime < oneDayAgo) return;
+        // Κανόνας: ΜΟΝΟ οι completed αρχειοθετούνται μετά από 48 ώρες
+        if (t.status === 'completed') {
+          const compTime = new Date(t.completed_at || t.created_at).getTime();
+          if (compTime < twoDaysAgo) return;
         }
 
         if (currentUser && currentUser.role !== "admin" && currentUser.role !== "office") {
@@ -1021,7 +1176,31 @@
         const timeAgo = formatTimeAgo(t.created_at);
         const isSop = (t.priority && t.priority.includes("SOP")) || (t.category && t.category.includes("Χρηματοκιβώτιο"));
 
-        // Προσοχή: Εισαγωγικά γύρω από το '${t.id}' ώστε να μην παγώνει σε UUIDs
+        // Φωτογραφίες (Πολλαπλές ή Μονή)
+        let photosHtml = "";
+        if (t.photos && Array.isArray(t.photos) && t.photos.length > 0) {
+          photosHtml = `
+            <div style="display:flex; gap:6px; flex-wrap:wrap; margin:8px 0;">
+              ${t.photos.map(p => `<img src="${p}" onclick="openPhotoModal('${p}')" style="width:65px; height:65px; border-radius:6px; object-fit:cover; cursor:pointer; border:1px solid var(--border-color);" />`).join('')}
+            </div>
+          `;
+        } else if (t.photo_url) {
+          photosHtml = `<img src="${t.photo_url}" onclick="openPhotoModal('${t.photo_url}')" style="width:100%; border-radius:6px; margin:6px 0; max-height:120px; object-fit:cover; cursor:pointer;" />`;
+        }
+
+        // Τεχνικός & Συνεργάτης
+        const primaryTech = t.assigned_primary_tech || t.assigned_role;
+        const secondaryTech = t.assigned_secondary_tech;
+        let techHtml = "";
+        if (primaryTech) {
+          techHtml = `
+            <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:6px;">
+              👤 Τεχνικός: <strong style="color:var(--text-main);">${primaryTech}</strong>
+              ${secondaryTech ? ` | <span style="color:var(--accent-blue); font-weight:700;">+ ${secondaryTech}</span>` : ''}
+            </div>
+          `;
+        }
+
         const cardHtml = `
           <div class="ticket ${t.status}">
             <div class="ticket-head">
@@ -1034,18 +1213,30 @@
               <span>${timeAgo}</span>
             </div>
             <div class="ticket-issue">${t.issue}</div>
-            ${t.assigned_role ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">👤 Τεχνικός: <strong>${t.assigned_role}</strong></div>` : ''}
-            ${t.photo_url ? `<img src="${t.photo_url}" onclick="openPhotoModal('${t.photo_url}')" style="width:100%; border-radius:6px; margin:6px 0; max-height:120px; object-fit:cover; cursor:pointer;" />` : ''}
+            ${techHtml}
+            ${photosHtml}
             <div class="ticket-actions">
-              ${t.status === 'pending' ? `<button class="action-btn" style="background:var(--status-progress);" onclick="updateStatus('${t.id}', 'in_progress')">Ανάληψη</button>` : ''}
-              ${t.status === 'in_progress' ? `<button class="action-btn" style="background:var(--status-done);" onclick="updateStatus('${t.id}', 'completed')">Ολοκλήρωση</button>` : ''}
-              ${t.status === 'completed' ? `<span style="font-size:0.78rem; font-weight:700; color:var(--status-done);">✅ Ολοκληρώθηκε</span>` : ''}
+              ${t.status === 'pending' ? `
+                <button class="action-btn" style="background:var(--status-progress);" onclick="updateStatus('${t.id}', 'in_progress')">Ανάληψη</button>
+              ` : ''}
+              ${t.status === 'in_progress' ? `
+                <button class="action-btn" style="background:var(--accent-blue);" onclick="addPartner('${t.id}')">+ Συνεργάτης</button>
+                <button class="action-btn" style="background:#6366f1;" onclick="updateStatus('${t.id}', 'winter_pending')">❄️ Χειμερινό</button>
+                <button class="action-btn" style="background:var(--status-done);" onclick="updateStatus('${t.id}', 'completed')">Ολοκλήρωση</button>
+              ` : ''}
+              ${t.status === 'winter_pending' ? `
+                <span style="font-size:0.78rem; font-weight:800; color:#818cf8; align-self:center;">❄️ ΕΚΚΡΕΜΕΙ ΓΙΑ ΧΕΙΜΩΝΑ</span>
+                <button class="action-btn" style="background:var(--status-done);" onclick="updateStatus('${t.id}', 'completed')">Ολοκλήρωση</button>
+              ` : ''}
+              ${t.status === 'completed' ? `
+                <span style="font-size:0.78rem; font-weight:700; color:var(--status-done); align-self:center;">✅ Ολοκληρώθηκε</span>
+              ` : ''}
             </div>
           </div>
         `;
 
         if (t.status === 'pending') { cOpen++; htmlOpen += cardHtml; }
-        else if (t.status === 'in_progress') { cProg++; htmlProg += cardHtml; }
+        else if (t.status === 'in_progress' || t.status === 'winter_pending') { cProg++; htmlProg += cardHtml; }
         else if (t.status === 'completed') { cDone++; htmlDone += cardHtml; }
       });
 
@@ -1059,9 +1250,8 @@
     }
 
     async function updateStatus(id, newStatus) {
-      // Έλεγχος σύνδεσης με PIN
       if (!currentUser) {
-        alert("Παρακαλώ εισάγετε πρώτα το PIN σας στο πλαίσιο «ΣΥΝΔΕΣΗ ENGINEERING» παραπάνω!");
+        alert("Παρακαλώ εισάγετε πρώτα το PIN σας στο πλαίσιο «ΣΥΝΔΕΣΗ» παραπάνω!");
         return;
       }
 
@@ -1069,6 +1259,10 @@
         const updates = { status: newStatus };
         if (newStatus === 'in_progress') {
           updates.assigned_role = currentUser.name;
+          updates.assigned_primary_tech = currentUser.name;
+        }
+        if (newStatus === 'completed') {
+          updates.completed_at = new Date().toISOString();
         }
 
         const { error } = await db.from("tickets").update(updates).eq("id", id);
@@ -1079,6 +1273,22 @@
         }
       } catch (err) {
         alert("Σφάλμα: " + err.message);
+      }
+    }
+
+    async function addPartner(id) {
+      if (!currentUser) {
+        alert("Παρακαλώ συνδεθείτε πρώτα με PIN!");
+        return;
+      }
+      const partner = prompt("Όνομα & Ειδικότητα συνεργάτη:");
+      if (!partner || !partner.trim()) return;
+
+      const { error } = await db.from("tickets").update({ assigned_secondary_tech: partner.trim() }).eq("id", id);
+      if (error) {
+        alert("Σφάλμα: " + error.message);
+      } else {
+        loadTickets();
       }
     }
 
