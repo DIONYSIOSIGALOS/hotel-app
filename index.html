@@ -823,6 +823,43 @@
         loadTickets();
       }
     }
+    /* FIX: ΑΜΕΣΟ ΞΕΚΛΕΙΔΩΜΑ ΧΩΡΙΣ ΚΟΛΛΗΜΑ */
+    window.handleDeviceLogin = function(event) {
+      if (event) event.preventDefault();
+      const pinInput = document.getElementById('devicePinInput').value.trim();
+      const rememberMe = document.getElementById('rememberMeCheck').checked;
+
+      if (USER_ROLES[pinInput]) {
+        if (rememberMe) {
+          localStorage.setItem('w_maintenance_device_pin', pinInput);
+        }
+        currentUser = USER_ROLES[pinInput];
+        currentUser.pin = pinInput;
+
+        // Κλείσιμο modal αμέσως
+        const overlay = document.getElementById('pinOverlay');
+        if (overlay) overlay.style.display = 'none';
+
+        // Ρύθμιση Admin
+        const tabAdminBtn = document.getElementById('tabAdminBtn');
+        if (tabAdminBtn) {
+          tabAdminBtn.style.display = (currentUser.role === 'admin') ? 'block' : 'none';
+        }
+
+        renderRoomTiles();
+        renderSubAreaTiles();
+
+        try {
+          loadTickets();
+          initSupabaseRealtime();
+        } catch(e) {
+          console.log('Syncing...');
+        }
+      } else {
+        alert('Μη έγκυρος κωδικός PIN.');
+        document.getElementById('devicePinInput').value = '';
+      }
+    };
   </script>
 </body>
 </html>
