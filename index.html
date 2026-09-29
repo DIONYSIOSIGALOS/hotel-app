@@ -3,1549 +3,826 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>W Maintenance OS • Navarino Engineering & Operations</title>
-  
-  <!-- Google Fonts: Orbitron & Rajdhani για Sci-Fi / High-Tech αισθητική -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-  
-  <!-- FontAwesome Icons & Chart.js Engine -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Supabase JS Client (Ready for Sync) -->
+  <title>W Maintenance OS</title>
+  <!-- Supabase JS Client & FontAwesome -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    /* =========================================================================
-       FUTURISTIC CYBERPUNK / INDUSTRIAL DESIGN SYSTEM
-       ========================================================================= */
     :root {
-      --bg-core: #040812;
-      --bg-surface: rgba(13, 22, 41, 0.75);
-      --bg-panel: rgba(18, 30, 56, 0.65);
-      --bg-input: rgba(7, 13, 26, 0.85);
-      --border-glow: rgba(56, 189, 248, 0.3);
-      --border-subtle: rgba(255, 255, 255, 0.08);
-
-      --neon-cyan: #00f3ff;
-      --neon-cyan-glow: rgba(0, 243, 255, 0.4);
-      --neon-amber: #ffaa00;
-      --neon-amber-glow: rgba(255, 170, 0, 0.35);
-      --neon-red: #ff2a5f;
-      --neon-red-glow: rgba(255, 42, 95, 0.45);
-      --neon-green: #00ff88;
-      --neon-green-glow: rgba(0, 255, 136, 0.35);
-
-      --text-main: #f1f5f9;
-      --text-muted: #8494b2;
-      --text-glow: rgba(241, 245, 249, 0.85);
-
-      --font-display: 'Orbitron', monospace;
-      --font-body: 'Rajdhani', sans-serif;
-      --font-mono: 'JetBrains Mono', monospace;
-
-      --radius-sm: 8px;
-      --radius-md: 14px;
-      --radius-lg: 20px;
-      --transition-smooth: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: var(--font-body);
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    body {
-      background-color: var(--bg-core);
-      background-image: 
-        radial-gradient(circle at 15% 15%, rgba(0, 243, 255, 0.05) 0%, transparent 40%),
-        radial-gradient(circle at 85% 85%, rgba(255, 42, 95, 0.04) 0%, transparent 40%),
-        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-      background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
-      color: var(--text-main);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow-x: hidden;
-    }
-
-    /* Scanline Overlay Effect for Hardware Console Feel */
-    body::before {
-      content: " ";
-      position: fixed;
-      top: 0; left: 0; bottom: 0; right: 0;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
-      background-size: 100% 4px;
-      z-index: 999;
-      pointer-events: none;
-      opacity: 0.3;
-    }
-
-    /* === HIGH-SECURITY PIN MODAL (HOLOGRAPHIC STYLE) === */
-    .auth-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(4, 8, 18, 0.95);
-      backdrop-filter: blur(16px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10000;
-      padding: 20px;
-    }
-
-    .auth-terminal {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-glow);
-      border-radius: var(--radius-lg);
-      padding: 40px 32px;
-      width: 100%;
-      max-width: 440px;
-      box-shadow: 0 0 50px rgba(0, 243, 255, 0.15), inset 0 0 20px rgba(0, 243, 255, 0.05);
-      text-align: center;
-      position: relative;
-    }
-
-    .auth-terminal::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 25%; right: 25%;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
-    }
-
-    .hud-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(0, 243, 255, 0.1);
-      border: 1px solid var(--neon-cyan);
-      color: var(--neon-cyan);
-      font-family: var(--font-display);
-      font-size: 0.85rem;
-      padding: 6px 16px;
-      border-radius: 50px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      box-shadow: 0 0 15px var(--neon-cyan-glow);
-      margin-bottom: 20px;
-    }
-
-    .auth-terminal h2 {
-      font-family: var(--font-display);
-      font-size: 1.5rem;
-      font-weight: 800;
-      letter-spacing: 1px;
-      color: #fff;
-      margin-bottom: 6px;
-      text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-    }
-
-    .auth-terminal p {
-      color: var(--text-muted);
-      font-size: 0.95rem;
-      margin-bottom: 30px;
-    }
-
-    .hud-pin-input {
-      width: 100%;
-      padding: 18px;
-      background: var(--bg-input);
-      border: 2px solid var(--border-glow);
-      border-radius: var(--radius-md);
-      font-family: var(--font-mono);
-      font-size: 2.2rem;
-      color: var(--neon-cyan);
-      text-align: center;
-      letter-spacing: 14px;
-      outline: none;
-      margin-bottom: 24px;
-      box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8);
-      transition: var(--transition-smooth);
-    }
-
-    .hud-pin-input:focus {
-      border-color: var(--neon-cyan);
-      box-shadow: 0 0 25px var(--neon-cyan-glow), inset 0 0 15px rgba(0, 243, 255, 0.2);
-    }
-
-    .btn-cyber {
-      width: 100%;
-      padding: 16px;
-      background: linear-gradient(135deg, #00f3ff, #0088ff);
-      color: #040812;
-      border: none;
-      border-radius: var(--radius-md);
-      font-family: var(--font-display);
-      font-weight: 800;
-      font-size: 1rem;
-      letter-spacing: 2px;
-      cursor: pointer;
-      box-shadow: 0 0 25px var(--neon-cyan-glow);
-      transition: var(--transition-smooth);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-    }
-
-    .btn-cyber:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 0 40px var(--neon-cyan);
-    }
-
-    .pin-legend {
-      margin-top: 26px;
-      padding: 16px;
-      background: rgba(0, 0, 0, 0.45);
-      border: 1px dashed var(--border-subtle);
-      border-radius: var(--radius-sm);
-      text-align: left;
-      font-size: 0.82rem;
-      color: var(--text-muted);
-      line-height: 1.6;
-    }
-
-    .pin-legend strong {
-      color: var(--neon-cyan);
-      font-family: var(--font-mono);
-    }
-
-    /* === FUTURISTIC TOP BAR & HUD === */
-    header {
-      background: rgba(8, 14, 28, 0.85);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border-subtle);
-      padding: 14px 28px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .brand-cluster {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .brand-emblem {
-      background: linear-gradient(135deg, var(--neon-cyan), #0077ff);
-      color: #040812;
-      font-family: var(--font-display);
-      font-weight: 900;
-      font-size: 1.3rem;
-      padding: 8px 14px;
-      border-radius: 10px;
-      box-shadow: 0 0 20px var(--neon-cyan-glow);
-    }
-
-    .brand-meta h1 {
-      font-family: var(--font-display);
-      font-size: 1.2rem;
-      font-weight: 800;
-      letter-spacing: 1.5px;
-      color: #fff;
-    }
-
-    .brand-meta span {
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      color: var(--neon-cyan);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    /* Cyber Navigation Tabs */
-    .hud-nav {
-      display: flex;
-      gap: 8px;
-      background: var(--bg-input);
-      padding: 4px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-subtle);
-    }
-
-    .hud-tab-btn {
-      background: transparent;
-      border: 1px solid transparent;
-      color: var(--text-muted);
-      padding: 9px 18px;
-      border-radius: 10px;
-      font-family: var(--font-display);
-      font-size: 0.82rem;
-      font-weight: 700;
-      letter-spacing: 1px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: var(--transition-smooth);
-    }
-
-    .hud-tab-btn:hover {
-      color: var(--text-main);
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    .hud-tab-btn.active {
-      background: rgba(0, 243, 255, 0.12);
-      border-color: var(--neon-cyan);
-      color: var(--neon-cyan);
-      box-shadow: 0 0 15px var(--neon-cyan-glow);
-    }
-
-    .user-console-badge {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .user-pill {
-      background: rgba(0, 243, 255, 0.08);
-      border: 1px solid var(--border-glow);
-      padding: 7px 16px;
-      border-radius: 50px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--neon-cyan);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .btn-quit {
-      background: rgba(255, 42, 95, 0.1);
-      border: 1px solid rgba(255, 42, 95, 0.3);
-      color: var(--neon-red);
-      padding: 7px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-weight: 600;
-      transition: var(--transition-smooth);
-    }
-
-    .btn-quit:hover {
-      background: var(--neon-red);
-      color: #fff;
-      box-shadow: 0 0 15px var(--neon-red-glow);
-    }
-
-    /* === WORKSPACE / APP VIEWS === */
-    main {
-      flex: 1;
-      max-width: 1440px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 28px 24px;
-    }
-
-    .workspace-view {
-      display: none;
-      animation: fadeInView 0.3s ease-out forwards;
-    }
-
-    .workspace-view.active-view {
-      display: block;
-    }
-
-    @keyframes fadeInView {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* === FUTURISTIC PANELS & CARDS === */
-    .cyber-panel {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-glow);
-      border-radius: var(--radius-lg);
-      padding: 26px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-      position: relative;
-    }
-
-    .cyber-panel::after {
-      content: "";
-      position: absolute;
-      bottom: 0; right: 0;
-      width: 16px; height: 16px;
-      border-right: 2px solid var(--neon-cyan);
-      border-bottom: 2px solid var(--neon-cyan);
-      border-bottom-right-radius: var(--radius-lg);
-    }
-
-    .panel-title {
-      font-family: var(--font-display);
-      font-size: 1.15rem;
-      font-weight: 800;
-      letter-spacing: 1px;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      border-bottom: 1px solid var(--border-subtle);
-      padding-bottom: 14px;
-      margin-bottom: 22px;
-    }
-
-    .panel-title i {
-      color: var(--neon-cyan);
-      filter: drop-shadow(0 0 8px var(--neon-cyan-glow));
-    }
-
-    /* FORM STYLES */
-    .field-group {
-      margin-bottom: 18px;
-    }
-
-    .field-label {
-      display: block;
-      font-family: var(--font-display);
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: var(--text-muted);
-      letter-spacing: 1.2px;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-
-    .cyber-control {
-      width: 100%;
-      padding: 13px 16px;
-      background: var(--bg-input);
-      border: 1px solid var(--border-glow);
-      border-radius: var(--radius-md);
-      color: var(--text-main);
-      font-size: 1rem;
-      outline: none;
-      transition: var(--transition-smooth);
-    }
-
-    .cyber-control:focus {
-      border-color: var(--neon-cyan);
-      box-shadow: 0 0 15px var(--neon-cyan-glow);
-    }
-
-    .cyber-control:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      border-color: var(--border-subtle);
-    }
-
-    /* GLOWING PRIORITY SWITCH */
-    .priority-matrix {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .matrix-btn {
-      padding: 14px;
-      background: var(--bg-input);
-      border: 2px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      color: var(--text-muted);
-      font-family: var(--font-display);
-      font-weight: 800;
-      font-size: 0.9rem;
-      letter-spacing: 1px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      transition: var(--transition-smooth);
-    }
-
-    .matrix-btn.active-normal {
-      background: rgba(0, 255, 136, 0.12);
-      border-color: var(--neon-green);
-      color: var(--neon-green);
-      box-shadow: 0 0 20px var(--neon-green-glow);
-    }
-
-    .matrix-btn.active-urgent {
-      background: rgba(255, 42, 95, 0.15);
-      border-color: var(--neon-red);
-      color: var(--neon-red);
-      box-shadow: 0 0 25px var(--neon-red-glow);
-      animation: pulseUrgent 1.8s infinite;
-    }
-
-    @keyframes pulseUrgent {
-      0%, 100% { box-shadow: 0 0 15px var(--neon-red-glow); }
-      50% { box-shadow: 0 0 30px var(--neon-red); }
-    }
-
-    /* KANBAN / FEED CARDS */
-    .cyber-card {
-      background: var(--bg-panel);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 18px;
-      margin-bottom: 14px;
-      transition: var(--transition-smooth);
-      position: relative;
-    }
-
-    .cyber-card:hover {
-      border-color: var(--border-glow);
-      transform: translateX(4px);
-    }
-
-    .cyber-card.urgent-border {
-      border-left: 6px solid var(--neon-red);
-      box-shadow: -10px 0 20px -10px var(--neon-red-glow);
-    }
-
-    .cyber-card.normal-border {
-      border-left: 6px solid var(--neon-green);
-      box-shadow: -10px 0 20px -10px var(--neon-green-glow);
-    }
-
-    .card-meta-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .card-room-id {
-      font-family: var(--font-display);
-      font-size: 1.1rem;
-      font-weight: 800;
-      color: #fff;
-    }
-
-    .badge-chip {
-      font-family: var(--font-display);
-      font-size: 0.72rem;
-      font-weight: 800;
-      padding: 4px 10px;
-      border-radius: 6px;
-      letter-spacing: 1px;
-    }
-
-    .badge-chip.urgent {
-      background: rgba(255, 42, 95, 0.2);
-      border: 1px solid var(--neon-red);
-      color: var(--neon-red);
-    }
-
-    .badge-chip.normal {
-      background: rgba(0, 255, 136, 0.2);
-      border: 1px solid var(--neon-green);
-      color: var(--neon-green);
-    }
-
-    .card-narrative {
-      font-size: 1rem;
-      color: #cbd5e1;
-      line-height: 1.5;
-      margin-bottom: 16px;
-    }
-
-    .card-action-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-top: 1px solid var(--border-subtle);
-      padding-top: 12px;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .hud-select {
-      background: var(--bg-input);
-      border: 1px solid var(--border-glow);
-      color: var(--text-main);
-      padding: 6px 12px;
-      border-radius: var(--radius-sm);
-      font-size: 0.85rem;
-      font-weight: 600;
-      outline: none;
-      cursor: pointer;
-    }
-
-    /* MANAGER KPI METRICS */
-    .metric-ribbon {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 18px;
-      margin-bottom: 28px;
-    }
-
-    .metric-pod {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 22px;
-      text-align: center;
-      position: relative;
-    }
-
-    .metric-value {
-      font-family: var(--font-display);
-      font-size: 2.8rem;
-      font-weight: 900;
-      margin: 8px 0;
-      line-height: 1;
-    }
-
-    .metric-title {
-      font-family: var(--font-display);
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: var(--text-muted);
-      letter-spacing: 1.5px;
-    }
-
-    /* RESPONSIVE LAYOUT */
-    .dashboard-duo {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 26px;
-    }
-
-    @media (min-width: 1024px) {
-      .dashboard-duo {
-        grid-template-columns: 450px 1fr;
-      }
-    }
+      --bg-dark: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --accent-blue: #38bdf8;
+      --accent-hover: #0284c7;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; padding-bottom: 30px; }
+    
+    /* Top Bar */
+    .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid var(--card-border); position: sticky; top: 0; z-index: 100; }
+    .brand-title { font-size: 1.15rem; font-weight: 800; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
+    .brand-title span { color: #22c55e; }
+    .top-actions { display: flex; gap: 8px; }
+    .btn-top { background: #334155; border: 1px solid #475569; color: var(--text-main); padding: 6px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+
+    /* Navigation Tabs */
+    .nav-tabs { display: flex; background: #1e293b; padding: 4px; margin: 12px 16px; border-radius: 10px; border: 1px solid var(--card-border); gap: 4px; }
+    .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; color: var(--text-muted); font-weight: 700; font-size: 0.85rem; border-radius: 8px; cursor: pointer; text-align: center; }
+    .tab-btn.active { background: var(--accent-blue); color: #0f172a; }
+
+    /* Container */
+    .container { padding: 0 16px; max-width: 600px; margin: 0 auto; }
+    .step-section { margin-bottom: 18px; }
+    .step-title { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; justify-content: space-between; }
+    
+    /* Grid Tiles (Αυθεντικά κουμπιά) */
+    .tiles-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .tile-btn { background: #243248; border: 1px solid var(--card-border); color: var(--text-main); padding: 12px 6px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; text-align: center; cursor: pointer; min-height: 48px; display: flex; align-items: center; justify-content: center; }
+    .tile-btn.selected { background: var(--accent-blue); color: #0f172a; border-color: var(--accent-blue); font-weight: 800; box-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
+
+    /* SOP Alert Banner */
+    .sop-alert { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); border-radius: 8px; padding: 10px 12px; margin: 12px 0; color: #fca5a5; font-size: 0.75rem; line-height: 1.4; display: none; }
+    .sop-alert strong { color: var(--danger); display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+
+    /* Ελεύθερο Κείμενο & Inputs */
+    .input-field { width: 100%; background: #243248; border: 1px solid var(--card-border); color: var(--text-main); padding: 12px; border-radius: 8px; font-size: 0.9rem; outline: none; }
+    .input-field:focus { border-color: var(--accent-blue); }
+    textarea.input-field { resize: vertical; min-height: 70px; }
+
+    /* Toggles Urgent & Buttons */
+    .priority-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+    .p-btn { padding: 10px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; border: 1px solid var(--card-border); background: #243248; color: var(--text-muted); cursor: pointer; text-align: center; }
+    .p-btn.active-normal { background: var(--success); color: #fff; border-color: var(--success); }
+    .p-btn.active-urgent { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+    .btn-submit { width: 100%; padding: 14px; background: #22c55e; border: none; border-radius: 8px; color: #0f172a; font-weight: 800; font-size: 1rem; cursor: pointer; margin-top: 15px; }
+
+    /* PIN Gate Overlay */
+    #pinOverlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.96); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .pin-box { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 25px 20px; width: 100%; max-width: 320px; text-align: center; }
+    .pin-input { width: 100%; padding: 12px; font-size: 2rem; letter-spacing: 12px; text-align: center; background: #0f172a; border: 1px solid var(--card-border); color: #fff; border-radius: 8px; margin: 15px 0; outline: none; }
+    .pin-input:focus { border-color: var(--accent-blue); }
+
+    /* Live Feed / Tickets List */
+    .ticket-card { background: var(--card-bg); border-left: 4px solid var(--accent-blue); border-radius: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid var(--card-border); border-left-width: 4px; }
+    .ticket-card.urgent { border-left-color: var(--danger); }
+    .t-header { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
+    .t-room { font-size: 1rem; font-weight: 700; color: #fff; }
+    .t-desc { font-size: 0.85rem; color: #cbd5e1; margin-top: 4px; }
+    .t-badge { padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
   </style>
 </head>
 <body>
-  <!-- =========================================================================
-       1. HOLOGRAPHIC PIN AUTHENTICATION OVERLAY (STRICT ROLE MAPPING)
-       ========================================================================= -->
-  <div class="auth-overlay" id="authGateway">
-    <div class="auth-terminal">
-      <div class="hud-badge"><i class="fa-solid fa-shield-halved"></i> Security Portal</div>
-      <h2>W MAINTENANCE OS</h2>
-      <p>Εισάγετε τον 4ψήφιο κωδικό PIN του τμήματός σας</p>
 
-      <form id="authPinForm" onsubmit="executeAuthentication(event)">
+  <!-- 1. Αρχική Οθόνη PIN Gatekeeper (Μόνο PIN, χωρίς λίστες) -->
+  <div id="pinOverlay">
+    <div class="pin-box">
+      <div style="font-size: 2rem; color: var(--accent-blue); margin-bottom: 8px;">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <h2 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 4px;">W MAINTENANCE OS</h2>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Εισάγετε τον τετραψήφιο κωδικό πρόσβασης</p>
+      
+      <form onsubmit="handleDeviceLogin(event)">
         <input 
           type="password" 
-          id="systemPinInput" 
-          class="hud-pin-input" 
-          maxlength="4" 
+          id="devicePinInput" 
+          class="pin-input" 
           inputmode="numeric" 
+          maxlength="4" 
           placeholder="••••" 
-          autofocus 
+          autocomplete="off"
           required
         >
-        <button type="submit" class="btn-cyber">
-          <span>ΕΙΣΟΔΟΣ ΣΤΟ ΣΥΣΤΗΜΑ</span>
-          <i class="fa-solid fa-arrow-right-to-bracket"></i>
+        
+        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 16px;">
+          <input type="checkbox" id="rememberMeCheck" checked style="accent-color: var(--accent-blue); cursor: pointer;">
+          <label for="rememberMeCheck" style="font-size: 0.8rem; color: var(--text-muted); cursor: pointer;">Να παραμείνω συνδεδεμένος</label>
+        </div>
+
+        <button type="submit" class="btn-submit" style="margin-top: 0; background: var(--accent-blue);">
+          Είσοδος
         </button>
       </form>
-
-      <div class="pin-legend">
-        <i class="fa-solid fa-circle-info" style="color:var(--neon-cyan); margin-right:4px;"></i>
-        <strong>Κωδικοί Πρόσβασης (PIN):</strong><br>
-        • <strong>8888</strong> : Engineering Manager / Γραφείο (Πλήρης Έλεγχος & KPIs)<br>
-        • <strong>7000</strong> : Housing Προσωπικού (Κτίρια 700 - 1100 & Κοινόχρηστα)<br>
-        • <strong>1111</strong> : Curators / Guest Experience<br>
-        • <strong>2222</strong> : F&B / Εστιατόρια & Bars<br>
-        • <strong>3333</strong> : Housekeeping (Οροφοκομία)<br>
-        • <strong>4444</strong> : Front Office / Υποδοχή<br>
-        • <strong>5001</strong> : Ηλεκτρολόγος Βάρδιας (Καρτέλα Εργασιών)<br>
-        • <strong>5002</strong> : Υδραυλικός Βάρδιας (Καρτέλα Εργασιών)<br>
-        • <strong>5003</strong> : Ψυκτικός / HVAC (Καρτέλα Εργασιών)
-      </div>
     </div>
   </div>
 
-  <!-- =========================================================================
-       2. CYBERPUNK HUD HEADER & DYNAMIC NAVIGATION
-       ========================================================================= -->
-  <header>
-    <div class="brand-cluster">
-      <div class="brand-emblem">W</div>
-      <div class="brand-meta">
-        <h1>W MAINTENANCE</h1>
-        <span>Engineering Operations Console</span>
-      </div>
+  <!-- 2. Header Εφαρμογής -->
+  <header class="top-bar">
+    <div class="brand-title">
+      <span>W</span> MAINTENANCE
     </div>
-
-    <!-- DYNAMIC HUD TABS (Manager / Technicians) -->
-    <div class="hud-nav" id="hudNavigationTabs" style="display: none;">
-      <button type="button" class="hud-tab-btn active" id="tabNavTickets" onclick="navigateToWorkspace('tickets')">
-        <i class="fa-solid fa-list-check"></i>
-        <span>ΒΛΑΒΕΣ</span>
+    <div class="top-actions">
+      <button class="btn-top" id="btnAudioToggle" onclick="toggleAudio()">
+        <i class="fa-solid fa-volume-high"></i> <span id="audioStatusText">Ήχος</span>
       </button>
-      <button type="button" class="hud-tab-btn" id="tabNavManager" onclick="navigateToWorkspace('manager')">
-        <i class="fa-solid fa-chart-line"></i>
-        <span>MANAGER KPIS</span>
-      </button>
-      <button type="button" class="hud-tab-btn" id="tabNavTech" onclick="navigateToWorkspace('technician')">
-        <i class="fa-solid fa-user-gear"></i>
-        <span>ΚΑΡΤΕΛΑ ΤΕΧΝΙΚΟΥ</span>
-      </button>
-    </div>
-
-    <div class="user-console-badge">
-      <div class="user-pill" id="activeIdentityBadge">
-        <i class="fa-solid fa-satellite-dish"></i>
-        <span id="activeUserNameText">Αναμονή...</span>
-      </div>
-      <button type="button" class="btn-quit" onclick="terminateSession()">
-        <i class="fa-solid fa-power-off"></i>
+      <button class="btn-top" onclick="logoutDevice()" title="Αποσύνδεση">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i>
       </button>
     </div>
   </header>
 
-  <!-- =========================================================================
-       3. WORKSPACE CONTAINER
-       ========================================================================= -->
-  <main>
-    <!-- VIEW 1: TICKETS / ΚΑΤΑΓΡΑΦΗ & ΠΙΝΑΚΑΣ ΒΛΑΒΩΝ -->
-    <section id="viewWorkspaceTickets" class="workspace-view active-view">
-      <div class="dashboard-duo">
+  <!-- 3. Navigation Tabs -->
+  <nav class="nav-tabs">
+    <button class="tab-btn active" id="tabReportBtn" onclick="switchMainTab('report')">
+      <i class="fa-solid fa-plus-circle"></i> Δήλωση
+    </button>
+    <button class="tab-btn" id="tabFeedBtn" onclick="switchMainTab('feed')">
+      <i class="fa-solid fa-list-check"></i> Βλάβες (<span id="ticketCountBadge">0</span>)
+    </button>
+    <button class="tab-btn" id="tabAdminBtn" onclick="switchMainTab('admin')" style="display: none;">
+      <i class="fa-solid fa-chart-line"></i> Διοίκηση
+    </button>
+  </nav>
+
+  <!-- 4. Κύρια Οθόνη: Φόρμα Καταγραφής Βλάβης -->
+  <main class="container" id="reportView">
+    <form id="mainTicketForm" onsubmit="submitNewTicket(event)">
+
+      <!-- Βήμα 1: Αριθμός Δωματίου / Χώρου (Δυναμικά Κουμπιά ανά Ρόλο) -->
+      <section class="step-section">
+        <div class="step-title">
+          <span>1. ΑΡΙΘΜΟΣ ΔΩΜΑΤΙΟΥ / ΧΩΡΟΥ:</span>
+          <span id="selectedRoomDisplay" style="color: var(--accent-blue);">--</span>
+        </div>
+        <div class="tiles-grid" id="roomTilesContainer">
+          <!-- Γεμίζει αυτόματα με βάση το PIN (Housing, Guest Areas, Infrastructure) -->
+        </div>
+      </section>
+
+      <!-- Βήμα 2: Επιμέρους Χώρος / Σημείο -->
+      <section class="step-section">
+        <div class="step-title">
+          <span>2. ΕΠΙΜΕΡΟΥΣ ΧΩΡΟΣ / ΣΗΜΕΙΟ:</span>
+          <span id="selectedSubAreaDisplay" style="color: var(--accent-blue);">Γενικά</span>
+        </div>
+        <div class="tiles-grid" id="subAreaTilesContainer">
+          <!-- Γεμίζει αυτόματα ανάλογα με την επιλογή χώρου -->
+        </div>
+      </section>
+
+      <!-- Βήμα 3: Ειδικότητα / Κατηγορία -->
+      <section class="step-section">
+        <div class="step-title">
+          <span>3. ΕΙΔΙΚΟΤΗΤΑ / ΚΑΤΗΓΟΡΙΑ:</span>
+          <span id="selectedCategoryDisplay" style="color: var(--accent-blue);">--</span>
+        </div>
+        <div class="tiles-grid" id="categoryTilesContainer">
+          <button type="button" class="tile-btn" onclick="selectCategory('Υδραυλικά', this)">Υδραυλικά</button>
+          <button type="button" class="tile-btn" onclick="selectCategory('Ηλεκτρολογικά', this)">Ηλεκτρολογικά</button>
+          <button type="button" class="tile-btn" onclick="selectCategory('A/C', this)">A/C</button>
+          <button type="button" class="tile-btn" onclick="selectCategory('A/V', this)">A/V</button>
+          <button type="button" class="tile-btn" onclick="selectCategory('Πόρτες / Έπιπλα', this)">Πόρτες / Έπιπλα</button>
+          <button type="button" class="tile-btn" onclick="selectCategory('Safe / Κλειδαριά', this)">Safe / Κλειδαριά</button>
+          <button type="button" class="tile-btn" onclick="selectCategory('Πισίνες', this)">Πισίνες</button>
+          <button type="button" class="tile-btn" onclick="selectCategory('Civil / Εργασίες', this)">Civil / Εργασίες</button>
+        </div>
+      </section>
+
+      <!-- Προειδοποίηση Security SOP (για Safe / Κλειδαριές) -->
+      <div class="sop-alert" id="sopAlertBox">
+        <strong><i class="fa-solid fa-triangle-exclamation"></i> ΥΠΟΧΡΕΩΤΙΚΟ ΠΡΩΤΟΚΟΛΛΟ SECURITY SOP:</strong>
+        Η επέμβαση σε χρηματοκιβώτιο ή ξεκλείδωμα πόρτας απαγορεύεται χωρίς τη φυσική παρουσία μέλους της Ασφάλειας (Security).
+      </div>
+
+      <!-- Βήμα 4: Συχνή Βλάβη (Άμεσο Κλικ) -->
+      <section class="step-section">
+        <div class="step-title">
+          <span>4. ΣΥΧΝΗ ΒΛΑΒΗ (ΑΜΕΣΟ ΚΛΙΚ):</span>
+        </div>
+        <div class="tiles-grid" id="commonIssuesContainer">
+          <!-- Γεμίζει δυναμικά ανάλογα με την κατηγορία -->
+        </div>
+      </section>
+
+      <!-- Ελεύθερη Περιγραφή Βλάβης -->
+      <section class="step-section">
+        <div class="step-title">
+          <span>ΠΕΡΙΓΡΑΦΗ ΒΛΑΒΗΣ / ΖΗΜΙΑΣ:</span>
+        </div>
+        <textarea 
+          id="customDescriptionInput" 
+          class="input-field" 
+          placeholder="Περιγράψτε αναλυτικά το πρόβλημα ή συμπληρωματικές λεπτομέρειες..."
+          required
+        ></textarea>
+      </section>
+
+      <!-- Προτεραιότητα & Αυτόματη Βάρδια -->
+      <section class="step-section">
+        <div class="step-title">
+          <span>ΠΡΟΤΕΡΑΙΟΤΗΤΑ & ΒΑΡΔΙΑ:</span>
+        </div>
+        <div class="priority-toggle">
+          <button type="button" class="p-btn active-normal" id="btnPriorityNormal" onclick="setPriority('Normal')">
+            <i class="fa-solid fa-check"></i> Κανονικό
+          </button>
+          <button type="button" class="p-btn" id="btnPriorityUrgent" onclick="setPriority('Urgent')">
+            <i class="fa-solid fa-bolt"></i> Επείγον (Urgent)
+          </button>
+        </div>
+        <input type="hidden" id="priorityValue" value="Normal">
         
-        <!-- ΑΡΙΣΤΕΡΑ: ΦΟΡΜΑ ΔΗΛΩΣΗΣ ΒΛΑΒΗΣ -->
-        <div class="cyber-panel">
-          <div class="panel-title">
-            <i class="fa-solid fa-pen-ruler"></i>
-            <span>ΚΑΤΑΓΡΑΦΗ ΝΕΟΥ ΣΥΜΒΑΝΤΟΣ</span>
-          </div>
-
-          <form id="newDefectRecordForm" onsubmit="handleDefectSubmission(event)">
-            
-            <!-- Τμήμα (Κλειδωμένο με βάση το PIN) -->
-            <div class="field-group">
-              <label class="field-label">ΤΜΗΜΑ ΑΝΑΦΟΡΑΣ</label>
-              <input type="text" id="reportDeptLocked" class="cyber-control" readonly disabled>
-            </div>
-
-            <!-- Κτίριο / Περιοχή -->
-            <div class="field-group">
-              <label class="field-label">ΚΤΙΡΙΟ / ΠΕΡΙΟΧΗ</label>
-              <select id="selectMainSector" class="cyber-control" onchange="cascadeSecondaryLocations()" required>
-                <!-- Φορτώνεται δυναμικά ανάλογα με το PIN -->
-              </select>
-            </div>
-
-            <!-- Χώρος / Δωμάτιο -->
-            <div class="field-group">
-              <label class="field-label">ΣΗΜΕΙΟ / ΔΩΜΑΤΙΟ / ΧΩΡΟΣ</label>
-              <select id="selectSubSpot" class="cyber-control" required>
-                <!-- Φορτώνεται δυναμικά -->
-              </select>
-            </div>
-
-            <!-- Urgent / Normal Matrix Toggle -->
-            <div class="field-group">
-              <label class="field-label">ΒΑΘΜΟΣ ΠΡΟΤΕΡΑΙΟΤΗΤΑΣ</label>
-              <div class="priority-matrix">
-                <button type="button" id="matrixBtnNormal" class="matrix-btn active-normal" onclick="setTaskPriority('normal')">
-                  <i class="fa-solid fa-circle-check"></i>
-                  <span>NORMAL</span>
-                </button>
-                <button type="button" id="matrixBtnUrgent" class="matrix-btn" onclick="setTaskPriority('urgent')">
-                  <i class="fa-solid fa-triangle-exclamation"></i>
-                  <span>URGENT</span>
-                </button>
-              </div>
-              <input type="hidden" id="taskPriorityState" value="normal">
-            </div>
-
-            <!-- Βάρδια (Αυτόματη Ανίχνευση Ώρας) -->
-            <div class="field-group">
-              <label class="field-label">ΒΑΡΔΙΑ ΕΡΓΑΣΙΑΣ</label>
-              <select id="selectWorkShift" class="cyber-control">
-                <option value="Πρωινή (07:00 - 15:00)">Πρωινή (07:00 - 15:00)</option>
-                <option value="Απογευματινή (15:00 - 23:00)">Απογευματινή (15:00 - 23:00)</option>
-                <option value="Νυχτερινή (23:00 - 07:00)">Νυχτερινή (23:00 - 07:00)</option>
-              </select>
-            </div>
-
-            <!-- Περιγραφή Βλάβης -->
-            <div class="field-group">
-              <label class="field-label">ΠΕΡΙΓΡΑΦΗ ΤΕΧΝΙΚΟΥ ΠΡΟΒΛΗΜΑΤΟΣ</label>
-              <textarea id="taskIssueDescription" class="cyber-control" rows="3" placeholder="Αναλυτική περιγραφή βλάβης..." required></textarea>
-            </div>
-
-            <button type="submit" class="btn-cyber">
-              <span>ΑΠΟΣΤΟΛΗ ΣΤΟ ΤΕΧΝΙΚΟ</span>
-              <i class="fa-solid fa-paper-plane"></i>
-            </button>
-          </form>
+        <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; background: #243248; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--card-border);">
+          <span style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-regular fa-clock"></i> Τρέχουσα Βάρδια:</span>
+          <span id="detectedShiftDisplay" style="font-size: 0.85rem; font-weight: 700; color: #fff;">--</span>
         </div>
+      </section>
 
-        <!-- ΔΕΞΙΑ: LIVE FEED & ΦΙΛΤΡΑ -->
-        <div class="cyber-panel">
-          <div class="feed-header">
-            <div class="panel-title" style="border:none; margin:0; padding:0;">
-              <i class="fa-solid fa-tower-broadcast"></i>
-              <span>ΡΟΗ ΤΕΧΝΙΚΩΝ ΕΡΓΑΣΙΩΝ</span>
-            </div>
+      <!-- Κουμπί Υποβολής -->
+      <button type="submit" class="btn-submit" id="btnSubmitTicket">
+        <i class="fa-solid fa-paper-plane"></i> Υποβολή Βλάβης
+      </button>
 
-            <div class="filter-pills">
-              <button type="button" class="pill-btn active" onclick="filterTaskFeed('all', this)">Όλες</button>
-              <button type="button" class="pill-btn" onclick="filterTaskFeed('pending', this)">Εκκρεμείς</button>
-              <button type="button" class="pill-btn" onclick="filterTaskFeed('in_progress', this)">Σε Εξέλιξη</button>
-              <button type="button" class="pill-btn" onclick="filterTaskFeed('completed', this)">Ολοκληρωμένες</button>
-            </div>
-          </div>
-
-          <div class="ticket-list" id="defectsFeedContainer">
-            <!-- Οι κάρτες βλαβών παράγονται εδώ δυναμικά -->
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- VIEW 2: MANAGER KPI & LIVE ANALYTICS CHARTS -->
-    <section id="viewWorkspaceManager" class="workspace-view">
-      <!-- Ribbon Metrics -->
-      <div class="metric-ribbon">
-        <div class="metric-pod" style="border-bottom: 3px solid var(--neon-cyan);">
-          <div class="metric-title">ΣΥΝΟΛΙΚΕΣ ΒΛΑΒΕΣ</div>
-          <div class="metric-value" id="kpiTotalMetric" style="color: var(--neon-cyan);">0</div>
-          <div style="font-size:0.8rem; color:var(--text-muted);"><i class="fa-solid fa-database"></i> Καταγεγραμμένα</div>
-        </div>
-
-        <div class="metric-pod" style="border-bottom: 3px solid var(--neon-red);">
-          <div class="metric-title">ΕΠΕΙΓΟΝΤΑ (URGENT)</div>
-          <div class="metric-value" id="kpiUrgentMetric" style="color: var(--neon-red);">0</div>
-          <div style="font-size:0.8rem; color:var(--text-muted);"><i class="fa-solid fa-bell"></i> Άμεσης Προτεραιότητας</div>
-        </div>
-
-        <div class="metric-pod" style="border-bottom: 3px solid var(--neon-amber);">
-          <div class="metric-title">ΣΕ ΕΞΕΛΙΞΗ</div>
-          <div class="metric-value" id="kpiProgressMetric" style="color: var(--neon-amber);">0</div>
-          <div style="font-size:0.8rem; color:var(--text-muted);"><i class="fa-solid fa-wrench"></i> Σε Επεξεργασία</div>
-        </div>
-
-        <div class="metric-pod" style="border-bottom: 3px solid var(--neon-green);">
-          <div class="metric-title">ΟΛΟΚΛΗΡΩΜΕΝΕΣ</div>
-          <div class="metric-value" id="kpiCompletedMetric" style="color: var(--neon-green);">0</div>
-          <div style="font-size:0.8rem; color:var(--text-muted);"><i class="fa-solid fa-check-double"></i> Επιλυμένες</div>
-        </div>
-      </div>
-
-      <!-- Real-Time Charts Grid -->
-      <div class="charts-grid">
-        <div class="chart-box">
-          <div class="panel-title" style="font-size: 0.95rem; margin-bottom: 12px;">
-            <i class="fa-solid fa-chart-pie"></i>
-            <span>ΚΑΤΑΣΤΑΣΗ ΕΠΙΛΥΣΗΣ ΣΥΜΒΑΝΤΩΝ</span>
-          </div>
-          <canvas id="chartCanvasStatus"></canvas>
-        </div>
-
-        <div class="chart-box">
-          <div class="panel-title" style="font-size: 0.95rem; margin-bottom: 12px;">
-            <i class="fa-solid fa-chart-column"></i>
-            <span>ΣΥΧΝΟΤΗΤΑ ΒΛΑΒΩΝ ΑΝΑ ΤΜΗΜΑ / ΤΟΜΕΑ</span>
-          </div>
-          <canvas id="chartCanvasSector"></canvas>
-        </div>
-      </div>
-    </section>
-
-    <!-- VIEW 3: TECHNICIAN DOSSIER / PROFILE (ΚΑΡΤΕΛΑ ΤΕΧΝΙΚΟΥ) -->
-    <section id="viewWorkspaceTechnician" class="workspace-view">
-      <div class="tech-header-card">
-        <div class="tech-title">
-          <h2 id="techProfileHeaderName"><i class="fa-solid fa-id-card-clip" style="color:var(--neon-cyan); margin-right:10px;"></i>Καρτέλα Τεχνικού</h2>
-          <p id="techProfileHeaderDetails">Ειδικότητα: Ηλεκτρολογικά / Βάρδια: -</p>
-        </div>
-        <div class="user-pill" id="techPersonalStatsBadge" style="font-size:0.95rem; padding:10px 20px;">
-          <i class="fa-solid fa-list-check"></i>
-          <span>Ενεργές Εργασίες: 0 | Ολοκληρωμένες: 0</span>
-        </div>
-      </div>
-
-      <div class="cyber-panel">
-        <div class="panel-title">
-          <i class="fa-solid fa-clipboard-user"></i>
-          <span>ΕΡΓΑΣΙΕΣ ΑΝΑΤΕΘΕΙΜΕΝΕΣ ΣΤΟΝ ΤΕΧΝΙΚΟ</span>
-        </div>
-        <div class="ticket-list" id="technicianPersonalFeed">
-          <!-- Προσωπικές εργασίες τεχνικού -->
-        </div>
-      </div>
-    </section>
+    </form>
   </main>
-  <!-- =========================================================================
-       4. JAVASCRIPT SYSTEM ENGINE (FULL LOGIC & CONTROLLERS)
-       ========================================================================= -->
+
+  <!-- 5. Οθόνη: Ζωντανή Ροή Βλαβών (Tickets Feed) -->
+  <section class="container" id="feedView" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+      <h3 style="font-size: 1rem; font-weight: 700;">Ζωντανές Βλάβες</h3>
+      <span id="feedStatusIndicator" style="font-size: 0.75rem; color: var(--success); display: flex; align-items: center; gap: 5px;">
+        <i class="fa-solid fa-circle" style="font-size: 0.5rem;"></i> Real-Time Ενεργό
+      </span>
+    </div>
+    <div id="ticketsListContainer">
+      <!-- Κάρτες βλαβών -->
+    </div>
+  </section>
+
+  <!-- 6. Οθόνη: Ταμπλό Διοίκησης (Admin / Civil Long-term) -->
+  <section class="container" id="adminView" style="display: none;">
+    <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 12px;">Πίνακας Διοίκησης & Πολυήμερες Βλάβες</h3>
+    <div id="adminStatsContainer" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+      <!-- Cards στατιστικών -->
+    </div>
+    <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 8px; padding: 12px; margin-bottom: 15px;">
+      <h4 style="font-size: 0.85rem; color: var(--accent-blue); margin-bottom: 8px;">
+        <i class="fa-solid fa-person-digging"></i> Εκκρεμότητες Civil / Πολυήμερες Εργασίες
+      </h4>
+      <div id="civilTasksContainer">
+        <!-- Λίστα πολυήμερων εργασιών -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Ήχος Ειδοποίησης (Chime) -->
+  <audio id="notificationSound" preload="auto">
+    <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg">
+  </audio>
   <script>
-    /* -------------------------------------------------------------------------
-       A. USER PROFILES & PIN DIRECTORY
-       ------------------------------------------------------------------------- */
-    const ACCESS_REGISTRY = {
-      "8888": { id: "mgr", name: "Engineering Manager (Γραφείο)", type: "manager", scope: "all", canAssign: true },
-      "7000": { id: "hsg", name: "Housing Προσωπικού", type: "department", scope: "housing", canAssign: false },
-      "1111": { id: "cur", name: "Curators (Guest Exp.)", type: "department", scope: "resort", canAssign: false },
-      "2222": { id: "fnb", name: "F&B / Εστιατόρια", type: "department", scope: "resort", canAssign: false },
-      "3333": { id: "hkp", name: "Housekeeping", type: "department", scope: "resort", canAssign: false },
-      "4444": { id: "fro", name: "Front Office", type: "department", scope: "resort", canAssign: false },
-      "5001": { id: "t_elec", name: "Ηλεκτρολόγος Βάρδιας", type: "technician", scope: "all", specialty: "Ηλεκτρολογικά" },
-      "5002": { id: "t_plumb", name: "Υδραυλικός Βάρδιας", type: "technician", scope: "all", specialty: "Υδραυλικά" },
-      "5003": { id: "t_hvac", name: "Ψυκτικός (HVAC)", type: "technician", scope: "all", specialty: "Κλιματισμός / Ψύξη" }
+    /* ==========================================================================
+       1. ΡΟΛΟΙ, PINS & ΔΙΚΑΙΩΜΑΤΑ ΧΡΗΣΤΩΝ
+       ========================================================================== */
+/* ==========================================================================
+       1. ΡΟΛΟΙ, PINS & ΔΙΚΑΙΩΜΑΤΑ ΧΡΗΣΤΩΝ (ΠΛΗΡΗΣ ΛΙΣΤΑ)
+       ========================================================================== */
+    const USER_ROLES = {
+      // Executive Admin (Εσύ)
+      '2003': { name: 'Διονύσιος Σίγαλος', role: 'admin', dept: 'Executive Admin', scope: 'all' },
+
+      // Executive Management
+      '9001': { name: 'ΣΠΥΡΟΣ ΚΑΣΣΙΑΡΗΣ', role: 'admin', dept: 'Head of Engineering', scope: 'all' },
+      '9002': { name: 'ΓΙΩΡΓΟΣ ΠΑΝΑΓΕΑΣ', role: 'admin', dept: 'Head of Engineering', scope: 'all' },
+
+      // Admin Leads
+      '0001': { name: 'ΜΟΣΧΟΣ ΚΩΣΤΑΣ', role: 'admin', dept: 'Chief Engineer', scope: 'all' },
+      '0002': { name: 'ΖΗΣΙΜΟΠΟΥΛΟΣ ΔΗΜΗΤΡΗΣ', role: 'admin', dept: 'Ass. Manager', scope: 'all' },
+      '0003': { name: 'ΧΑΤΖΗΓΑΛΗΝΗ ΣΤΕΛΛΑ', role: 'admin', dept: 'Admin', scope: 'all' },
+
+      // Τεχνικοί Engineering & Βάρδιες (0004 - 0028)
+      '0004': { name: 'ΔΟΥΜΠΑΚΗΣ ΗΛΙΑΣ', role: 'technician', dept: 'Τεχνικός A/V (Team Leader)', scope: 'all' },
+      '0005': { name: 'ΠΑΝΑΓΙΩΤΟΠΟΥΛΟΣ ΠΕΤΡΟΣ', role: 'technician', dept: 'Ηλεκτρολόγος (ΗΛΕ 1)', scope: 'all' },
+      '0006': { name: 'ΓΑΛΑΝΟΠΟΥΛΟΣ ΘΕΟΔΩΡΟΣ', role: 'technician', dept: 'Ηλεκτρολόγος (ΗΛΕ 2)', scope: 'all' },
+      '0007': { name: 'ΗΛΙΟΠΟΥΛΟΣ ΔΙΟΝΥΣΗΣ', role: 'technician', dept: 'Ηλεκτρολόγος (ΗΛΕ 3)', scope: 'all' },
+      '0008': { name: 'CULLHAJ AGIM KIM', role: 'technician', dept: 'Ηλεκτρολόγος (ΗΛΕ 4)', scope: 'all' },
+      '0009': { name: 'ΧΑΡΜΠΑΛΗΣ ΑΘΑΝΑΣΙΟΣ', role: 'technician', dept: 'Ηλεκτρολόγος (ΗΛΕ 5)', scope: 'all' },
+      '0010': { name: 'ΑΝΑΣΤΑΣΟΠΟΥΛΟΣ ΓΕΩΡΓΙΟΣ', role: 'technician', dept: 'Ηλεκτρολόγος (ΗΛΕ 6)', scope: 'all' },
+      '0011': { name: 'ΑΝΔΡΕΟΥ ΓΙΩΡΓΟΣ', role: 'technician', dept: 'Υδραυλικός (ΥΔΡ 1)', scope: 'all' },
+      '0012': { name: 'ΑΡΚΑΛΗΣ ΓΕΩΡΓΙΟΣ', role: 'technician', dept: 'Υδραυλικός (ΥΔΡ 2)', scope: 'all' },
+      '0013': { name: 'ΖΕΡΒΑΣ ΚΩΣΤΑΣ', role: 'technician', dept: 'Υδραυλικός (ΥΔΡ 3)', scope: 'all' },
+      '0014': { name: 'ΛΟΥΦΑΣ ΒΑΣΙΛΗΣ', role: 'technician', dept: 'A/C & Ψυκτικός (AC Engineer)', scope: 'all' },
+      '0015': { name: 'ΤΥΛΛΗΡΙΔΗΣ ΝΕΣΤΩΡ', role: 'technician', dept: 'A/C & Ψυκτικός (Junior AC Tech)', scope: 'all' },
+      '0016': { name: 'ΚΑΛΟΓΕΡΟΠΟΥΛΟΣ ΧΡΗΣΤΟΣ', role: 'technician', dept: 'Ξυλουργός', scope: 'all' },
+      '0017': { name: 'ΤΣΩΝΗΣ ΙΩΑΝΝΗΣ', role: 'technician', dept: 'Υπεύθυνος Πισινών (Pool Leader 1)', scope: 'all' },
+      '0018': { name: 'ΠΑΠΑΠΕΤΡΟΥ ΚΩΝ/ΝΟΣ', role: 'technician', dept: 'Πισίνες (Senior Pool C. 2)', scope: 'all' },
+      '0019': { name: 'ΑΡΜΠΕΝ ΖΕΚΟΙ', role: 'technician', dept: 'Πισίνες (Pool C. 3)', scope: 'all' },
+      '0020': { name: 'ΤΣΟΠΕΛΑΣ ΑΝΑΣΤΑΣΙΟΣ', role: 'technician', dept: 'Πισίνες (Pool C. 4)', scope: 'all' },
+      '0021': { name: 'ΜΑΣΤΡΟΓΙΑΝΝΟΠΟΥΛΟΣ Π.', role: 'technician', dept: 'Πισίνες (Pool C. 5)', scope: 'all' },
+      '0022': { name: 'ΤΣΕΡΤΟΣ ΔΙΟΝΥΣΙΟΣ', role: 'technician', dept: 'Πισίνες (Pool C. 6)', scope: 'all' },
+      '0023': { name: 'ΚΑΡΔΑΡΑΣ ΔΙΟΝΥΣΙΟΣ', role: 'technician', dept: 'Πισίνες (Pool C. 7)', scope: 'all' },
+      '0024': { name: 'ΣΚΟΚΟΣ ΔΙΟΝΥΣΗΣ', role: 'technician', dept: 'Civil / Εργασίες (Civil Leader 1)', scope: 'all' },
+      '0025': { name: 'BLEDAR HOXHAJ', role: 'technician', dept: 'Civil / Εργασίες (ΕΡΓ 2)', scope: 'all' },
+      '0026': { name: 'MECANI ADI', role: 'technician', dept: 'Civil / Εργασίες (ΕΡΓ 3)', scope: 'all' },
+      '0027': { name: 'LAMBROS HOXHAJ', role: 'technician', dept: 'Civil / Εργασίες (ΕΡΓ 4)', scope: 'all' },
+      '0028': { name: 'ΚΑΝΑΚΗΣ ΙΩΑΝΝΗΣ', role: 'technician', dept: 'Civil / Εργασίες (Εργάτης / Civil)', scope: 'all' },
+
+      // Τμήματα Ξενοδοχείου
+      '3001': { name: 'Style / Housekeeping', role: 'department', dept: 'Style', scope: 'guest' },
+      '3002': { name: 'Curators', role: 'department', dept: 'Curators', scope: 'guest' },
+      '3003': { name: 'Front Office', role: 'department', dept: 'Front Office', scope: 'guest' },
+      '3004': { name: 'F&B Outlet', role: 'department', dept: 'Food & Beverage', scope: 'guest' },
+      '3005': { name: 'Away Spa', role: 'department', dept: 'Spa', scope: 'guest' },
+      '3006': { name: 'Security', role: 'department', dept: 'Security', scope: 'all' },
+      '3007': { name: 'Housing', role: 'department', dept: 'Staff Housing', scope: 'housing' }
+  
+      // Τμήματα Ξενοδοχείου
+      '3001': { name: 'Style / Housekeeping', role: 'department', dept: 'Style', scope: 'guest' },
+      '3002': { name: 'Curators', role: 'department', dept: 'Curators', scope: 'guest' },
+      '3003': { name: 'Front Office', role: 'department', dept: 'Front Office', scope: 'guest' },
+      '3004': { name: 'F&B Outlet', role: 'department', dept: 'Food & Beverage', scope: 'guest' },
+      '3005': { name: 'Away Spa', role: 'department', dept: 'Spa', scope: 'guest' },
+      '3006': { name: 'Security', role: 'department', dept: 'Security', scope: 'all' }, // Πλήρης πρόσβαση παντού
+      '3007': { name: 'Housing', role: 'department', dept: 'Staff Housing', scope: 'housing' }
     };
 
-    const REGISTERED_TECHNICIANS = [
-      { id: "t_elec", name: "Ηλεκτρολόγος Βάρδιας" },
-      { id: "t_plumb", name: "Υδραυλικός Βάρδιας" },
-      { id: "t_hvac", name: "Ψυκτικός (HVAC)" }
-    ];
+    /* ==========================================================================
+       2. ΔΕΔΟΜΕΝΑ ΧΩΡΩΝ ΚΑΙ ΤΟΠΟΘΕΣΙΩΝ
+       ========================================================================== */
+    const LOCATION_DATA = {
+      // Χώροι Housing Προσωπικού
+      housing: [
+        { id: 'b700', label: 'Κτίριο 700', rooms: generateRoomRange(701, 740), extras: ['Laundry 700', 'TV Room 700', 'Κουζίνα 700'] },
+        { id: 'b800', label: 'Κτίριο 800', rooms: generateRoomRange(801, 840), extras: ['Laundry 800', 'TV Room 800', 'Κουζίνα 800'] },
+        { id: 'b1000', label: 'Κτίριο 1000', rooms: generateRoomRange(1001, 1040), extras: ['Laundry 1000', 'TV Room 1000', 'Κουζίνα 1000'] },
+        { id: 'b1100', label: 'Κτίριο 1100', rooms: generateRoomRange(1101, 1160), extras: ['Laundry 1100', 'TV Room 1100', 'Κουζίνα 1100'] },
+        { id: 'agora', label: 'Αγορά (501-540)', rooms: generateRoomRange(501, 540), extras: ['Κοινόχρηστα Αγοράς'] }
+      ],
 
-    /* -------------------------------------------------------------------------
-       B. DATA TAXONOMY: HOUSING, RESORT & INFRASTRUCTURE
-       ------------------------------------------------------------------------- */
-    function generateRoomCodes(start, end) {
-      const collection = [];
-      for (let num = start; num <= end; num++) {
-        collection.push(`Δωμάτιο ${num}`);
+      // Χώροι Φιλοξενουμένων (Guest Areas)
+      guest: [
+        { id: 'villas', label: 'Villas', rooms: ['Villa 1', 'Villa 2', 'Villa 3', 'Villa 5', 'Villa 6', 'Villa 7', 'Villa 8', 'Villa 9', 'Villa 10', 'Villa 11', 'Villa 12'] },
+        { id: 'suites', label: 'Suites & Rooms', rooms: ['101-120', '201-225', '301-325', '401-420'] },
+        { id: 'outlets', label: 'F&B / Bars', rooms: ['Platia', 'W Lounge', 'Wet Deck', 'Between', 'Parelia'] },
+        { id: 'public', label: 'Κοινόχρηστοι', rooms: ['Lobby / Reception', 'Away Spa', 'Γυμναστήριο', 'Κεντρική Πισίνα'] }
+      ],
+
+      // Υποδομές Συγκροτήματος (Engineering & Security Μόνο)
+      infrastructure: [
+        { id: 'pumps', label: 'Αντλιοστάσια', rooms: ['Αντλιοστάσιο ΕΔΕΚ (Τουαλέτες)', 'Κεντρικό Αντλιοστάσιο Ακαθάρτων', 'Αντλιοστάσιο Όμβριων'] },
+        { id: 'subs', label: 'Υποσταθμοί', rooms: ['Υποσταθμός Μέσης Τάσης Υ/Σ 1', 'Υποσταθμός Υ/Σ 2', 'Ηλεκτροπαραγωγό Ζεύγος (Η/Ζ)'] },
+        { id: 'plant', label: 'Μηχανοστάσια', rooms: ['Μηχανοστάσιο Πισινών', 'Μηχανοστάσιο Κλιματισμού (Chillers)', 'Boiler Room'] }
+      ]
+    };
+
+    // Helper συνάρτηση για παραγωγή αριθμών δωματίων
+    function generateRoomRange(start, end) {
+      const list = [];
+      for (let i = start; i <= end; i++) {
+        list.push('Δωμ. ' + i);
       }
-      return collection;
+      return list;
     }
 
-    const HOUSING_SECTORS = {
-      "Κτίριο 700": {
-        rooms: generateRoomCodes(701, 740),
-        facilities: ["Κουζίνα", "Laundry (Πλυντήρια)", "TV Room (Σαλόνι)", "Κλιμακοστάσιο / Διάδρομοι"]
-      },
-      "Κτίριο 800": {
-        rooms: generateRoomCodes(801, 840),
-        facilities: ["Κουζίνα", "Laundry (Πλυντήρια)", "TV Room (Σαλόνι)", "Κλιμακοστάσιο / Διάδρομοι"]
-      },
-      "Κτίριο 1000": {
-        rooms: generateRoomCodes(1001, 1040),
-        facilities: ["Κουζίνα", "Laundry (Πλυντήρια)", "TV Room (Σαλόνι)", "Κλιμακοστάσιο / Διάδρομοι"]
-      },
-      "Κτίριο 1100": {
-        rooms: generateRoomCodes(1101, 1160),
-        facilities: ["Κουζίνα", "Laundry (Πλυντήρια)", "TV Room (Σαλόνι)", "Κλιμακοστάσιο / Διάδρομοι"]
+    /* ==========================================================================
+       3. ΕΠΙΜΕΡΟΥΣ ΣΗΜΕΙΑ & ΣΥΧΝΕΣ ΒΛΑΒΕΣ
+       ========================================================================== */
+    const SUB_AREAS = {
+      default: ['Γενικά', 'Master Bedroom', 'Twin Bedroom', 'Living Room', 'Μπάνιο', 'Πισίνα / Έξω', 'Μπαλκόνι'],
+      housing: ['Υπνοδωμάτιο', 'Μπάνιο', 'Κουζίνα', 'Laundry Room', 'TV Room / Σαλόνι', 'Διάδρομος / Κλιμακοστάσιο'],
+      infrastructure: ['Ηλεκτρολογικός Πίνακας', 'Αντλία 1', 'Αντλία 2', 'Πιεστικό Δίκτυο', 'Αυτοματισμός / PLC', 'Φρεάτιο']
+    };
+
+    const COMMON_ISSUES_BY_CATEGORY = {
+      'Υδραυλικά': ['Διαρροή σε καζανάκι', 'Βουλωμένος νιπτήρας', 'Χαμηλή πίεση νερού', 'Δεν έχει ζεστό νερό', 'Διαρροή σε σιφόνι'],
+      'Ηλεκτρολογικά': ['Πεσμένη ασφάλεια', 'Δεν ανάβουν σποτάκια', 'Χαλασμένη πρίζα', 'Πρόβλημα master διακόπτη', 'Φωτισμός μπαλκονιού'],
+      'A/C': ['Δεν κατεβάζει θερμοκρασία', 'Στάζει νερό από μονάδα', 'Θόρυβος στο μοτέρ', 'Οθόνη θερμοστάτη σβηστή', 'Δεν φυσάει αέρα'],
+      'A/V': ['Τηλεόραση χωρίς εικόνα', 'Πρόβλημα σύνδεσης Apple TV', 'Ηχοσύστημα δεν παίζει', 'Δεν λειτουργεί τηλεκοντρόλ', 'WiFi χαμηλό σήμα'],
+      'Πόρτες / Έπιπλα': ['Μαγκώνει συρόμενη πόρτα', 'Χαλασμένος μεντεσές ντουλάπας', 'Σπασμένο συρτάρι', 'Τρίζει το κρεβάτι'],
+      'Safe / Κλειδαριά': ['Κλειδωμένο χρηματοκιβώτιο (SOP)', 'Χαλασμένο πληκτρολόγιο safe', 'Κλειδαριά δωματίου δεν ανοίγει (SOP)', 'Αλλαγή μπαταριών Safe Box'],
+      'Πισίνες': ['Θολό νερό πισίνας', 'Χαμηλή στάθμη νερού', 'Δεν δουλεύει ανακυκλοφορία', 'Σπασμένο φωτιστικό πισίνας'],
+      'Civil / Εργασίες': ['Ξεκολλημένο πλακάκι', 'Βάψιμο / Μερεμέτι τοίχου', 'Υγρασία σε γυψοσανίδα', 'Σιλικόνη ντουζιέρας']
+    };
+/* ==========================================================================
+       4. SUPABASE CLIENT & STATE CONFIGURATION
+       ========================================================================== */
+    const SUPABASE_URL = 'https://wkycbbdfomffpfsdohhn.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndreWNiYmRmb21mZnBmc2RvaGhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY3Mzk4MTcsImV4cCI6MjA0MjMxNTgxN30.C-d_TzFk_KqgP_8q5U8d9k1wX7Y8Z9a0B1c2D3e4F5g';
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Global App State
+    let currentUser = null;
+    let selectedRoom = '';
+    let selectedSubArea = 'Γενικά';
+    let selectedCategory = '';
+    let isAudioEnabled = true;
+
+    /* ==========================================================================
+       5. INITIALIZATION & AUTH (PIN GATE WITH REMEMBER ME)
+       ========================================================================== */
+    document.addEventListener('DOMContentLoaded', () => {
+      checkDeviceSession();
+      detectShift();
+      requestNotificationPermission();
+    });
+
+    function checkDeviceSession() {
+      const savedPin = localStorage.getItem('w_maintenance_device_pin');
+      if (savedPin && USER_ROLES[savedPin]) {
+        loginUser(savedPin);
+      } else {
+        document.getElementById('pinOverlay').style.display = 'flex';
       }
-    };
+    }
 
-    const RESORT_PUBLIC_SPACES = {
-      "Κοινόχρηστοι Χώροι Resort": [
-        "Lobby Reception", "Κεντρική Πισίνα", "Away Spa", "Gym / Fitness Center", "Beach Club"
-      ],
-      "Επισιτιστικά Τμήματα (F&B)": [
-        "Κεντρικό Εστιατόριο", "Pool Bar", "Beach Lounge", "Κεντρική Κουζίνα", "Παρασκευαστήριο"
-      ],
-      "Δωμάτια Φιλοξενουμένων": [
-        "Villas", "Suites", "Deluxe Rooms"
-      ]
-    };
+    function handleDeviceLogin(event) {
+      event.preventDefault();
+      const pinInput = document.getElementById('devicePinInput').value.trim();
+      const rememberMe = document.getElementById('rememberMeCheck').checked;
 
-    // Υποδομές: Ορατές ΑΠΟΚΛΕΙΣΤΙΚΑ στο Γραφείο (8888) και στους Τεχνικούς
-    const EXCLUSIVE_INFRASTRUCTURE = {
-      "Υποδομές Resort (Τεχνικό Μόνο)": [
-        "Αντλιοστάσιο (απέναντι από τουαλέτες ΕΔΕΚ)",
-        "Κεντρικός Υποσταθμός Μέσης Τάσης",
-        "Ηλεκτροπαραγωγά Ζεύγη (Η/Ζ)",
-        "Βιολογικός Καθαρισμός"
-      ]
-    };
+      if (USER_ROLES[pinInput]) {
+        if (rememberMe) {
+          localStorage.setItem('w_maintenance_device_pin', pinInput);
+        }
+        loginUser(pinInput);
+      } else {
+        alert('Μη έγκυρος κωδικός PIN. Παρακαλώ δοκιμάστε ξανά.');
+        document.getElementById('devicePinInput').value = '';
+      }
+    }
 
-    /* -------------------------------------------------------------------------
-       C. STATE MANAGEMENT & STORAGE (PERSISTENCE)
-       ------------------------------------------------------------------------- */
-    const MASTER_STORE_KEY = "w_maint_os_defects_v3";
-    let activeUserSession = null;
-    let currentFeedFilter = "all";
-    let chartInstanceStatus = null;
-    let chartInstanceSector = null;
+    function loginUser(pin) {
+      currentUser = USER_ROLES[pin];
+      currentUser.pin = pin;
 
-    function getLocalRecords() {
-      const raw = localStorage.getItem(MASTER_STORE_KEY);
-      if (!raw) {
-        const seedData = [
-          {
-            id: "W-742",
-            department: "Housing Προσωπικού",
-            location: "Κτίριο 700 - Δωμάτιο 708",
-            sector: "Housing",
-            description: "Διαρροή νερού στον νιπτήρα του μπάνιου.",
-            priority: "urgent",
-            shift: "Πρωινή (07:00 - 15:00)",
-            status: "pending",
-            assignedTo: "t_plumb",
-            timestamp: "09:30"
-          },
-          {
-            id: "W-743",
-            department: "Housing Προσωπικού",
-            location: "Κτίριο 1100 - Laundry (Πλυντήρια)",
-            sector: "Housing",
-            description: "Το πλυντήριο #2 δεν στραγγίζει τα νερά.",
-            priority: "normal",
-            shift: "Πρωινή (07:00 - 15:00)",
-            status: "in_progress",
-            assignedTo: "t_elec",
-            timestamp: "10:15"
-          },
-          {
-            id: "W-744",
-            department: "Curators (Guest Exp.)",
-            location: "Κοινόχρηστοι Χώροι Resort - Lobby Reception",
-            sector: "Resort",
-            description: "Δυσλειτουργία φωτισμού στον κύριο προθάλαμο υποδοχής.",
-            priority: "normal",
-            shift: "Πρωινή (07:00 - 15:00)",
-            status: "completed",
-            assignedTo: "t_elec",
-            timestamp: "08:10"
-          }
+      document.getElementById('pinOverlay').style.display = 'none';
+
+      // Εμφάνιση Admin Tab αν είναι διαχειριστής
+      if (currentUser.role === 'admin') {
+        document.getElementById('tabAdminBtn').style.display = 'block';
+      } else {
+        document.getElementById('tabAdminBtn').style.display = 'none';
+      }
+
+      renderRoomTiles();
+      renderSubAreaTiles();
+      loadTickets();
+      initSupabaseRealtime();
+    }
+
+    function logoutDevice() {
+      if (confirm('Θέλετε να αποσυνδεθείτε από αυτή τη συσκευή;')) {
+        localStorage.removeItem('w_maintenance_device_pin');
+        location.reload();
+      }
+    }
+
+    /* ==========================================================================
+       6. DYNAMIC UI RENDERING (TILES SELECTION)
+       ========================================================================== */
+    function renderRoomTiles() {
+      const container = document.getElementById('roomTilesContainer');
+      container.innerHTML = '';
+      let availableSections = [];
+
+      if (currentUser.scope === 'housing') {
+        availableSections = LOCATION_DATA.housing;
+      } else if (currentUser.scope === 'guest') {
+        availableSections = LOCATION_DATA.guest;
+      } else {
+        // Engineering και Security έχουν πρόσβαση στα πάντα
+        availableSections = [
+          ...LOCATION_DATA.guest,
+          ...LOCATION_DATA.housing,
+          ...LOCATION_DATA.infrastructure
         ];
-        localStorage.setItem(MASTER_STORE_KEY, JSON.stringify(seedData));
-        return seedData;
       }
-      return JSON.parse(raw);
+
+      availableSections.forEach(sec => {
+        sec.rooms.forEach(r => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'tile-btn';
+          btn.textContent = r;
+          btn.onclick = () => selectRoom(r, btn, sec.id);
+          container.appendChild(btn);
+        });
+      });
     }
 
-    function saveLocalRecords(records) {
-      localStorage.setItem(MASTER_STORE_KEY, JSON.stringify(records));
+    function selectRoom(roomName, btnElement, sectionType) {
+      document.querySelectorAll('#roomTilesContainer .tile-btn').forEach(b => b.classList.remove('selected'));
+      btnElement.classList.add('selected');
+      selectedRoom = roomName;
+      document.getElementById('selectedRoomDisplay').textContent = roomName;
+
+      renderSubAreaTiles(sectionType);
     }
 
-    /* -------------------------------------------------------------------------
-       D. AUTHENTICATION & SESSION DISPATCHER
-       ------------------------------------------------------------------------- */
-    function executeAuthentication(e) {
-      e.preventDefault();
-      const enteredCode = document.getElementById("systemPinInput").value.trim();
-      const user = ACCESS_REGISTRY[enteredCode];
+    function renderSubAreaTiles(sectionType) {
+      const container = document.getElementById('subAreaTilesContainer');
+      container.innerHTML = '';
 
-      if (!user) {
-        alert("Απόρριψη Πρόσβασης: Μη έγκυρο PIN!");
-        document.getElementById("systemPinInput").value = "";
+      let list = SUB_AREAS.default;
+      if (sectionType === 'housing' || (currentUser && currentUser.scope === 'housing')) {
+        list = SUB_AREAS.housing;
+      } else if (sectionType === 'pumps' || sectionType === 'subs' || sectionType === 'plant') {
+        list = SUB_AREAS.infrastructure;
+      }
+
+      list.forEach((area, index) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'tile-btn' + (index === 0 ? ' selected' : '');
+        btn.textContent = area;
+        btn.onclick = () => {
+          document.querySelectorAll('#subAreaTilesContainer .tile-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          selectedSubArea = area;
+          document.getElementById('selectedSubAreaDisplay').textContent = area;
+        };
+        container.appendChild(btn);
+      });
+      selectedSubArea = list[0];
+      document.getElementById('selectedSubAreaDisplay').textContent = list[0];
+    }
+
+    function selectCategory(categoryName, btnElement) {
+      document.querySelectorAll('#categoryTilesContainer .tile-btn').forEach(b => b.classList.remove('selected'));
+      btnElement.classList.add('selected');
+      selectedCategory = categoryName;
+      document.getElementById('selectedCategoryDisplay').textContent = categoryName;
+
+      // Έλεγχος Security SOP
+      const sopAlert = document.getElementById('sopAlertBox');
+      if (categoryName === 'Safe / Κλειδαριά') {
+        sopAlert.style.display = 'block';
+      } else {
+        sopAlert.style.display = 'none';
+      }
+
+      renderCommonIssues(categoryName);
+    }
+
+    function renderCommonIssues(category) {
+      const container = document.getElementById('commonIssuesContainer');
+      container.innerHTML = '';
+      const issues = COMMON_ISSUES_BY_CATEGORY[category] || [];
+
+      issues.forEach(issue => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'tile-btn';
+        btn.style.background = 'rgba(34, 197, 94, 0.15)';
+        btn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
+        btn.textContent = issue;
+        btn.onclick = () => {
+          const descInput = document.getElementById('customDescriptionInput');
+          descInput.value = issue;
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function setPriority(level) {
+      document.getElementById('priorityValue').value = level;
+      const btnNorm = document.getElementById('btnPriorityNormal');
+      const btnUrg = document.getElementById('btnPriorityUrgent');
+
+      if (level === 'Urgent') {
+        btnUrg.className = 'p-btn active-urgent';
+        btnNorm.className = 'p-btn';
+      } else {
+        btnNorm.className = 'p-btn active-normal';
+        btnUrg.className = 'p-btn';
+      }
+    }
+
+    function detectShift() {
+      const currentHour = new Date().getHours();
+      let shift = 'Πρωινή (07:00 - 15:30)';
+      if (currentHour >= 15 && currentHour < 23) {
+        shift = 'Απογευματινή (15:00 - 23:30)';
+      } else if (currentHour >= 23 || currentHour < 7) {
+        shift = 'Νυχτερινή (23:00 - 07:30)';
+      }
+      document.getElementById('detectedShiftDisplay').textContent = shift;
+      return shift;
+    }
+
+    /* ==========================================================================
+       7. SUBMIT TICKET & DATABASE SYNC
+       ========================================================================== */
+    async function submitNewTicket(event) {
+      event.preventDefault();
+
+      if (!selectedRoom) {
+        alert('Παρακαλώ επιλέξτε Αριθμό Δωματίου ή Χώρου.');
+        return;
+      }
+      if (!selectedCategory) {
+        alert('Παρακαλώ επιλέξτε Ειδικότητα / Κατηγορία.');
         return;
       }
 
-      activeUserSession = user;
-      sessionStorage.setItem("w_os_authenticated_pin", enteredCode);
+      const description = document.getElementById('customDescriptionInput').value.trim();
+      const priority = document.getElementById('priorityValue').value;
+      const shift = detectShift();
 
-      // Κλείσιμο modal
-      document.getElementById("authGateway").style.display = "none";
-      document.getElementById("activeUserNameText").textContent = user.name;
-      document.getElementById("reportDeptLocked").value = user.name;
+      const btnSubmit = document.getElementById('btnSubmitTicket');
+      btnSubmit.disabled = true;
+      btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Αποστολή...';
 
-      // Εμφάνιση των κατάλληλων Tabs
-      const tabsWrap = document.getElementById("hudNavigationTabs");
-      const tabManager = document.getElementById("tabNavManager");
-      const tabTech = document.getElementById("tabNavTech");
-
-      if (user.type === "manager") {
-        tabsWrap.style.display = "flex";
-        tabManager.style.display = "flex";
-        tabTech.style.display = "flex";
-      } else if (user.type === "technician") {
-        tabsWrap.style.display = "flex";
-        tabManager.style.display = "none";
-        tabTech.style.display = "flex";
-      } else {
-        tabsWrap.style.display = "none";
-      }
-
-      setupLocationSelectors();
-      syncShiftPreset();
-      renderDefectsFeed();
-
-      // Αν είναι τεχνικός, άνοιξε κατευθείαν την καρτέλα του
-      if (user.type === "technician") {
-        navigateToWorkspace("technician");
-      } else {
-        navigateToWorkspace("tickets");
-      }
-    }
-
-    function terminateSession() {
-      sessionStorage.removeItem("w_os_authenticated_pin");
-      activeUserSession = null;
-      document.getElementById("systemPinInput").value = "";
-      document.getElementById("authGateway").style.display = "flex";
-      document.getElementById("activeUserNameText").textContent = "Αναμονή...";
-      navigateToWorkspace("tickets");
-    }
-
-    /* -------------------------------------------------------------------------
-       E. WORKSPACE VIEW ROUTING
-       ------------------------------------------------------------------------- */
-    function navigateToWorkspace(viewId) {
-      document.querySelectorAll(".workspace-view").forEach(el => el.classList.remove("active-view"));
-      document.querySelectorAll(".hud-tab-btn").forEach(btn => btn.classList.remove("active"));
-
-      if (viewId === "tickets") {
-        document.getElementById("viewWorkspaceTickets").classList.add("active-view");
-        const btn = document.getElementById("tabNavTickets");
-        if (btn) btn.classList.add("active");
-        renderDefectsFeed();
-      } else if (viewId === "manager") {
-        document.getElementById("viewWorkspaceManager").classList.add("active-view");
-        const btn = document.getElementById("tabNavManager");
-        if (btn) btn.classList.add("active");
-        calculateManagerKPIs();
-        renderManagerCharts();
-      } else if (viewId === "technician") {
-        document.getElementById("viewWorkspaceTechnician").classList.add("active-view");
-        const btn = document.getElementById("tabNavTech");
-        if (btn) btn.classList.add("active");
-        renderTechnicianProfile();
-      }
-    }
-
-    /* -------------------------------------------------------------------------
-       F. DYNAMIC CASCADING SELECTORS (ROOMS & INFRASTRUCTURE)
-       ------------------------------------------------------------------------- */
-    function setupLocationSelectors() {
-      const mainSector = document.getElementById("selectMainSector");
-      mainSector.innerHTML = "";
-
-      if (activeUserSession.scope === "housing") {
-        // Το Housing βλέπει ΜΟΝΟ τα 4 κτίρια
-        Object.keys(HOUSING_SECTORS).forEach(bld => {
-          const opt = document.createElement("option");
-          opt.value = bld;
-          opt.textContent = bld;
-          mainSector.appendChild(opt);
-        });
-      } else if (activeUserSession.scope === "all") {
-        // Manager & Τεχνικοί βλέπουν όλες τις κατηγορίες ταξινομημένες
-        const grpHousing = document.createElement("optgroup");
-        grpHousing.label = "Housing Προσωπικού (700-1100)";
-        Object.keys(HOUSING_SECTORS).forEach(bld => {
-          const opt = document.createElement("option");
-          opt.value = bld;
-          opt.textContent = bld;
-          grpHousing.appendChild(opt);
-        });
-        mainSector.appendChild(grpHousing);
-
-        const grpResort = document.createElement("optgroup");
-        grpResort.label = "Resort & Κοινόχρηστα";
-        Object.keys(RESORT_PUBLIC_SPACES).forEach(sp => {
-          const opt = document.createElement("option");
-          opt.value = sp;
-          opt.textContent = sp;
-          grpResort.appendChild(opt);
-        });
-        mainSector.appendChild(grpResort);
-
-        const grpInfra = document.createElement("optgroup");
-        grpInfra.label = "Υποδομές (Τεχνικό Μόνο)";
-        Object.keys(EXCLUSIVE_INFRASTRUCTURE).forEach(inf => {
-          const opt = document.createElement("option");
-          opt.value = inf;
-          opt.textContent = inf;
-          grpInfra.appendChild(opt);
-        });
-        mainSector.appendChild(grpInfra);
-      } else {
-        // Υπόλοιπα τμήματα (Curators, Housekeeping, κλπ.)
-        Object.keys(RESORT_PUBLIC_SPACES).forEach(sp => {
-          const opt = document.createElement("option");
-          opt.value = sp;
-          opt.textContent = sp;
-          mainSector.appendChild(opt);
-        });
-      }
-
-      cascadeSecondaryLocations();
-    }
-
-    function cascadeSecondaryLocations() {
-      const mainSector = document.getElementById("selectMainSector");
-      const subSpot = document.getElementById("selectSubSpot");
-      const selected = mainSector.value;
-      subSpot.innerHTML = "";
-
-      if (HOUSING_SECTORS[selected]) {
-        // 1. Δωμάτια
-        const grpRooms = document.createElement("optgroup");
-        grpRooms.label = "Δωμάτια Προσωπικού";
-        HOUSING_SECTORS[selected].rooms.forEach(rm => {
-          const opt = document.createElement("option");
-          opt.value = rm;
-          opt.textContent = rm;
-          grpRooms.appendChild(opt);
-        });
-        subSpot.appendChild(grpRooms);
-
-        // 2. Κοινόχρηστοι χώροι κτιρίου
-        const grpFac = document.createElement("optgroup");
-        grpFac.label = "Κοινόχρηστοι Χώροι Κτιρίου";
-        HOUSING_SECTORS[selected].facilities.forEach(fc => {
-          const opt = document.createElement("option");
-          opt.value = fc;
-          opt.textContent = fc;
-          grpFac.appendChild(opt);
-        });
-        subSpot.appendChild(grpFac);
-      } else if (RESORT_PUBLIC_SPACES[selected]) {
-        RESORT_PUBLIC_SPACES[selected].forEach(item => {
-          const opt = document.createElement("option");
-          opt.value = item;
-          opt.textContent = item;
-          subSpot.appendChild(opt);
-        });
-      } else if (EXCLUSIVE_INFRASTRUCTURE[selected]) {
-        EXCLUSIVE_INFRASTRUCTURE[selected].forEach(infPoint => {
-          const opt = document.createElement("option");
-          opt.value = infPoint;
-          opt.textContent = infPoint;
-          subSpot.appendChild(opt);
-        });
-      }
-    }
-
-    /* -------------------------------------------------------------------------
-       G. PRIORITY TOGGLE & CURRENT SHIFT DETECTION
-       ------------------------------------------------------------------------- */
-    function setTaskPriority(level) {
-      document.getElementById("taskPriorityState").value = level;
-      const btnNormal = document.getElementById("matrixBtnNormal");
-      const btnUrgent = document.getElementById("matrixBtnUrgent");
-
-      if (level === "urgent") {
-        btnUrgent.className = "matrix-btn active-urgent";
-        btnNormal.className = "matrix-btn";
-      } else {
-        btnNormal.className = "matrix-btn active-normal";
-        btnUrgent.className = "matrix-btn";
-      }
-    }
-
-    function syncShiftPreset() {
-      const nowHour = new Date().getHours();
-      const shiftMenu = document.getElementById("selectWorkShift");
-      if (nowHour >= 7 && nowHour < 15) {
-        shiftMenu.value = "Πρωινή (07:00 - 15:00)";
-      } else if (nowHour >= 15 && nowHour < 23) {
-        shiftMenu.value = "Απογευματινή (15:00 - 23:00)";
-      } else {
-        shiftMenu.value = "Νυχτερινή (23:00 - 07:00)";
-      }
-    }
-
-    /* -------------------------------------------------------------------------
-       H. SUBMIT DEFECT / TICKET CREATION
-       ------------------------------------------------------------------------- */
-    function handleDefectSubmission(e) {
-      e.preventDefault();
-      if (!activeUserSession) return;
-
-      const sectorVal = document.getElementById("selectMainSector").value;
-      const spotVal = document.getElementById("selectSubSpot").value;
-      const priorityVal = document.getElementById("taskPriorityState").value;
-      const shiftVal = document.getElementById("selectWorkShift").value;
-      const descVal = document.getElementById("taskIssueDescription").value.trim();
-
-      // Αυτόματος προσδιορισμός κατηγορίας
-      let categoryType = "Resort";
-      if (sectorVal.includes("Κτίριο")) categoryType = "Housing";
-      if (sectorVal.includes("Υποδομές")) categoryType = "Υποδομές";
-
-      const newRecord = {
-        id: "W-" + Math.floor(100 + Math.random() * 900),
-        department: activeUserSession.name,
-        location: `${sectorVal} - ${spotVal}`,
-        sector: categoryType,
-        description: descVal,
-        priority: priorityVal,
-        shift: shiftVal,
-        status: "pending",
-        assignedTo: null,
-        timestamp: new Date().toLocaleTimeString("el-GR", { hour: "2-digit", minute: "2-digit" })
+      const payload = {
+        room_number: `${selectedRoom} (${selectedSubArea})`,
+        category: selectedCategory,
+        description: description,
+        priority: priority,
+        shift: shift,
+        department_pin: currentUser.pin,
+        status: 'Ανοιχτή',
+        created_at: new Date().toISOString()
       };
 
-      const store = getLocalRecords();
-      store.unshift(newRecord);
-      saveLocalRecords(store);
+      const { data, error } = await supabase.from('tickets').insert([payload]);
 
-      // Επαναφορά φόρμας
-      document.getElementById("taskIssueDescription").value = "";
-      setTaskPriority("normal");
-      renderDefectsFeed();
-      alert("Η βλάβη καταχωρήθηκε επιτυχώς στο Τεχνικό!");
-    }
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Υποβολή Βλάβης';
 
-    /* -------------------------------------------------------------------------
-       I. RENDER DEFECTS FEED
-       ------------------------------------------------------------------------- */
-    function filterTaskFeed(filterState, btnElement) {
-      currentFeedFilter = filterState;
-      document.querySelectorAll(".pill-btn").forEach(b => b.classList.remove("active"));
-      btnElement.classList.add("active");
-      renderDefectsFeed();
-    }
-
-    function updateTicketState(id, nextState) {
-      const records = getLocalRecords();
-      const target = records.find(item => item.id === id);
-      if (target) {
-        target.status = nextState;
-        saveLocalRecords(records);
-        renderDefectsFeed();
+      if (error) {
+        alert('Σφάλμα κατά την υποβολή: ' + error.message);
+      } else {
+        alert('Η βλάβη καταχωρήθηκε επιτυχώς!');
+        document.getElementById('customDescriptionInput').value = '';
+        switchMainTab('feed');
       }
     }
 
-    function assignTicketTechnician(id, techId) {
-      const records = getLocalRecords();
-      const target = records.find(item => item.id === id);
-      if (target) {
-        target.assignedTo = techId || null;
-        if (techId && target.status === "pending") {
-          target.status = "in_progress";
-        }
-        saveLocalRecords(records);
-        renderDefectsFeed();
-      }
+    /* ==========================================================================
+       8. REAL-TIME ENGINE, TICKETS FEED & NOTIFICATIONS
+       ========================================================================== */
+    function initSupabaseRealtime() {
+      supabase
+        .channel('realtime-tickets-channel')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, (payload) => {
+          handleIncomingTicketChange(payload);
+        })
+        .subscribe((status) => {
+          const indicator = document.getElementById('feedStatusIndicator');
+          if (status === 'SUBSCRIBED') {
+            indicator.style.color = 'var(--success)';
+            indicator.innerHTML = '<i class="fa-solid fa-circle" style="font-size: 0.5rem;"></i> Real-Time Live';
+          } else {
+            indicator.style.color = 'var(--danger)';
+            indicator.innerHTML = '<i class="fa-solid fa-circle" style="font-size: 0.5rem;"></i> Σύνδεση...';
+          }
+        });
     }
 
-    function renderDefectsFeed() {
-      const container = document.getElementById("defectsFeedContainer");
-      let list = getLocalRecords();
-
-      // Αν δεν είναι Manager ή Τεχνικός, βλέπει ΜΟΝΟ όσα δήλωσε το τμήμα του
-      if (activeUserSession && activeUserSession.type === "department") {
-        list = list.filter(r => r.department === activeUserSession.name);
+    function handleIncomingTicketChange(payload) {
+      if (payload.eventType === 'INSERT') {
+        playAlertSound();
+        triggerWebNotification('Νέα Βλάβη: ' + payload.new.room_number, payload.new.description);
       }
+      loadTickets();
+    }
 
-      // Φιλτράρισμα κατάστασης
-      if (currentFeedFilter !== "all") {
-        list = list.filter(r => r.status === currentFeedFilter);
-      }
+    async function loadTickets() {
+      const { data: tickets, error } = await supabase
+        .from('tickets')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      if (list.length === 0) {
-        container.innerHTML = `
-          <div style="text-align:center; padding:50px 20px; color:var(--text-muted); font-size:1rem;">
-            <i class="fa-solid fa-folder-open" style="font-size:2rem; margin-bottom:12px; display:block;"></i>
-            Δεν υπάρχουν καταχωρημένες εργασίες σε αυτή την προβολή.
-          </div>
-        `;
+      if (error) return;
+
+      const container = document.getElementById('ticketsListContainer');
+      const badge = document.getElementById('ticketCountBadge');
+      container.innerHTML = '';
+      badge.textContent = tickets ? tickets.length : 0;
+
+      if (!tickets || tickets.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 20px;">Δεν υπάρχουν ενεργές βλάβες.</p>';
         return;
       }
 
-      container.innerHTML = list.map(t => {
-        const isUrgent = t.priority === "urgent";
-        const assignedTechObj = REGISTERED_TECHNICIANS.find(tc => tc.id === t.assignedTo);
-        const assignedName = assignedTechObj ? assignedTechObj.name : "Μη ανατεθειμένο";
-
-        return `
-          <div class="cyber-card ${isUrgent ? 'urgent-border' : 'normal-border'}">
-            <div class="card-meta-top">
-              <span class="card-room-id">${escapeHtml(t.location)}</span>
-              <span class="badge-chip ${isUrgent ? 'urgent' : 'normal'}">
-                ${isUrgent ? '<i class="fa-solid fa-triangle-exclamation"></i> URGENT' : '<i class="fa-solid fa-check"></i> NORMAL'}
-              </span>
-            </div>
-
-            <div class="card-narrative">${escapeHtml(t.description)}</div>
-
-            <div class="card-action-bar">
-              <div>
-                <strong>${escapeHtml(t.department)}</strong> | Ώρα: ${t.timestamp} | Βάρδια: ${escapeHtml(t.shift)}
-                <div style="margin-top:4px; color:var(--neon-cyan);">
-                  <i class="fa-solid fa-user-gear"></i> Τεχνικός: <strong>${escapeHtml(assignedName)}</strong>
-                </div>
-              </div>
-
-              <div style="display:flex; gap:8px; align-items:center;">
-                <!-- Αν είναι Manager, μπορεί να αναθέσει τεχνικό & να αλλάξει status -->
-                ${activeUserSession && activeUserSession.canAssign ? `
-                  <select class="hud-select" onchange="assignTicketTechnician('${t.id}', this.value)">
-                    <option value="">-- Ανάθεση --</option>
-                    ${REGISTERED_TECHNICIANS.map(tech => `
-                      <option value="${tech.id}" ${t.assignedTo === tech.id ? 'selected' : ''}>${tech.name}</option>
-                    `).join('')}
-                  </select>
-
-                  <select class="hud-select" onchange="updateTicketState('${t.id}', this.value)">
-                    <option value="pending" ${t.status === 'pending' ? 'selected' : ''}>⏳ Εκκρεμεί</option>
-                    <option value="in_progress" ${t.status === 'in_progress' ? 'selected' : ''}>🔧 Σε Εξέλιξη</option>
-                    <option value="completed" ${t.status === 'completed' ? 'selected' : ''}>✓ Ολοκληρώθηκε</option>
-                  </select>
-                ` : `
-                  <!-- Απλή ένδειξη status για απλά τμήματα -->
-                  <span style="font-weight:700; color: ${t.status === 'completed' ? 'var(--neon-green)' : (t.status === 'in_progress' ? 'var(--neon-amber)' : 'var(--neon-red)')}">
-                    ${t.status === 'completed' ? '✓ Ολοκληρώθηκε' : (t.status === 'in_progress' ? '🔧 Σε Εξέλιξη' : '⏳ Εκκρεμεί')}
-                  </span>
-                `}
-              </div>
-            </div>
+      tickets.forEach(t => {
+        const isUrgent = t.priority === 'Urgent';
+        const card = document.createElement('div');
+        card.className = 'ticket-card' + (isUrgent ? ' urgent' : '');
+        card.innerHTML = `
+          <div class="t-header">
+            <span>#${t.id ? t.id.slice(0, 5) : ''} • ${t.shift || ''}</span>
+            <span class="t-badge" style="background: ${isUrgent ? 'var(--danger)' : 'var(--card-border)'}; color: #fff;">
+              ${t.priority || 'Normal'}
+            </span>
+          </div>
+          <div class="t-room">${t.room_number}</div>
+          <div style="font-size: 0.8rem; color: var(--accent-blue); margin-top: 2px;">${t.category}</div>
+          <div class="t-desc">${t.description || 'Χωρίς περιγραφή'}</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 0.75rem; color: var(--text-muted);">
+            <span>Κατάσταση: <strong>${t.status || 'Ανοιχτή'}</strong></span>
+            <span>Από PIN: ${t.department_pin || '--'}</span>
           </div>
         `;
-      }).join('');
-    }
-
-    /* -------------------------------------------------------------------------
-       J. MANAGER KPIS & CHART.JS ENGINE
-       ------------------------------------------------------------------------- */
-    function calculateManagerKPIs() {
-      const records = getLocalRecords();
-      const total = records.length;
-      const urgent = records.filter(r => r.priority === "urgent").length;
-      const inProgress = records.filter(r => r.status === "in_progress").length;
-      const completed = records.filter(r => r.status === "completed").length;
-
-      document.getElementById("kpiTotalMetric").textContent = total;
-      document.getElementById("kpiUrgentMetric").textContent = urgent;
-      document.getElementById("kpiProgressMetric").textContent = inProgress;
-      document.getElementById("kpiCompletedMetric").textContent = completed;
-    }
-
-    function renderManagerCharts() {
-      const records = getLocalRecords();
-
-      // Υπολογισμός κατανομής καταστάσεων
-      const pendingCount = records.filter(r => r.status === "pending").length;
-      const progressCount = records.filter(r => r.status === "in_progress").length;
-      const completedCount = records.filter(r => r.status === "completed").length;
-
-      // Υπολογισμός κατανομής τομέων
-      const housingCount = records.filter(r => r.sector === "Housing").length;
-      const resortCount = records.filter(r => r.sector === "Resort").length;
-      const infraCount = records.filter(r => r.sector === "Υποδομές").length;
-
-      // 1. Chart Status (Doughnut)
-      const ctxStatus = document.getElementById("chartCanvasStatus").getContext("2d");
-      if (chartInstanceStatus) chartInstanceStatus.destroy();
-
-      chartInstanceStatus = new Chart(ctxStatus, {
-        type: "doughnut",
-        data: {
-          labels: ["Εκκρεμείς", "Σε Εξέλιξη", "Ολοκληρωμένες"],
-          datasets: [{
-            data: [pendingCount, progressCount, completedCount],
-            backgroundColor: ["#ff2a5f", "#ffaa00", "#00ff88"],
-            borderColor: "#0b1120",
-            borderWidth: 2
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { labels: { color: "#f1f5f9", font: { family: "Rajdhani", size: 14 } } }
-          }
-        }
+        container.appendChild(card);
       });
 
-      // 2. Chart Sector (Bar)
-      const ctxSector = document.getElementById("chartCanvasSector").getContext("2d");
-      if (chartInstanceSector) chartInstanceSector.destroy();
-
-      chartInstanceSector = new Chart(ctxSector, {
-        type: "bar",
-        data: {
-          labels: ["Housing Προσωπικού", "Resort / Κοινόχρηστα", "Υποδομές ΕΔΕΚ/Resort"],
-          datasets: [{
-            label: "Αριθμός Συμβάντων",
-            data: [housingCount, resortCount, infraCount],
-            backgroundColor: ["#00f3ff", "#38bdf8", "#818cf8"],
-            borderRadius: 6
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: { ticks: { color: "#8494b2" }, grid: { color: "rgba(255,255,255,0.05)" } },
-            x: { ticks: { color: "#8494b2" }, grid: { display: false } }
-          },
-          plugins: {
-            legend: { display: false }
-          }
-        }
-      });
+      if (currentUser && currentUser.role === 'admin') {
+        renderAdminStats(tickets);
+      }
     }
 
-    /* -------------------------------------------------------------------------
-       K. TECHNICIAN PROFILE (ΚΑΡΤΕΛΑ ΤΕΧΝΙΚΟΥ)
-       ------------------------------------------------------------------------- */
-    function renderTechnicianProfile() {
-      const records = getLocalRecords();
-      let targetTechId = activeUserSession.id;
+    function renderAdminStats(tickets) {
+      const container = document.getElementById('adminStatsContainer');
+      const civilContainer = document.getElementById('civilTasksContainer');
+      const urgentCount = tickets.filter(t => t.priority === 'Urgent').length;
+      const civilTasks = tickets.filter(t => t.category === 'Civil / Εργασίες');
 
-      // Αν είναι Manager, δείχνει εξ ορισμού τον πρώτο τεχνικό (ή επιλεγμένο)
-      if (activeUserSession.type === "manager") {
-        targetTechId = "t_elec";
-      }
-
-      const assignedTasks = records.filter(r => r.assignedTo === targetTechId);
-      const activeCount = assignedTasks.filter(r => r.status !== "completed").length;
-      const doneCount = assignedTasks.filter(r => r.status === "completed").length;
-
-      document.getElementById("techProfileHeaderName").innerHTML = `
-        <i class="fa-solid fa-id-card-clip" style="color:var(--neon-cyan); margin-right:10px;"></i>
-        ${activeUserSession.type === "technician" ? activeUserSession.name : "Καρτέλα: Ηλεκτρολόγος Βάρδιας"}
-      `;
-      document.getElementById("techProfileHeaderDetails").textContent = `
-        Ειδικότητα: ${activeUserSession.specialty || "Τεχνική Υπηρεσία"} | Αυτόματη Ανάθεση Συμβάντων
-      `;
-      document.getElementById("techPersonalStatsBadge").innerHTML = `
-        <i class="fa-solid fa-list-check"></i>
-        <span>Ενεργές: ${activeCount} | Ολοκληρωμένες: ${doneCount}</span>
-      `;
-
-      const container = document.getElementById("technicianPersonalFeed");
-      if (assignedTasks.length === 0) {
-        container.innerHTML = `
-          <div style="text-align:center; padding:40px 20px; color:var(--text-muted);">
-            Δεν υπάρχουν εργασίες ανατεθειμένες σε αυτόν τον τεχνικό.
-          </div>
-        `;
-        return;
-      }
-
-      container.innerHTML = assignedTasks.map(t => `
-        <div class="cyber-card ${t.priority === 'urgent' ? 'urgent-border' : 'normal-border'}">
-          <div class="card-meta-top">
-            <span class="card-room-id">${escapeHtml(t.location)}</span>
-            <span class="badge-chip ${t.priority === 'urgent' ? 'urgent' : 'normal'}">${t.priority.toUpperCase()}</span>
-          </div>
-          <div class="card-narrative">${escapeHtml(t.description)}</div>
-          <div class="card-action-bar">
-            <span>Ώρα: ${t.timestamp} | Βάρδια: ${escapeHtml(t.shift)}</span>
-            <select class="hud-select" onchange="updateTicketState('${t.id}', this.value)">
-              <option value="pending" ${t.status === 'pending' ? 'selected' : ''}>⏳ Εκκρεμεί</option>
-              <option value="in_progress" ${t.status === 'in_progress' ? 'selected' : ''}>🔧 Σε Εξέλιξη</option>
-              <option value="completed" ${t.status === 'completed' ? 'selected' : ''}>✓ Ολοκληρώθηκε</option>
-            </select>
-          </div>
+      container.innerHTML = `
+        <div style="background: var(--card-bg); padding: 12px; border-radius: 8px; border: 1px solid var(--card-border);">
+          <div style="font-size: 0.75rem; color: var(--text-muted);">ΣΥΝΟΛΙΚΕΣ ΒΛΑΒΕΣ</div>
+          <div style="font-size: 1.5rem; font-weight: 800; color: #fff;">${tickets.length}</div>
         </div>
-      `).join('');
-    }
+        <div style="background: var(--card-bg); padding: 12px; border-radius: 8px; border: 1px solid var(--card-border);">
+          <div style="font-size: 0.75rem; color: var(--danger);">ΕΠΕΙΓΟΥΣΕΣ (URGENT)</div>
+          <div style="font-size: 1.5rem; font-weight: 800; color: var(--danger);">${urgentCount}</div>
+        </div>
+      `;
 
-    function escapeHtml(text) {
-      if (!text) return "";
-      return String(text)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
-    }
-
-    /* -------------------------------------------------------------------------
-       L. BOOTSTRAP / RESTORE SESSION
-       ------------------------------------------------------------------------- */
-    window.addEventListener("DOMContentLoaded", () => {
-      const savedPin = sessionStorage.getItem("w_os_authenticated_pin");
-      if (savedPin && ACCESS_REGISTRY[savedPin]) {
-        document.getElementById("systemPinInput").value = savedPin;
-        executeAuthentication(new Event("submit"));
+      civilContainer.innerHTML = '';
+      if (civilTasks.length === 0) {
+        civilContainer.innerHTML = '<p style="font-size: 0.8rem; color: var(--text-muted);">Καμία εκκρεμότητα Civil.</p>';
+      } else {
+        civilTasks.forEach(task => {
+          const item = document.createElement('div');
+          item.style = 'border-bottom: 1px solid var(--card-border); padding: 6px 0; font-size: 0.8rem;';
+          item.innerHTML = `<strong>${task.room_number}</strong>: ${task.description} <span style="color: var(--warning);">(Σε αναμονή υλικών/εργασιών)</span>`;
+          civilContainer.appendChild(item);
+        });
       }
-    });
+    }
+
+    /* ==========================================================================
+       9. NOTIFICATIONS & AUDIO CONTROLS
+       ========================================================================== */
+    function toggleAudio() {
+      isAudioEnabled = !isAudioEnabled;
+      const text = document.getElementById('audioStatusText');
+      const icon = document.querySelector('#btnAudioToggle i');
+      if (isAudioEnabled) {
+        text.textContent = 'Ήχος';
+        icon.className = 'fa-solid fa-volume-high';
+      } else {
+        text.textContent = 'Σίγαση';
+        icon.className = 'fa-solid fa-volume-xmark';
+      }
+    }
+
+    function playAlertSound() {
+      if (!isAudioEnabled) return;
+      const sound = document.getElementById('notificationSound');
+      if (sound) {
+        sound.currentTime = 0;
+        sound.play().catch(() => {});
+      }
+    }
+
+    function requestNotificationPermission() {
+      if ('Notification' in window && Notification.permission !== 'granted') {
+        Notification.requestPermission();
+      }
+    }
+
+    function triggerWebNotification(title, body) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(title, {
+          body: body || 'Νέα καταχώρηση στο W Maintenance',
+          icon: 'https://cdn-icons-png.flaticon.com/512/1055/1055644.png'
+        });
+      }
+    }
+
+    /* ==========================================================================
+       10. TABS NAVIGATION
+       ========================================================================== */
+    function switchMainTab(tab) {
+      document.getElementById('reportView').style.display = 'none';
+      document.getElementById('feedView').style.display = 'none';
+      document.getElementById('adminView').style.display = 'none';
+
+      document.getElementById('tabReportBtn').classList.remove('active');
+      document.getElementById('tabFeedBtn').classList.remove('active');
+      document.getElementById('tabAdminBtn').classList.remove('active');
+
+      if (tab === 'report') {
+        document.getElementById('reportView').style.display = 'block';
+        document.getElementById('tabReportBtn').classList.add('active');
+      } else if (tab === 'feed') {
+        document.getElementById('feedView').style.display = 'block';
+        document.getElementById('tabFeedBtn').classList.add('active');
+        loadTickets();
+      } else if (tab === 'admin') {
+        document.getElementById('adminView').style.display = 'block';
+        document.getElementById('tabAdminBtn').classList.add('active');
+        loadTickets();
+      }
+    }
   </script>
 </body>
 </html>
